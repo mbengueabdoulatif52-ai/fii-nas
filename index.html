@@ -892,11 +892,10 @@ function renderBudPage(){
 function populateCopySrc(){
   const sel=document.getElementById('copy-src');
   if(!sel)return;
-  const curYm=ymk(bYear,bMonth);
-  // Les 3 mois précédents du mois sélectionné
+  // Les 3 mois précédents du mois SÉLECTIONNÉ dans le budget (bYear, bMonth)
   const prev=[];
   for(let i=1;i<=3;i++){
-    const d=new Date(parseInt(bYear),bMonth-1-i,1);
+    const d=new Date(parseInt(bYear),parseInt(bMonth)-1-i,1);
     prev.push(ymk(d.getFullYear(),d.getMonth()+1));
   }
   sel.innerHTML=prev.map(ym=>`<option value="${ym}">${yml(ym)}${budget[ym]&&Object.keys(budget[ym]).length?' ✓':''}</option>`).join('');
@@ -920,8 +919,8 @@ async function copyBudget(){
   msg.textContent='Budget de '+yml(srcYm)+' copié avec succès ✓';
   setTimeout(()=>{if(msg)msg.textContent='';},3000);
 }
-function setBY(el,y){document.querySelectorAll('.ytab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bYear=y;renderBForm();}
-function setBM(el,m){document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bMonth=m;renderBForm();}
+function setBY(el,y){document.querySelectorAll('.ytab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bYear=y;renderBForm();populateCopySrc();}
+function setBM(el,m){document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bMonth=m;renderBForm();populateCopySrc();}
 function calcBudSolde(ym){
   const bud=budget[ym]||{};
   const revPs=[...(CATS['Revenu']||[]),...(custom['Revenu']||[])];
