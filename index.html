@@ -309,6 +309,18 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 
   <!-- PAGE PROFIL -->
   <div id="page-pro" class="page">
+    <div class="card" style="background:linear-gradient(135deg,#0f1a2e,#0d1520);border:1px solid rgba(59,130,246,.25);cursor:pointer" onclick="goP('imp',null)">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:42px;height:42px;background:rgba(59,130,246,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:#f0f0f0">Importer depuis Excel</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">Colle tes transactions copiées depuis Excel</div>
+        </div>
+        <div style="margin-left:auto;color:#555;font-size:18px">›</div>
+      </div>
+    </div>
     <div class="card">
       <div class="ct">Compte</div>
       <div class="srow">
@@ -345,6 +357,10 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 
   <!-- PAGE IMPORT -->
   <div id="page-imp" class="page">
+    <button onclick="goP('pro',document.querySelectorAll('.ni')[4])" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--text2);font-size:13px;cursor:pointer;padding:0 0 12px;font-family:var(--font)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Retour
+    </button>
     <div class="card">
       <div class="ct">Import transactions Excel</div>
       <div id="imp-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px"></div>
