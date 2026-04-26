@@ -843,22 +843,30 @@ async function saveTx(){
   const msg=document.getElementById('fmsg');
   if(!amt||isNaN(amt)||!date||!poste){msg.textContent='Montant et date obligatoires.';return;}
   msg.textContent='';
-  const btn=document.getElementById('bsave');btn.disabled=true;
+  const btn=document.getElementById('bsave');
+  btn.disabled=true;
+  btn.style.opacity='0.7';
   const isRecur=document.getElementById('f-recur')?.checked||false;
   const recurDay=isRecur?parseInt(document.getElementById('f-recur-day')?.value||'1'):null;
-  try{
-    const{db,collection,addDoc}=window._fb;
-    const data={amt,date,cat:selCatVal,poste,cmt,ts:new Date().toISOString()};
-    if(isRecur){data.recur=true;data.recurDay=recurDay;}
-    await addDoc(collection(db,`users/${uid}/transactions`),data);
-    document.getElementById('f-amt').value='';
-    document.getElementById('f-cmt').value='';
-    const recurCb=document.getElementById('f-recur');
-    if(recurCb&&recurCb.checked){recurCb.checked=false;toggleRecurOptions();}
-    toast(isRecur?'Transaction récurrente enregistrée ✓':'Transaction enregistrée ✓');
-    goP('tx',document.querySelectorAll('.ni')[1]);
-  }catch(e){msg.textContent='Erreur: '+e.message;}
+  const{db,collection,addDoc}=window._fb;
+  const data={amt,date,cat:selCatVal,poste,cmt,ts:new Date().toISOString()};
+  if(isRecur){data.recur=true;data.recurDay=recurDay;}
+  // Lancer sans await — Firebase gère le hors ligne en arrière-plan
+  addDoc(collection(db,`users/${uid}/transactions`),data).catch(e=>{
+    console.warn('Sync en attente:',e.message);
+  });
+  // Réinitialiser immédiatement sans attendre Firebase
+  document.getElementById('f-amt').value='';
+  document.getElementById('f-cmt').value='';
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  const recurCb=document.getElementById('f-recur');
+  if(recurCb&&recurCb.checked){recurCb.checked=false;toggleRecurOptions();}
   btn.disabled=false;
+  btn.style.opacity='1';
+  toast(navigator.onLine
+    ?(isRecur?'Transaction récurrente enregistrée ✓':'Transaction enregistrée ✓')
+    :'Enregistré hors ligne · sync au retour du réseau');
+  goP('tx',document.querySelectorAll('.ni')[1]);
 }
 async function delTx(id){
   const{db,doc,deleteDoc}=window._fb;
