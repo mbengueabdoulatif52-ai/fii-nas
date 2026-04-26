@@ -431,6 +431,15 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <div class="chwrap" style="height:180px"><canvas id="cp" role="img" aria-label="Répartition des dépenses"></canvas></div>
       <div class="pleg" id="cpleg"></div>
     </div>
+    <div class="card">
+      <div class="ct">Analyse des habitudes</div>
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="analyse-period">
+        <button class="tab active" onclick="setAnalysePeriod(this,3)">3 mois</button>
+        <button class="tab" onclick="setAnalysePeriod(this,6)">6 mois</button>
+        <button class="tab" onclick="setAnalysePeriod(this,12)">12 mois</button>
+      </div>
+      <div id="analyse-content"></div>
+    </div>
   </div>
 
 
@@ -640,7 +649,7 @@ function goP(p,btn){
   if(p==='dash')renderDash();
   else if(p==='tx')renderTX();
   else if(p==='bud')renderBudPage();
-  else if(p==='pro'){renderCharts();renderCPUI();renderRecurList();renderTrash();}
+  else if(p==='pro'){renderCharts();renderCPUI();renderRecurList();renderTrash();renderAnalyse();}
   else if(p==='add'){syncPostes();document.getElementById('fmsg').textContent='';}
   else if(p==='imp'){document.getElementById('imp-log').style.display='none';document.getElementById('imp-pb').style.width='0%';document.getElementById('imp-pt').textContent='En attente';}
 }
@@ -1236,6 +1245,109 @@ async function doImport(txList){
 
 
 
+
+
+// ANALYSE DES HABITUDES
+let analysePeriod=3;
+
+function setAnalysePeriod(el,n){
+  document.querySelectorAll('#analyse-period .tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  analysePeriod=n;
+  renderAnalyse();
+}
+
+function renderAnalyse(){
+  const el=document.getElementById('analyse-content');
+  if(!el)return;
+
+  const now=new Date();
+  const months=[];
+  for(let i=1;i<=analysePeriod;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push(ymk(d.getFullYear(),d.getMonth()+1));
+  }
+
+  // Moyennes par poste
+  const posteMap={};
+  months.forEach(m=>{
+    txYM(m).filter(t=>t.cat!=='Revenu').forEach(t=>{
+      if(!posteMap[t.poste])posteMap[t.poste]={total:0,count:0};
+      posteMap[t.poste].total+=t.amt;
+      posteMap[t.poste].count++;
+    });
+  });
+
+  const avgByPoste=Object.entries(posteMap)
+    .map(([p,v])=>({p,avg:Math.round(v.total/analysePeriod)}))
+    .filter(x=>x.avg>0)
+    .sort((a,b)=>b.avg-a.avg);
+
+  // Mois courant pour comparaison
+  const curYm=ymk(now.getFullYear(),now.getMonth()+1);
+  const curTxs=txYM(curYm);
+  const curByPoste={};
+  curTxs.filter(t=>t.cat!=='Revenu').forEach(t=>{
+    curByPoste[t.poste]=(curByPoste[t.poste]||0)+t.amt;
+  });
+
+  // Résumé intelligent
+  const totalAvgDep=avgByPoste.reduce((s,x)=>s+x.avg,0);
+  const topPoste=avgByPoste[0];
+  const mostVariable=Object.entries(posteMap)
+    .map(([p,v])=>{
+      const vals=months.map(m=>txYM(m).filter(t=>t.poste===p).reduce((s,t)=>s+t.amt,0));
+      const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+      const variance=vals.reduce((s,v)=>s+Math.abs(v-avg),0)/vals.length;
+      return{p,variance};
+    })
+    .sort((a,b)=>b.variance-a.variance)[0];
+
+  // Meilleur mois
+  const bestMonth=months.map(m=>{
+    const t=txYM(m);
+    const r=sumC(t,'Revenu');
+    const d=sumC(t,'Dépenses fixes')+sumC(t,'Dépenses variables')+sumC(t,'Epargne');
+    return{m,sol:r-d};
+  }).sort((a,b)=>b.sol-a.sol)[0];
+
+  let html='';
+
+  // Résumé
+  html+=`<div style="background:var(--surf2);border-radius:var(--rs);padding:14px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Résumé · ${analysePeriod} derniers mois</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${topPoste?`<div style="font-size:13px;color:var(--text)">💸 Poste principal : <span style="font-weight:500">${topPoste.p}</span> — moy. ${fmt(topPoste.avg)} F/mois</div>`:''}
+      ${mostVariable?`<div style="font-size:13px;color:var(--text)">📊 Plus variable : <span style="font-weight:500">${mostVariable.p}</span></div>`:''}
+      ${bestMonth&&bestMonth.sol>0?`<div style="font-size:13px;color:var(--text)">🏆 Meilleur mois : <span style="font-weight:500">${yml(bestMonth.m)}</span> (+${fmt(bestMonth.sol)} F)</div>`:''}
+      <div style="font-size:13px;color:var(--text)">📈 Dépenses moyennes : <span style="font-weight:500">${fmt(totalAvgDep)} F/mois</span></div>
+    </div>
+  </div>`;
+
+  // Tableau moyennes vs mois actuel
+  html+=`<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Moyenne vs mois actuel</div>`;
+  if(!avgByPoste.length){
+    html+='<div class="empty">Pas assez de données</div>';
+  } else {
+    html+=`<table class="rtbl"><thead><tr><th>Poste</th><th>Moyenne</th><th>Ce mois</th><th>Écart</th></tr></thead><tbody>`;
+    avgByPoste.slice(0,10).forEach(({p,avg})=>{
+      const cur=curByPoste[p]||0;
+      const diff=cur-avg;
+      const pct=avg>0?Math.round(diff/avg*100):0;
+      const cl=diff>0?'ov':diff<0?'ok':'';
+      const sign=diff>=0?'↑':'↓';
+      html+=`<tr>
+        <td>${p}</td>
+        <td style="color:var(--text2)">${fmt(avg)}</td>
+        <td style="color:var(--text2)">${cur>0?fmt(cur):'—'}</td>
+        <td class="${cl}">${cur>0?sign+Math.abs(pct)+'%':'—'}</td>
+      </tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+
+  el.innerHTML=html;
+}
 
 // MODE HORS LIGNE
 function updateOnlineStatus(){
