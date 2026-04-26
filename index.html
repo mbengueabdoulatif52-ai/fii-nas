@@ -397,6 +397,10 @@ select option{background:#2c2c2e;color:#f5f5f7}
       </div>
     </div>
     <div class="card">
+      <div class="ct">Transactions récurrentes</div>
+      <div id="recur-list"></div>
+    </div>
+    <div class="card">
       <div class="ct">Postes personnalisés</div>
       <div id="cpui"></div>
     </div>
@@ -571,8 +575,10 @@ function subscribe(){
   const{db,collection,query,orderBy,onSnapshot,doc}=window._fb;
   if(unsub1)unsub1();
   unsub1=onSnapshot(query(collection(db,`users/${uid}/transactions`),orderBy('ts','desc')),snap=>{
+    const firstLoad=txs.length===0;
     txs=snap.docs.map(d=>({id:d.id,...d.data()}));
     renderCurrent();
+    if(firstLoad)checkRecurring();
   });
   if(unsub2)unsub2();
   unsub2=onSnapshot(doc(db,`users/${uid}/data/settings`),snap=>{
@@ -617,7 +623,7 @@ function goP(p,btn){
   if(p==='dash')renderDash();
   else if(p==='tx')renderTX();
   else if(p==='bud')renderBudPage();
-  else if(p==='pro'){renderCharts();renderCPUI();}
+  else if(p==='pro'){renderCharts();renderCPUI();renderRecurList();}
   else if(p==='add'){syncPostes();document.getElementById('fmsg').textContent='';}
   else if(p==='imp'){document.getElementById('imp-log').style.display='none';document.getElementById('imp-pb').style.width='0%';document.getElementById('imp-pt').textContent='En attente';}
 }
@@ -684,8 +690,6 @@ function renderAlerts(ym){
       else if(b>0&&r>=b*0.9&&r<b){alerts.push({p,r,b,pct:Math.round(r/b*100),warn:true});}
     });
   });
-  // Check recurring
-  checkRecurring(ym);
   const el=document.getElementById('alerts-wrap');
   if(!el)return;
   if(!alerts.length){el.innerHTML='';return;}
@@ -878,7 +882,7 @@ function renderTX(){
       <div class="txic ${cl}">${CICO[x.cat]||'💰'}</div>
       <div class="txin">
         <div class="txp">${hi(x.poste||'',q)}</div>
-        <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span></div>
+        <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span>${x.auto?' <span style="font-size:9px;color:var(--text3)">🔄 auto</span>':''}</div>
       </div>
       <div class="txr">
         <div class="txa ${ac}">${isR?'+':'−'}${fmt(x.amt)} F</div>
@@ -1162,31 +1166,69 @@ function toggleRecurOptions(){
   }
 }
 
-async function checkRecurring(ym){
+async function checkRecurring(){
   if(!uid)return;
-  const recurring=txs.filter(t=>t.recur&&t.recur===true);
+  const recurring=txs.filter(t=>t.recur===true);
   if(!recurring.length)return;
-  const existing=txYM(ym);
+  const now=new Date();
+  const curYm=ymk(now.getFullYear(),now.getMonth()+1);
+  const{db,collection,addDoc}=window._fb;
+  let created=0;
   for(const rt of recurring){
-    const alreadyExists=existing.some(t=>t.poste===rt.poste&&t.cat===rt.cat&&t.amt===rt.amt&&t.recurId===rt.id);
+    // Vérifier si cette récurrente existe déjà ce mois (par recurId + mois)
+    const alreadyExists=txs.some(t=>
+      t.recurId===rt.id &&
+      t.date&&t.date.startsWith(curYm)
+    );
     if(!alreadyExists){
-      const[y,m]=ym.split('-');
+      const[y,m]=curYm.split('-');
       const day=rt.recurDay||1;
       const maxDay=new Date(parseInt(y),parseInt(m),0).getDate();
-      const date=ymk(y,m)+'-'+String(Math.min(day,maxDay)).padStart(2,'0');
-      const now=new Date();
-      const targetMonth=new Date(parseInt(y),parseInt(m)-1,1);
-      if(targetMonth<=now){
-        const{db,collection,addDoc}=window._fb;
-        await addDoc(collection(db,'users/'+uid+'/transactions'),{
-          amt:rt.amt,date,cat:rt.cat,poste:rt.poste,cmt:rt.cmt||'',
-          ts:new Date().toISOString(),recurId:rt.id,auto:true
-        });
-      }
+      const date=curYm+'-'+String(Math.min(day,maxDay)).padStart(2,'0');
+      await addDoc(collection(db,'users/'+uid+'/transactions'),{
+        amt:rt.amt,date,cat:rt.cat,poste:rt.poste,
+        cmt:(rt.cmt||'')+'',
+        ts:new Date().toISOString(),
+        recurId:rt.id,
+        auto:true
+      });
+      created++;
     }
   }
+  if(created>0)toast(created+' transaction'+(created>1?'s':'')+' récurrente'+(created>1?'s':'')+' ajoutée'+(created>1?'s':'')+' ✓');
 }
 
+
+
+function renderRecurList(){
+  const el=document.getElementById('recur-list');
+  if(!el)return;
+  const recurring=txs.filter(t=>t.recur===true);
+  if(!recurring.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Aucune transaction récurrente</div>';
+    return;
+  }
+  el.innerHTML=recurring.map(t=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">
+          ${new Intl.NumberFormat('fr-FR').format(t.amt)} F · le ${t.recurDay||1} de chaque mois
+          <span class="bdg ${CCLS[t.cat]||'v'}" style="margin-left:4px">${t.cat}</span>
+        </div>
+      </div>
+      <button onclick="deleteRecur('${t.id}')"
+        style="padding:5px 10px;font-size:11px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">
+        Supprimer
+      </button>
+    </div>`).join('');
+}
+
+async function deleteRecur(id){
+  const{db,doc,deleteDoc}=window._fb;
+  await deleteDoc(doc(db,'users/'+uid+'/transactions/'+id));
+  toast('Transaction récurrente supprimée');
+}
 
 // FORMAT BUDGET INPUTS
 function fmtBudInput(el){
