@@ -716,9 +716,8 @@ function renderDC(){
       const cl=pc===null?(r>0?(isPos?'ok':'ov'):''):isPos?(pc>=100?'ok':pc>=80?'wa':'ov'):(pc>100?'ov':pc>80?'wa':'ok');
       const bw=b>0?Math.min(100,Math.round(r/b*100)):r>0?100:0;
       const bc=isPos?(b===0&&r>0?'#22c55e':bw>=100?'#22c55e':bw>=80?'#f59e0b':'#ef4444'):(b===0&&r>0?'#ef4444':bw>100?'#ef4444':bw>80?'#f59e0b':'#22c55e');
-      const pctTxt=pc!==null?(pc+'%'):(r>0?(isPos?'<span style="color:#22c55e;font-size:10px">✓ non budg.</span>':'<span style="color:#ef4444;font-size:10px">non budg.</span>'):'—');
+      const pctTxt=pc!==null?(pc+'%'):(r>0?(isPos?'✓':'⚠'):'—');
       rows+=`<tr><td>${p}</td><td class="${cl}">${fmt(r)}</td><td style="color:var(--text3)">${b>0?fmt(b):'—'}</td><td style="color:var(--text3)">${pctTxt}</td></tr><tr><td colspan="4" style="padding:0 5px 6px"><div class="pb"><div class="pbr" style="width:${bw}%;background:${bc};min-width:${r>0?'4px':'0'}"></div></div></td></tr>`;
-      <tr><td colspan="4" style="padding:0 5px 6px"><div class="pb"><div class="pbr" style="width:${bw}%;background:${bc};min-width:${r>0?'4px':'0'}"></div></div></td></tr>`;
     });
     if(!rows&&dTab!=='all')return;
     html+=`<div class="card">
