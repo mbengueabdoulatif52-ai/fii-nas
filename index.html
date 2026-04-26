@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f0f0f" id="theme-color-meta">
 <title>FII'NAS</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
 <script type="module">
@@ -37,7 +37,7 @@ window._fb = { db, auth, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc,
   --green:#30d158;--gd:rgba(48,209,88,.12);--red:#ff453a;--rd:rgba(255,69,58,.1);
   --blue:#0a84ff;--bd:rgba(10,132,255,.12);--purple:#bf5af2;--pd:rgba(191,90,242,.12);
   --amber:#ffd60a;--r:14px;--rs:10px;
-  --font:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'DM Mono',monospace;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',system-ui,sans-serif;--mono:'DM Mono',monospace;
 }
 :root.light{
   --bg:#f5f5f7;--surf:#ffffff;--surf2:#f2f2f7;--border:rgba(0,0,0,.08);
@@ -47,6 +47,7 @@ window._fb = { db, auth, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc,
   --amber:#ff9500;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+body{font-feature-settings:'cv02','cv03','cv04','cv11';-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 html,body{background:var(--bg);min-height:100vh}
 body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;padding-bottom:88px}
 
