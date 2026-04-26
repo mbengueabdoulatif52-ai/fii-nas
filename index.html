@@ -876,36 +876,75 @@ async function saveTx(){
   goP('tx',document.querySelectorAll('.ni')[1]);
 }
 // Corbeille temporaire (session)
-const trashBin=[];
+// Corbeille — persistée 1h dans localStorage
+const TRASH_KEY='fiinas-trash';
+const TRASH_TTL=60*60*1000; // 1 heure en ms
+
+function loadTrash(){
+  try{
+    const raw=localStorage.getItem(TRASH_KEY);
+    if(!raw)return[];
+    const items=JSON.parse(raw);
+    const now=Date.now();
+    return items.filter(t=>(now-new Date(t.deletedAt).getTime())<TRASH_TTL);
+  }catch(e){return[];}
+}
+
+function saveTrash(items){
+  try{localStorage.setItem(TRASH_KEY,JSON.stringify(items));}catch(e){}
+}
+
+const trashBin=loadTrash();
 
 async function delTx(id){
   const tx=txs.find(t=>t.id===id);
   if(!tx)return;
   // Sauvegarder en corbeille avant suppression
   trashBin.unshift({...tx, deletedAt: new Date().toISOString()});
-  if(trashBin.length>10)trashBin.pop(); // garder max 10
+  if(trashBin.length>10)trashBin.pop();
+  saveTrash(trashBin);
   const{db,doc,deleteDoc}=window._fb;
   await deleteDoc(doc(db,`users/${uid}/transactions/${id}`));
   showUndoToast(tx);
 }
 
+let lastDeleted=null;
+
 function showUndoToast(tx){
+  lastDeleted=tx;
   const el=document.getElementById('toast');
-  el.innerHTML=`<span>${tx.poste} supprimée</span>
-    <button onclick="undoDelete('${tx.id}')" style="margin-left:12px;padding:3px 10px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer">Annuler</button>`;
+  el.innerHTML='';
+  const span=document.createElement('span');
+  span.textContent=tx.poste+' supprimée';
+  const btn=document.createElement('button');
+  btn.textContent='Annuler';
+  btn.style.cssText='margin-left:12px;padding:3px 10px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer';
+  btn.addEventListener('click',()=>undoDelete(tx.id));
+  el.appendChild(span);
+  el.appendChild(btn);
   el.classList.add('on');
   clearTimeout(tt);
-  tt=setTimeout(()=>{el.classList.remove('on');el.innerHTML='';},5000);
+  tt=setTimeout(()=>{el.classList.remove('on');el.innerHTML='';lastDeleted=null;},5000);
 }
 
 async function undoDelete(id){
-  const tx=trashBin.find(t=>t.id===id);
+  const tx=trashBin.find(t=>t.id===id)||lastDeleted;
   if(!tx)return;
   const{db,collection,addDoc}=window._fb;
-  const{id:_,deletedAt:__,...data}=tx;
-  await addDoc(collection(db,`users/${uid}/transactions`),data);
-  trashBin.splice(trashBin.findIndex(t=>t.id===id),1);
+  const data={amt:tx.amt,date:tx.date,cat:tx.cat,poste:tx.poste,cmt:tx.cmt||'',ts:tx.ts||new Date().toISOString()};
+  if(tx.recur)data.recur=tx.recur;
+  if(tx.recurDay)data.recurDay=tx.recurDay;
+  addDoc(collection(db,`users/${uid}/transactions`),data);
+  const idx=trashBin.findIndex(t=>t.id===id);
+  if(idx>-1)trashBin.splice(idx,1);
+  saveTrash(trashBin);
+  lastDeleted=null;
+  const el=document.getElementById('toast');
+  el.classList.remove('on');
+  el.innerHTML='';
+  clearTimeout(tt);
   toast('Transaction restaurée ✓');
+  renderTrash();
 }
 
 // TX LIST
@@ -1310,13 +1349,17 @@ function renderTrash(){
     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
       <div>
         <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.date} · ${new Intl.NumberFormat('fr-FR').format(t.amt)} F</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.date} · ${new Intl.NumberFormat('fr-FR').format(t.amt)} F · ${(()=>{const left=Math.max(0,Math.round((TRASH_TTL-(Date.now()-new Date(t.deletedAt).getTime()))/60000));return left>0?'expire dans '+left+' min':'expire bientôt';})()}</div>
       </div>
-      <button onclick="undoDelete('${t.id}')"
+      <button data-id="${t.id}" class="restore-btn"
         style="padding:5px 10px;font-size:11px;border:0.5px solid var(--blue);border-radius:var(--rs);background:transparent;color:var(--blue);cursor:pointer;font-family:var(--font);white-space:nowrap">
         Restaurer
       </button>
     </div>`).join('');
+  // Event delegation pour les boutons Restaurer
+  el.querySelectorAll('.restore-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>undoDelete(btn.dataset.id));
+  });
 }
 
 // FORMAT BUDGET INPUTS
