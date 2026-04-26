@@ -12,7 +12,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, enableIndexedDbPersistence, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -27,6 +27,16 @@ const firebaseConfig = {
 const app  = initializeApp(firebaseConfig);
 const db   = getFirestore(app);
 const auth = getAuth(app);
+
+// Activer le mode hors ligne
+enableIndexedDbPersistence(db).catch(err=>{
+  if(err.code==='failed-precondition'){
+    console.warn('Persistence désactivée : plusieurs onglets ouverts');
+  } else if(err.code==='unimplemented'){
+    console.warn('Persistence non supportée sur ce navigateur');
+  }
+});
+
 window._fb = { db, auth, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc, query, orderBy, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut };
 </script>
 
@@ -240,7 +250,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <div class="av" id="uav">?</div>
       <div>
         <div class="uname" id="uname">—</div>
-        <div class="usync"><span class="sdot"></span>Synchronisé</div>
+        <div class="usync" id="sync-status"><span class="sdot"></span>Synchronisé</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -1144,6 +1154,22 @@ async function doImport(txList){
 }
 
 
+
+
+// MODE HORS LIGNE
+function updateOnlineStatus(){
+  const el=document.getElementById('sync-status');
+  if(!el)return;
+  if(navigator.onLine){
+    el.innerHTML='<span class="sdot"></span>Synchronisé';
+    el.style.color='';
+  } else {
+    el.innerHTML='<span style="width:5px;height:5px;border-radius:50%;background:var(--amber);display:inline-block;margin-right:4px"></span>Hors ligne · sync en attente';
+    el.style.color='var(--amber)';
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
 
 // TRANSACTIONS RÉCURRENTES
 function toggleRecurOptions(){
