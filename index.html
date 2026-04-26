@@ -893,21 +893,13 @@ function populateCopySrc(){
   const sel=document.getElementById('copy-src');
   if(!sel)return;
   const curYm=ymk(bYear,bMonth);
-  // Tous les mois ayant un budget défini
-  const withBudget=Object.keys(budget)
-    .filter(ym=>ym!==curYm&&Object.keys(budget[ym]||{}).length>0)
-    .sort().reverse();
-  // + les 12 mois précédents ET suivants sans budget (navigation libre)
-  const now=new Date();
-  const extra=[];
-  for(let i=-3;i<=12;i++){
-    if(i===0)continue;
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    const ym=ymk(d.getFullYear(),d.getMonth()+1);
-    if(!withBudget.includes(ym)&&ym!==curYm)extra.push(ym);
+  // Les 3 mois précédents du mois sélectionné
+  const prev=[];
+  for(let i=1;i<=3;i++){
+    const d=new Date(parseInt(bYear),bMonth-1-i,1);
+    prev.push(ymk(d.getFullYear(),d.getMonth()+1));
   }
-  const all=[...withBudget,...extra].filter((v,i,a)=>a.indexOf(v)===i).sort().reverse();
-  sel.innerHTML=all.map(ym=>`<option value="${ym}">${yml(ym)}${budget[ym]&&Object.keys(budget[ym]).length?' ✓':''}</option>`).join('');
+  sel.innerHTML=prev.map(ym=>`<option value="${ym}">${yml(ym)}${budget[ym]&&Object.keys(budget[ym]).length?' ✓':''}</option>`).join('');
 }
 
 async function copyBudget(){
