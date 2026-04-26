@@ -453,11 +453,17 @@ async function saveSettings(){
 
 function buildMonthSel(){
   const s=document.getElementById('gm');s.innerHTML='';
-  const now=new Date();const months=[];
+  const now=new Date();const y=now.getFullYear();
+  const oa=document.createElement('option');oa.value='annual-'+y;oa.textContent='Toute l'année '+y;s.appendChild(oa);
+  const sep=document.createElement('option');sep.disabled=true;sep.textContent='──────────';s.appendChild(sep);
+  const months=[];
   for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(ymk(d.getFullYear(),d.getMonth()+1));}
   for(let i=1;i<=3;i++){const d=new Date(now.getFullYear(),now.getMonth()+i,1);months.push(ymk(d.getFullYear(),d.getMonth()+1));}
   months.forEach(ym=>{const o=document.createElement('option');o.value=ym;o.textContent=yml(ym);if(ym===ymk(now.getFullYear(),now.getMonth()+1))o.selected=true;s.appendChild(o);});
 }
+function isAnnual(){return curYM().startsWith('annual-');}
+function annualYear(){return parseInt(curYM().split('-')[1]);}
+function txYear(y){return txs.filter(t=>t.date&&t.date.startsWith(String(y)));}
 
 function onMChange(){renderCurrent();}
 
@@ -491,6 +497,7 @@ function setDTab(el,k){
 }
 
 function renderDash(){
+  if(isAnnual()){renderDashAnnual();return;}
   const ym=curYM();const t=txYM(ym);
   const rev=sumC(t,'Revenu');const fix=sumC(t,'Dépenses fixes');
   const vr=sumC(t,'Dépenses variables');const ep=sumC(t,'Epargne');
@@ -508,7 +515,70 @@ function renderDash(){
     mc('Variables',vr,budTot(ym,'Dépenses variables'))+
     mc('Épargne',ep,budTot(ym,'Epargne'))+
     mc('Transactions',t.length,0,true);
+  document.getElementById('dtabs').style.display='flex';
   renderDC();
+}
+
+function renderDashAnnual(){
+  const y=annualYear();
+  const t=txYear(y);
+  const rev=sumC(t,'Revenu');const fix=sumC(t,'Dépenses fixes');
+  const vr=sumC(t,'Dépenses variables');const ep=sumC(t,'Epargne');
+  const dep=fix+vr+ep;const sol=rev-dep;const taux=rev>0?Math.round(sol/rev*100):0;
+  // Best/worst month
+  const soldes=Array.from({length:12},(_,i)=>{
+    const ym=ymk(y,i+1);const mt=txYM(ym);
+    const r=sumC(mt,'Revenu');const d=sumC(mt,'Dépenses fixes')+sumC(mt,'Dépenses variables')+sumC(mt,'Epargne');
+    return{m:MFR[i],sol:r-d};
+  }).filter(x=>x.sol!==0);
+  const best=soldes.length?soldes.reduce((a,b)=>b.sol>a.sol?b:a):null;
+  const worst=soldes.length?soldes.reduce((a,b)=>b.sol<a.sol?b:a):null;
+  document.getElementById('hero').innerHTML=`
+    <div class="hlbl">Récap annuel · ${y}</div>
+    <div class="hamt ${sol>=0?'pos':'neg'}">${fmt(sol)} <span style="font-size:15px;opacity:.55">FCFA</span></div>
+    <div class="hmeta">
+      <div class="hmi">Revenus totaux<span style="color:var(--green)">${fmt(rev)} F</span></div>
+      <div class="hmi">Dépenses totales<span style="color:var(--red)">${fmt(dep)} F</span></div>
+      <div class="hmi">Taux d'épargne<span style="${taux>=15?'color:var(--green)':taux>=5?'color:var(--amber)':'color:var(--red)'}">${taux}%</span></div>
+    </div>`;
+  document.getElementById('dm').innerHTML=
+    mc('Fixes',fix,0)+mc('Variables',vr,0)+mc('Épargne',ep,0)+mc('Transactions',t.length,0,true);
+  document.getElementById('dtabs').style.display='none';
+  // Annual breakdown by month
+  const monthRows=Array.from({length:12},(_,i)=>{
+    const ym=ymk(y,i+1);const mt=txYM(ym);
+    if(!mt.length)return'';
+    const r=sumC(mt,'Revenu');const d=sumC(mt,'Dépenses fixes')+sumC(mt,'Dépenses variables')+sumC(mt,'Epargne');
+    const s=r-d;const cl=s>=0?'ok':'ov';
+    return`<tr><td>${MFR[i]}</td><td style="color:var(--green)">${fmt(r)}</td><td style="color:var(--red)">${fmt(d)}</td><td class="${cl}">${s>=0?'+':'−'}${fmt(s)}</td></tr>`;
+  }).join('');
+  // Top postes
+  const posteMap={};t.filter(x=>x.cat!=='Revenu').forEach(x=>{posteMap[x.poste]=(posteMap[x.poste]||0)+x.amt;});
+  const topPostes=Object.entries(posteMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const topRows=topPostes.map(([p,v])=>`<tr><td>${p}</td><td colspan="2" style="color:var(--red)">${fmt(v)} F</td><td style="color:var(--text3)">${dep>0?Math.round(v/dep*100)+'%':'—'}</td></tr>`).join('');
+  document.getElementById('dc').innerHTML=`
+    <div class="card">
+      <div class="ct">Bilan mensuel ${y}</div>
+      <table class="rtbl"><thead><tr><th>Mois</th><th>Revenus</th><th>Dépenses</th><th>Solde</th></tr></thead>
+      <tbody>${monthRows||'<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text3)">Aucune donnée</td></tr>'}</tbody></table>
+      ${best&&worst?`<div style="display:flex;gap:12px;margin-top:12px">
+        <div style="flex:1;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.05em">Meilleur mois</div>
+          <div style="font-size:14px;font-weight:600;margin-top:4px">${best.m}</div>
+          <div style="font-size:13px;color:var(--green);font-family:var(--mono)">+${fmt(best.sol)} F</div>
+        </div>
+        <div style="flex:1;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.05em">Mois difficile</div>
+          <div style="font-size:14px;font-weight:600;margin-top:4px">${worst.m}</div>
+          <div style="font-size:13px;color:var(--red);font-family:var(--mono)">${worst.sol>=0?'+':'−'}${fmt(worst.sol)} F</div>
+        </div>
+      </div>`:''}
+    </div>
+    <div class="card">
+      <div class="ct">Top dépenses ${y}</div>
+      <table class="rtbl"><thead><tr><th>Poste</th><th colspan="2">Total</th><th>% dép.</th></tr></thead>
+      <tbody>${topRows||'<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text3)">Aucune donnée</td></tr>'}</tbody></table>
+    </div>`;
 }
 
 function mc(lbl,val,bud,cnt=false){
