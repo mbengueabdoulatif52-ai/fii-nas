@@ -933,7 +933,7 @@ function calcBudSolde(ym){
   const live={};
   allPs.forEach(p=>{
     const el=document.getElementById('bi_'+btoa(encodeURIComponent(p)));
-    live[p]=el?parseFloat(el.value)||0:(bud[p]||0);
+    live[p]=el?parseFloat((el.dataset.raw||'').replace(/\s/g,''))||0:(bud[p]||0);
   });
   const revPs=[...(CATS['Revenu']||[]),...(custom['Revenu']||[])];
   const depPs=[...(CATS['Dépenses fixes']||[]),...(custom['Dépenses fixes']||[]),
@@ -971,10 +971,21 @@ function renderBForm(){
     const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
     const total=ps.reduce((s,p)=>s+(bud[p]||0),0);
     html+=`<div class="card"><div class="ct">${CICO[cat]} ${cat}${total>0?` <span style="float:right;color:${cat==='Revenu'?'#34d399':'#fb7185'};font-family:var(--mono)">${fmt(total)} F</span>`:''}</div>
-      ${ps.map(p=>`<div class="brow">
-        <div class="brow-n">${p}</div>
-        <input class="binp" type="number" id="bi_${btoa(encodeURIComponent(p))}" value="${bud[p]||''}" placeholder="0" inputmode="numeric" oninput="renderBudSolde()">
-      </div>`).join('')}
+      ${ps.map(p=>{
+        const id='bi_'+btoa(encodeURIComponent(p));
+        const val=bud[p]||'';
+        return `<div class="brow" style="align-items:center">
+          <div class="brow-n">${p}</div>
+          <div style="position:relative;width:120px">
+            <input class="binp" type="text" inputmode="numeric" id="${id}"
+              value="${val?new Intl.NumberFormat('fr-FR').format(val):''}"
+              placeholder="0"
+              style="width:120px;text-align:right;padding-right:8px"
+              oninput="fmtBudInput(this);renderBudSolde()"
+              data-raw="${val||0}">
+          </div>
+        </div>`;
+      }).join('')}
     </div>`;
   });
   document.getElementById('bform').innerHTML=html;
@@ -983,7 +994,13 @@ function renderBForm(){
 async function saveBudget(){
   const ym=ymk(bYear,bMonth);const bud={};
   const all=[...Object.values(CATS).flat(),...Object.values(custom).flat()];
-  all.forEach(p=>{const el=document.getElementById('bi_'+btoa(encodeURIComponent(p)));if(el&&el.value)bud[p]=parseFloat(el.value)||0;});
+  all.forEach(p=>{
+    const el=document.getElementById('bi_'+btoa(encodeURIComponent(p)));
+    if(el){
+      const raw=parseFloat((el.dataset.raw||'').replace(/\s/g,''))||0;
+      if(raw>0)bud[p]=raw;
+    }
+  });
   budget[ym]=bud;await saveSettings();
   renderBudSolde();
   toast('Budget enregistré pour '+yml(ym)+' ✓');
@@ -1159,6 +1176,19 @@ async function checkRecurring(ym){
       }
     }
   }
+}
+
+
+// FORMAT BUDGET INPUTS
+function fmtBudInput(el){
+  // Extract raw digits only
+  const raw=el.value.replace(/\s/g,'').replace(/[^0-9]/g,'');
+  const num=parseInt(raw)||0;
+  el.dataset.raw=num;
+  // Format with spaces as thousand separator
+  el.value=num>0?new Intl.NumberFormat('fr-FR').format(num):'';
+  // Keep cursor at end
+  setTimeout(()=>{el.selectionStart=el.selectionEnd=el.value.length;},0);
 }
 
 // EDIT TRANSACTION
