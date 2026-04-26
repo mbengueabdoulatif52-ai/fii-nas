@@ -786,7 +786,7 @@ function renderTX(){
     const isR=x.cat==='Revenu';const isE=x.cat==='Epargne';
     const ac=isR?'g':isE?'p':'r';
     const hi=(s,q)=>{if(!q||!s)return s||"";const i=s.toLowerCase().indexOf(q.toLowerCase());if(i<0)return s;return s.slice(0,i)+'<mark style="background:rgba(99,102,241,.3);color:#a5b4fc;border-radius:3px;padding:0 2px">'+s.slice(i,i+q.length)+'</mark>'+s.slice(i+q.length);};
-    return `<div class="txi">   return `<div class="txi">
+    return `<div class="txi">
       <div class="txic ${cl}">${CICO[x.cat]||'💰'}</div>
       <div class="txin">
         <div class="txp">${hi(x.poste||'',q)}</div>
