@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f0f0f" id="theme-color-meta">
 <title>FII'NAS</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
 <script type="module">
@@ -37,7 +37,7 @@ window._fb = { db, auth, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc,
   --green:#30d158;--gd:rgba(48,209,88,.12);--red:#ff453a;--rd:rgba(255,69,58,.1);
   --blue:#0a84ff;--bd:rgba(10,132,255,.12);--purple:#bf5af2;--pd:rgba(191,90,242,.12);
   --amber:#ffd60a;--r:14px;--rs:10px;
-  --font:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',system-ui,sans-serif;--mono:'DM Mono',monospace;
+  --font:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif;--mono:'Poppins',-apple-system,sans-serif;
 }
 :root.light{
   --bg:#f5f5f7;--surf:#ffffff;--surf2:#f2f2f7;--border:rgba(0,0,0,.08);
@@ -47,7 +47,7 @@ window._fb = { db, auth, doc, setDoc, onSnapshot, collection, addDoc, deleteDoc,
   --amber:#ff9500;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-feature-settings:'cv02','cv03','cv04','cv11';-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{font-feature-settings:'tnum';-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 html,body{background:var(--bg);min-height:100vh}
 body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;padding-bottom:88px}
 
@@ -77,7 +77,7 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:none;background:transparent;cursor:pointer;border-radius:var(--rs);color:var(--text3);font-family:var(--font);transition:.15s}
 .ni.active{color:var(--blue)}
 .ni svg{width:20px;height:20px}
-.ni span{font-size:10px;font-weight:500}
+.ni span{font-size:10px;font-weight:500;font-family:var(--font)}
 .ni-add-ring{width:48px;height:48px;background:var(--blue);border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:1px}
 
 /* PAGES */
@@ -86,12 +86,12 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 
 /* CARDS */
 .card{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:10px}
-.ct{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.ct{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
 
 /* HERO */
 .hero{background:var(--surf);border:0.5px solid var(--border);border-left:3px solid var(--green);border-radius:0 var(--r) var(--r) 0;padding:20px 18px;margin-bottom:10px}
-.hlbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-weight:500}
-.hamt{font-size:34px;font-weight:500;font-family:var(--mono);letter-spacing:-.02em}
+.hlbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-weight:600}
+.hamt{font-size:34px;font-weight:600;font-family:var(--font);letter-spacing:-.01em}
 .hamt.pos{color:var(--green)}.hamt.neg{color:var(--red)}
 .hmeta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:14px;border-top:0.5px solid var(--border);padding-top:12px}
 .hmi{font-size:11px;color:var(--text3)}
@@ -102,7 +102,7 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .mc{background:var(--surf2);border-radius:var(--r);padding:14px}
 .mlbl{font-size:11px;color:var(--text3);margin-bottom:6px}
-.mval{font-size:20px;font-weight:500;font-family:var(--mono);letter-spacing:-.02em;color:var(--text)}
+.mval{font-size:20px;font-weight:600;font-family:var(--font);letter-spacing:-.01em;color:var(--text)}
 .mval.g{color:var(--green)}.mval.r{color:var(--red)}.mval.a{color:var(--amber)}
 .msub{font-size:11px;color:var(--text3);margin-top:3px}
 .pb{height:2px;background:var(--border);border-radius:1px;overflow:hidden;margin-top:8px}
@@ -118,7 +118,7 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 .rtbl{width:100%;border-collapse:collapse}
 .rtbl th{font-size:10px;color:var(--text3);font-weight:500;padding:4px 5px;border-bottom:1px solid var(--border);text-align:right}
 .rtbl th:first-child{text-align:left}
-.rtbl td{padding:8px 5px;border-bottom:0.5px solid var(--border);font-size:12px;text-align:right;font-family:var(--mono);color:var(--text2)}
+.rtbl td{padding:8px 5px;border-bottom:0.5px solid var(--border);font-size:12px;text-align:right;font-family:var(--font);font-weight:500;color:var(--text2)}
 .rtbl td:first-child{text-align:left;color:var(--text);font-family:var(--font);font-size:12px}
 .rtbl .tot td{border-top:1px solid var(--border);border-bottom:none;color:var(--text);font-weight:600;padding-top:9px}
 .ov{color:var(--red)}.ok{color:var(--green)}.wa{color:var(--amber)}
@@ -133,7 +133,7 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 .amtwrap{position:relative;background:var(--surf2);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;transition:.15s}
 .amtwrap:focus-within{border-color:var(--blue)}
 .amtcur{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text3);font-family:var(--mono);pointer-events:none}
-.amtinp{width:100%;padding:12px 13px 12px 62px;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:20px;font-weight:500;outline:none}
+.amtinp{width:100%;padding:12px 13px 12px 62px;background:transparent;border:none;color:var(--text);font-family:var(--font);font-size:20px;font-weight:600;outline:none}
 .amtinp::placeholder{color:var(--text3);font-size:13px;font-family:var(--font)}
 .cat-chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{padding:8px 13px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text2);font-family:var(--font);transition:.15s}
@@ -158,7 +158,7 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 .txp{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .txm{font-size:11px;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .txr{text-align:right;flex-shrink:0}
-.txa{font-size:14px;font-weight:600;font-family:var(--mono)}
+.txa{font-size:14px;font-weight:600;font-family:var(--font)}
 .txa.g{color:var(--green)}.txa.r{color:var(--red)}.txa.p{color:var(--purple)}
 .txd{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:3px;display:block;margin-left:auto;margin-top:2px}
 .txd:hover{color:var(--red)}
@@ -177,7 +177,7 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 .brow{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
 .brow:last-child{border-bottom:none}
 .brow-n{font-size:12px;color:var(--text2)}
-.binp{width:105px;padding:7px 10px;text-align:right;background:var(--surf2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--mono);font-size:13px;outline:none}
+.binp{width:105px;padding:7px 10px;text-align:right;background:var(--surf2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--font);font-size:13px;font-weight:500;outline:none}
 .binp:focus{border-color:var(--green)}
 
 /* CHART */
@@ -900,11 +900,11 @@ function renderBudSolde(){
   if(!bRev&&!bDep){el.innerHTML='';return;}
   el.innerHTML=`<div style="background:var(--surf);border:0.5px solid var(--border);border-left:2px solid ${pos?'var(--green)':'var(--red)'};border-radius:0 var(--r) var(--r) 0;padding:16px 18px;margin-bottom:10px">
     <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Solde budgétisé · ${yml(ym)}</div>
-    <div style="font-size:28px;font-weight:500;font-family:var(--mono);color:${pos?'var(--green)':'var(--red)'};margin-bottom:14px">${pos?'+':'−'}${fmt(solde)} <span style="font-size:13px;font-weight:400;color:var(--text3)">FCFA</span></div>
+    <div style="font-size:28px;font-weight:500;font-variant-numeric:tabular-nums;font-family:var(--font);color:${pos?'var(--green)':'var(--red)'};margin-bottom:14px">${pos?'+':'−'}${fmt(solde)} <span style="font-size:13px;font-weight:400;color:var(--text3)">FCFA</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:0.5px solid var(--border);padding-top:12px;gap:0">
-      <div><div style="font-size:10px;color:var(--text3);margin-bottom:3px">Revenus</div><div style="font-size:12px;font-family:var(--mono);color:var(--green)">${fmt(bRev)} F</div></div>
-      <div style="border-left:0.5px solid var(--border);padding-left:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px">Dépenses</div><div style="font-size:12px;font-family:var(--mono);color:var(--red)">${fmt(bDep)} F</div></div>
-      <div style="border-left:0.5px solid var(--border);padding-left:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px">Réel</div><div style="font-size:12px;font-family:var(--mono);color:${rSolde>=0?'var(--green)':'var(--red)'}">${rSolde>=0?'+':'−'}${fmt(rSolde)} F</div></div>
+      <div><div style="font-size:10px;color:var(--text3);margin-bottom:3px">Revenus</div><div style="font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--green)">${fmt(bRev)} F</div></div>
+      <div style="border-left:0.5px solid var(--border);padding-left:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px">Dépenses</div><div style="font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--red)">${fmt(bDep)} F</div></div>
+      <div style="border-left:0.5px solid var(--border);padding-left:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:3px">Réel</div><div style="font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;color:${rSolde>=0?'var(--green)':'var(--red)'}">${rSolde>=0?'+':'−'}${fmt(rSolde)} F</div></div>
     </div>
   </div>`;
 }
