@@ -411,6 +411,13 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <div id="recur-list"></div>
     </div>
     <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="ct" style="margin-bottom:0">Corbeille récente</div>
+        <button onclick="renderTrash()" style="font-size:11px;color:var(--text3);background:transparent;border:none;cursor:pointer;font-family:var(--font)">Actualiser</button>
+      </div>
+      <div id="trash-list"></div>
+    </div>
+    <div class="card">
       <div class="ct">Postes personnalisés</div>
       <div id="cpui"></div>
     </div>
@@ -633,7 +640,7 @@ function goP(p,btn){
   if(p==='dash')renderDash();
   else if(p==='tx')renderTX();
   else if(p==='bud')renderBudPage();
-  else if(p==='pro'){renderCharts();renderCPUI();renderRecurList();}
+  else if(p==='pro'){renderCharts();renderCPUI();renderRecurList();renderTrash();}
   else if(p==='add'){syncPostes();document.getElementById('fmsg').textContent='';}
   else if(p==='imp'){document.getElementById('imp-log').style.display='none';document.getElementById('imp-pb').style.width='0%';document.getElementById('imp-pt').textContent='En attente';}
 }
@@ -868,10 +875,37 @@ async function saveTx(){
     :'Enregistré hors ligne · sync au retour du réseau');
   goP('tx',document.querySelectorAll('.ni')[1]);
 }
+// Corbeille temporaire (session)
+const trashBin=[];
+
 async function delTx(id){
+  const tx=txs.find(t=>t.id===id);
+  if(!tx)return;
+  // Sauvegarder en corbeille avant suppression
+  trashBin.unshift({...tx, deletedAt: new Date().toISOString()});
+  if(trashBin.length>10)trashBin.pop(); // garder max 10
   const{db,doc,deleteDoc}=window._fb;
   await deleteDoc(doc(db,`users/${uid}/transactions/${id}`));
-  toast('Supprimée');
+  showUndoToast(tx);
+}
+
+function showUndoToast(tx){
+  const el=document.getElementById('toast');
+  el.innerHTML=`<span>${tx.poste} supprimée</span>
+    <button onclick="undoDelete('${tx.id}')" style="margin-left:12px;padding:3px 10px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer">Annuler</button>`;
+  el.classList.add('on');
+  clearTimeout(tt);
+  tt=setTimeout(()=>{el.classList.remove('on');el.innerHTML='';},5000);
+}
+
+async function undoDelete(id){
+  const tx=trashBin.find(t=>t.id===id);
+  if(!tx)return;
+  const{db,collection,addDoc}=window._fb;
+  const{id:_,deletedAt:__,...data}=tx;
+  await addDoc(collection(db,`users/${uid}/transactions`),data);
+  trashBin.splice(trashBin.findIndex(t=>t.id===id),1);
+  toast('Transaction restaurée ✓');
 }
 
 // TX LIST
@@ -1262,6 +1296,27 @@ async function deleteRecur(id){
   const{db,doc,deleteDoc}=window._fb;
   await deleteDoc(doc(db,'users/'+uid+'/transactions/'+id));
   toast('Transaction récurrente supprimée');
+}
+
+
+function renderTrash(){
+  const el=document.getElementById('trash-list');
+  if(!el)return;
+  if(!trashBin.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Aucune transaction supprimée cette session</div>';
+    return;
+  }
+  el.innerHTML=trashBin.map(t=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.date} · ${new Intl.NumberFormat('fr-FR').format(t.amt)} F</div>
+      </div>
+      <button onclick="undoDelete('${t.id}')"
+        style="padding:5px 10px;font-size:11px;border:0.5px solid var(--blue);border-radius:var(--rs);background:transparent;color:var(--blue);cursor:pointer;font-family:var(--font);white-space:nowrap">
+        Restaurer
+      </button>
+    </div>`).join('');
 }
 
 // FORMAT BUDGET INPUTS
