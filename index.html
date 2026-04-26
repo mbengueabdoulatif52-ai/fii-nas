@@ -309,6 +309,10 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 
   <!-- PAGE HISTORIQUE -->
   <div id="page-tx" class="page">
+    <div style="position:relative;margin-bottom:10px">
+      <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input id="tx-search" class="finp" type="text" placeholder="Rechercher poste, commentaire, montant..." style="padding-left:36px;font-size:13px" oninput="renderTX()">
+    </div>
     <div class="tabs" id="txf">
       <button class="tab active" onclick="setTF(this,'all')">Toutes</button>
       <button class="tab" onclick="setTF(this,'Revenu')">Revenus</button>
@@ -316,6 +320,7 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
       <button class="tab" onclick="setTF(this,'Dépenses variables')">Variables</button>
       <button class="tab" onclick="setTF(this,'Epargne')">Épargne</button>
     </div>
+    <div id="tx-count" style="font-size:11px;color:var(--text3);margin-bottom:8px;text-align:right"></div>
     <div class="card" id="txl" style="padding:4px 15px"></div>
   </div>
 
@@ -323,6 +328,7 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
   <div id="page-bud" class="page">
     <div class="ytabs" id="ytabs"></div>
     <div class="mtabs" id="mtabs"></div>
+    <div id="bud-solde"></div>
     <div id="bform"></div>
     <button class="btn-p" onclick="saveBudget()" style="margin-top:4px;margin-bottom:2px">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
@@ -435,6 +441,41 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;padding:20px;align-items:flex-end">
+  <div style="background:var(--surf);border-radius:var(--r) var(--r) 0 0;padding:20px;width:100%;max-width:480px;margin:0 auto;border-top:3px solid #6366f1">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-size:15px;font-weight:600">Modifier la transaction</span>
+      <button onclick="closeEditTx()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px">✕</button>
+    </div>
+    <div class="fgrp"><div class="flbl">Montant</div>
+      <div class="amtwrap"><div class="amtcur">FCFA</div>
+        <input class="amtinp" type="number" id="e-amt" inputmode="numeric">
+      </div>
+    </div>
+    <div class="frow" style="margin-bottom:11px">
+      <div class="fgrp"><div class="flbl">Catégorie</div>
+        <select class="fsel" id="e-cat" onchange="syncEditPostes()"></select>
+      </div>
+      <div class="fgrp"><div class="flbl">Poste</div>
+        <select class="fsel" id="e-poste"></select>
+      </div>
+    </div>
+    <div class="frow" style="margin-bottom:11px">
+      <div class="fgrp"><div class="flbl">Date</div>
+        <input class="finp" type="date" id="e-date">
+      </div>
+      <div class="fgrp"><div class="flbl">Commentaire</div>
+        <input class="finp" type="text" id="e-cmt" placeholder="Facultatif">
+      </div>
+    </div>
+    <button class="btn-p" onclick="saveEditTx()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+      Enregistrer les modifications
+    </button>
+  </div>
+</div>
 
 <script>
 const CATS={
@@ -731,20 +772,29 @@ function setTF(el,f){
 function renderTX(){
   const ym=curYM();let t=txYM(ym);
   if(txFilt!=='all')t=t.filter(x=>x.cat===txFilt);
+  const q=(document.getElementById('tx-search')?.value||'').toLowerCase().trim();
+  if(q)t=t.filter(x=>(x.poste||'').toLowerCase().includes(q)||(x.cmt||'').toLowerCase().includes(q)||String(x.amt).includes(q));
+  const countEl=document.getElementById('tx-count');
+  if(countEl)countEl.textContent=t.length?`${t.length} transaction${t.length>1?'s':''}`:'';
   const el=document.getElementById('txl');
-  if(!t.length){el.innerHTML=`<div class="empty">Aucune transaction</div>`;return;}
+  if(!t.length){
+    el.innerHTML=`<div class="empty">${q?'Aucun résultat pour "'+q+'"':'Aucune transaction'}</div>`;
+    return;
+  }
   el.innerHTML=t.map(x=>{
     const cl=CCLS[x.cat]||'v';
     const isR=x.cat==='Revenu';const isE=x.cat==='Epargne';
     const ac=isR?'g':isE?'p':'r';
+    const hi=(s,q)=>q?s.replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\]/g,'\$&')+')','gi'),'<mark style="background:rgba(99,102,241,.3);color:#a5b4fc;border-radius:3px;padding:0 2px">$1</mark>'):s;
     return `<div class="txi">
       <div class="txic ${cl}">${CICO[x.cat]||'💰'}</div>
       <div class="txin">
-        <div class="txp">${x.poste}</div>
-        <div class="txm">${x.date}${x.cmt?' · '+x.cmt:''} <span class="bdg ${cl}">${x.cat}</span></div>
+        <div class="txp">${hi(x.poste||'',q)}</div>
+        <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span></div>
       </div>
       <div class="txr">
         <div class="txa ${ac}">${isR?'+':'−'}${fmt(x.amt)} F</div>
+        <button class="txd" onclick="openEditTx('${x.id}')">✏️</button>
         <button class="txd" onclick="delTx('${x.id}')">✕</button>
       </div>
     </div>`;
@@ -760,25 +810,68 @@ function renderBudPage(){
 }
 function setBY(el,y){document.querySelectorAll('.ytab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bYear=y;renderBForm();}
 function setBM(el,m){document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bMonth=m;renderBForm();}
+function calcBudSolde(ym){
+  const bud=budget[ym]||{};
+  const revPs=[...(CATS['Revenu']||[]),...(custom['Revenu']||[])];
+  const depPs=[...(CATS['Dépenses fixes']||[]),...(custom['Dépenses fixes']||[]),
+               ...(CATS['Dépenses variables']||[]),...(custom['Dépenses variables']||[]),
+               ...(CATS['Epargne']||[]),...(custom['Epargne']||[])];
+  const bRev=revPs.reduce((s,p)=>s+(bud[p]||0),0);
+  const bDep=depPs.reduce((s,p)=>s+(bud[p]||0),0);
+  return{bRev,bDep,solde:bRev-bDep};
+}
+
+function renderBudSolde(){
+  const ym=ymk(bYear,bMonth);
+  const{bRev,bDep,solde}=calcBudSolde(ym);
+  const tRev=sumC(txYM(ym),'Revenu');
+  const tDep=sumC(txYM(ym),'Dépenses fixes')+sumC(txYM(ym),'Dépenses variables')+sumC(txYM(ym),'Epargne');
+  const rSolde=tRev-tDep;
+  const pos=solde>=0;
+  const el=document.getElementById('bud-solde');
+  if(!bRev&&!bDep){el.innerHTML='';return;}
+  el.innerHTML=`<div style="background:${pos?'linear-gradient(135deg,#0d2818,#0f2d1a)':'linear-gradient(135deg,#2d0d0d,#1a0f0f)'};border:1px solid ${pos?'rgba(16,185,129,.25)':'rgba(244,63,94,.25)'};border-radius:var(--r);padding:16px;margin-bottom:12px">
+    <div style="font-size:10px;color:${pos?'rgba(52,211,153,.7)':'rgba(251,113,133,.7)'};text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:10px">Solde budgétisé · ${yml(ym)}</div>
+    <div style="font-size:30px;font-weight:700;font-family:var(--mono);color:${pos?'#a7f3d0':'#fda4af'};margin-bottom:12px">${pos?'+':'−'}${fmt(solde)} <span style="font-size:14px;opacity:.6">FCFA</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:rgba(52,211,153,.7);margin-bottom:4px">Revenus budg.</div>
+        <div style="font-size:13px;font-weight:600;font-family:var(--mono);color:#34d399">${fmt(bRev)} F</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:rgba(251,113,133,.7);margin-bottom:4px">Dépenses budg.</div>
+        <div style="font-size:13px;font-weight:600;font-family:var(--mono);color:#fb7185">${fmt(bDep)} F</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:rgba(165,180,252,.7);margin-bottom:4px">Réel actuel</div>
+        <div style="font-size:13px;font-weight:600;font-family:var(--mono);color:${rSolde>=0?'#34d399':'#fb7185'}">${rSolde>=0?'+':'−'}${fmt(rSolde)} F</div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderBForm(){
   const ym=ymk(bYear,bMonth);const bud=budget[ym]||{};
   let html='';
   ['Revenu','Dépenses fixes','Dépenses variables','Epargne'].forEach(cat=>{
     const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
-    html+=`<div class="card"><div class="ct">${CICO[cat]} ${cat}</div>
+    const total=ps.reduce((s,p)=>s+(bud[p]||0),0);
+    html+=`<div class="card"><div class="ct">${CICO[cat]} ${cat}${total>0?` <span style="float:right;color:${cat==='Revenu'?'#34d399':'#fb7185'};font-family:var(--mono)">${fmt(total)} F</span>`:''}</div>
       ${ps.map(p=>`<div class="brow">
         <div class="brow-n">${p}</div>
-        <input class="binp" type="number" id="bi_${btoa(encodeURIComponent(p))}" value="${bud[p]||''}" placeholder="0" inputmode="numeric">
+        <input class="binp" type="number" id="bi_${btoa(encodeURIComponent(p))}" value="${bud[p]||''}" placeholder="0" inputmode="numeric" oninput="renderBudSolde()">
       </div>`).join('')}
     </div>`;
   });
   document.getElementById('bform').innerHTML=html;
+  renderBudSolde();
 }
 async function saveBudget(){
   const ym=ymk(bYear,bMonth);const bud={};
   const all=[...Object.values(CATS).flat(),...Object.values(custom).flat()];
   all.forEach(p=>{const el=document.getElementById('bi_'+btoa(encodeURIComponent(p)));if(el&&el.value)bud[p]=parseFloat(el.value)||0;});
   budget[ym]=bud;await saveSettings();
+  renderBudSolde();
   toast('Budget enregistré pour '+yml(ym)+' ✓');
 }
 
@@ -818,17 +911,19 @@ function renderCharts(){
 function renderCPUI(){
   const el=document.getElementById('cpui');if(!el)return;
   let html='';
-  ['Dépenses fixes','Dépenses variables'].forEach(cat=>{
+  ['Revenu','Dépenses fixes','Dépenses variables','Epargne'].forEach(cat=>{
     const cust=custom[cat]||[];
-    html+=`<div style="margin-bottom:14px">
-      <div style="font-size:10px;font-weight:500;color:var(--text3);margin-bottom:8px">${cat}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
-        ${(CATS[cat]||[]).map(p=>`<span class="bdg ${CCLS[cat]}">${p}</span>`).join('')}
-        ${cust.map(p=>`<span class="bdg" style="background:rgba(255,255,255,.07);color:var(--text2)">${p} <button onclick="removeCP('${cat}','${p}')" style="border:none;background:none;color:var(--red);cursor:pointer;font-size:11px;padding:0 2px">✕</button></span>`).join('')}
+    const cl=CCLS[cat]||'v';
+    html+=`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px">${CICO[cat]} ${cat}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
+        ${(CATS[cat]||[]).map(p=>`<span class="bdg ${cl}" style="opacity:.6">${p}</span>`).join('')}
+        ${cust.map(p=>`<span class="bdg" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;padding:3px 8px">${p} <button onclick="removeCP('${cat}','${p}')" style="border:none;background:none;color:#fb7185;cursor:pointer;font-size:11px;padding:0 2px;margin-left:2px">✕</button></span>`).join('')}
+        ${cust.length===0?'<span style="font-size:11px;color:var(--text3);font-style:italic">Aucun poste personnalisé</span>':''}
       </div>
       <div style="display:flex;gap:8px">
         <input id="ncp_${cat.replace(/ /g,'_')}" type="text" class="finp" placeholder="Nouveau poste..." style="flex:1;padding:8px 12px;font-size:12px">
-        <button class="btn-o" onclick="addCP('${cat}')">Ajouter</button>
+        <button class="btn-o" onclick="addCP('${cat}')">+ Ajouter</button>
       </div>
     </div>`;
   });
@@ -904,6 +999,45 @@ async function doImport(txList){
   document.getElementById('imp-txt').value='';
 }
 
+
+// EDIT TRANSACTION
+let editingId=null;
+function openEditTx(id){
+  const tx=txs.find(t=>t.id===id);if(!tx)return;
+  editingId=id;
+  document.getElementById('e-amt').value=tx.amt;
+  document.getElementById('e-date').value=tx.date;
+  document.getElementById('e-cmt').value=tx.cmt||'';
+  const catSel=document.getElementById('e-cat');
+  catSel.innerHTML=Object.keys(CATS).map(c=>`<option ${c===tx.cat?'selected':''}>${c}</option>`).join('');
+  syncEditPostes(tx.poste);
+  const modal=document.getElementById('edit-modal');
+  modal.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function syncEditPostes(selected){
+  const cat=document.getElementById('e-cat').value;
+  const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
+  document.getElementById('e-poste').innerHTML=ps.map(p=>`<option ${p===selected?'selected':''}>${p}</option>`).join('');
+}
+function closeEditTx(){
+  document.getElementById('edit-modal').style.display='none';
+  document.body.style.overflow='';
+  editingId=null;
+}
+async function saveEditTx(){
+  if(!editingId)return;
+  const amt=parseFloat(document.getElementById('e-amt').value);
+  const date=document.getElementById('e-date').value;
+  const cat=document.getElementById('e-cat').value;
+  const poste=document.getElementById('e-poste').value;
+  const cmt=document.getElementById('e-cmt').value.trim();
+  if(!amt||!date){toast('Montant et date obligatoires');return;}
+  const{db,doc,setDoc}=window._fb;
+  await setDoc(doc(db,`users/${uid}/transactions/${editingId}`),{amt,date,cat,poste,cmt,ts:new Date().toISOString()});
+  closeEditTx();
+  toast('Transaction modifiée ✓');
+}
 
 // THEME
 function toggleTheme(){
