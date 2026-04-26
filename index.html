@@ -342,6 +342,32 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
     </div>
   </div>
 
+
+  <!-- PAGE IMPORT -->
+  <div id="page-imp" class="page">
+    <div class="card">
+      <div class="ct">Import transactions Excel</div>
+      <div id="imp-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px"></div>
+      <div style="background:var(--surf2);border-radius:var(--rs);overflow:hidden;height:6px;margin-bottom:6px"><div id="imp-pb" style="height:6px;background:var(--green);border-radius:var(--rs);width:0%;transition:width .3s"></div></div>
+      <div id="imp-pt" style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:12px">En attente</div>
+      <div style="margin-bottom:12px">
+        <div class="flbl">Coller les données Excel (colonnes: date, catégorie, poste, montant, commentaire)</div>
+        <textarea id="imp-txt" class="finp" rows="6" placeholder="Colle ici tes lignes Excel copiées..." style="resize:vertical;font-size:12px;font-family:var(--mono)"></textarea>
+      </div>
+      <button class="btn-p" id="imp-btn" onclick="parseAndImport()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importer
+      </button>
+      <div id="imp-log" style="margin-top:10px;background:var(--surf2);border-radius:var(--rs);padding:10px;max-height:180px;overflow-y:auto;font-size:10px;font-family:var(--mono);color:var(--text3);display:none"></div>
+    </div>
+    <div class="card" style="font-size:12px;color:var(--text2);line-height:1.7">
+      <div class="ct">Comment utiliser</div>
+      <p>1. Ouvre ton fichier Excel</p>
+      <p>2. Sélectionne les lignes de transactions (colonnes date, catégorie, poste, montant, commentaire)</p>
+      <p>3. Copie (Ctrl+C) et colle ici (Ctrl+V)</p>
+      <p>4. Clique Importer</p>
+    </div>
+  </div>
   <!-- NAVBAR -->
   <nav id="nav">
     <button class="ni active" onclick="goP('dash',this)">
@@ -454,7 +480,7 @@ async function saveSettings(){
 function buildMonthSel(){
   const s=document.getElementById('gm');s.innerHTML='';
   const now=new Date();const y=now.getFullYear();
-  const oa=document.createElement('option');oa.value='annual-'+y;oa.textContent='Toute l'année '+y;s.appendChild(oa);
+  const oa=document.createElement('option');oa.value='annual-'+y;oa.textContent='Toute l\'année '+y;s.appendChild(oa);
   const sep=document.createElement('option');sep.disabled=true;sep.textContent='──────────';s.appendChild(sep);
   const months=[];
   for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(ymk(d.getFullYear(),d.getMonth()+1));}
@@ -484,6 +510,7 @@ function goP(p,btn){
   else if(p==='bud')renderBudPage();
   else if(p==='pro'){renderCharts();renderCPUI();}
   else if(p==='add'){syncPostes();document.getElementById('fmsg').textContent='';}
+  else if(p==='imp'){document.getElementById('imp-log').style.display='none';document.getElementById('imp-pb').style.width='0%';document.getElementById('imp-pt').textContent='En attente';}
 }
 
 function txYM(ym){return txs.filter(t=>t.date&&t.date.startsWith(ym));}
@@ -779,6 +806,63 @@ async function addCP(cat){
 async function removeCP(cat,p){
   custom[cat]=(custom[cat]||[]).filter(x=>x!==p);
   await saveSettings();syncPostes();renderCPUI();
+}
+
+
+// IMPORT
+function parseAndImport(){
+  const raw=document.getElementById('imp-txt').value.trim();
+  if(!raw){toast('Colle des données à importer');return;}
+  const lines=raw.split('\n').filter(l=>l.trim());
+  const txList=[];
+  lines.forEach(line=>{
+    const cols=line.split('\t');
+    if(cols.length<4)return;
+    const dateRaw=cols[0].trim();
+    const cat=cols[1].trim();
+    const poste=cols[2].trim();
+    const montant=parseFloat(cols[3].toString().replace(/[^0-9.-]/g,''));
+    const cmt=(cols[4]||'').trim();
+    if(!dateRaw||isNaN(montant)||!poste)return;
+    // Parse date
+    let date=dateRaw;
+    if(dateRaw.match(/^\d{2}\/\d{2}\/\d{4}$/)){const[d,m,y]=dateRaw.split('/');date=`${y}-${m}-${d}`;}
+    else if(dateRaw.match(/^\d{5}$/)){const d=new Date((parseInt(dateRaw)-25569)*86400000);date=d.toISOString().split('T')[0];}
+    txList.push({date,cat,poste,amt:montant,cmt});
+  });
+  if(!txList.length){toast('Aucune ligne valide détectée');return;}
+  const rev=txList.filter(t=>t.cat==='Revenu'||t.cat==='Revenus').reduce((s,t)=>s+t.amt,0);
+  const dep=txList.filter(t=>t.cat!=='Revenu'&&t.cat!=='Revenus').reduce((s,t)=>s+t.amt,0);
+  document.getElementById('imp-stats').innerHTML=
+    `<div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center"><div style="font-size:20px;font-weight:600;color:var(--green)">${txList.length}</div><div style="font-size:10px;color:var(--text3)">Lignes</div></div>
+     <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center"><div style="font-size:14px;font-weight:600;color:var(--green)">${fmt(rev)}F</div><div style="font-size:10px;color:var(--text3)">Revenus</div></div>
+     <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center"><div style="font-size:14px;font-weight:600;color:var(--red)">${fmt(dep)}F</div><div style="font-size:10px;color:var(--text3)">Dépenses</div></div>`;
+  doImport(txList);
+}
+
+async function doImport(txList){
+  const btn=document.getElementById('imp-btn');
+  btn.disabled=true;
+  const log=document.getElementById('imp-log');
+  log.style.display='block';log.innerHTML='';
+  const{db,collection,addDoc}=window._fb;
+  let ok=0;
+  for(let i=0;i<txList.length;i++){
+    const t=txList[i];
+    try{
+      await addDoc(collection(db,`users/${uid}/transactions`),{amt:t.amt,date:t.date,cat:t.cat,poste:t.poste,cmt:t.cmt,ts:new Date().toISOString()});
+      ok++;
+      log.innerHTML+=`<span style="color:var(--green)">✓ ${t.date} ${t.poste} ${fmt(t.amt)}F</span>\n`;
+    }catch(e){log.innerHTML+=`<span style="color:var(--red)">✗ ${t.poste}: ${e.message}</span>\n`;}
+    document.getElementById('imp-pb').style.width=Math.round((i+1)/txList.length*100)+'%';
+    document.getElementById('imp-pt').textContent=`${i+1}/${txList.length} importées`;
+    log.scrollTop=log.scrollHeight;
+    await new Promise(r=>setTimeout(r,30));
+  }
+  document.getElementById('imp-pt').textContent=`✓ ${ok}/${txList.length} transactions importées`;
+  toast(`${ok} transactions importées ✓`);
+  btn.disabled=false;
+  document.getElementById('imp-txt').value='';
 }
 
 // TOAST
