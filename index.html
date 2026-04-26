@@ -255,6 +255,7 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
   <!-- PAGE DASHBOARD -->
   <div id="page-dash" class="page active">
     <div class="hero" id="hero"></div>
+    <div id="alerts-wrap"></div>
     <div class="mgrid" id="dm"></div>
     <div class="tabs" id="dtabs">
       <button class="tab active" onclick="setDTab(this,'all')">Vue globale</button>
@@ -298,6 +299,23 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
       <div class="fgrp">
         <div class="flbl">Commentaire (facultatif)</div>
         <input class="finp" type="text" id="f-cmt" placeholder="Wave, Yango, MAB Ibrahima...">
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;margin-bottom:4px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--text)">Transaction récurrente</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Se répète automatiquement chaque mois</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+          <input type="checkbox" id="f-recur" style="opacity:0;width:0;height:0" onchange="toggleRecurOptions()">
+          <span id="recur-toggle" style="position:absolute;inset:0;background:var(--surf2);border-radius:12px;transition:.2s;border:1px solid var(--border)"></span>
+          <span id="recur-knob" style="position:absolute;left:3px;top:3px;width:16px;height:16px;background:var(--text3);border-radius:50%;transition:.2s"></span>
+        </label>
+      </div>
+      <div id="recur-options" style="display:none;margin-bottom:8px">
+        <div class="flbl" style="margin-bottom:6px">Jour du mois</div>
+        <select class="fsel" id="f-recur-day">
+          <option value='1'>1</option><option value='2'>2</option><option value='3'>3</option><option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option><option value='8'>8</option><option value='9'>9</option><option value='10'>10</option><option value='11'>11</option><option value='12'>12</option><option value='13'>13</option><option value='14'>14</option><option value='15'>15</option><option value='16'>16</option><option value='17'>17</option><option value='18'>18</option><option value='19'>19</option><option value='20'>20</option><option value='21'>21</option><option value='22'>22</option><option value='23'>23</option><option value='24'>24</option><option value='25'>25</option><option value='26'>26</option><option value='27'>27</option><option value='28'>28</option>
+        </select>
       </div>
       <button class="btn-p" id="bsave" onclick="saveTx()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
@@ -609,21 +627,73 @@ function renderDash(){
   const rev=sumC(t,'Revenu');const fix=sumC(t,'Dépenses fixes');
   const vr=sumC(t,'Dépenses variables');const ep=sumC(t,'Epargne');
   const dep=fix+vr+ep;const sol=rev-dep;const pct=rev>0?Math.round(dep/rev*100):0;
+  // Comparaison N-1
+  const prevYM=(()=>{const[y,m]=ym.split('-');const d=new Date(parseInt(y),parseInt(m)-2,1);return ymk(d.getFullYear(),d.getMonth()+1);})();
+  const prevT=txYM(prevYM);
+  const prevDep=sumC(prevT,'Dépenses fixes')+sumC(prevT,'Dépenses variables')+sumC(prevT,'Epargne');
+  const prevRev=sumC(prevT,'Revenu');
+  const diffDep=prevDep>0?Math.round((dep-prevDep)/prevDep*100):null;
+  const diffRev=prevRev>0?Math.round((rev-prevRev)/prevRev*100):null;
+  const diffTag=(val,inv=false)=>{
+    if(val===null)return'';
+    const good=inv?(val>=0):(val<=0);
+    const sign=val>=0?'+':'';
+    return ' <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:'+(good?'rgba(16,185,129,.15)':'rgba(244,63,94,.15)')+';color:'+(good?'#34d399':'#fb7185')+'">'+sign+val+'%</span>';
+  };
   document.getElementById('hero').innerHTML=`
     <div class="hlbl">Solde net · ${yml(ym)}</div>
     <div class="hamt ${sol>=0?'pos':'neg'}">${fmt(sol)} <span style="font-size:15px;opacity:.55">FCFA</span></div>
     <div class="hmeta">
-      <div class="hmi">Revenus<span style="color:var(--green)">${fmt(rev)} F</span></div>
-      <div class="hmi">Dépenses<span style="color:var(--red)">${fmt(dep)} F</span></div>
+      <div class="hmi">Revenus<span style="color:var(--green)">${fmt(rev)} F${diffTag(diffRev,true)}</span></div>
+      <div class="hmi">Dépenses<span style="color:var(--red)">${fmt(dep)} F${diffTag(diffDep,false)}</span></div>
       <div class="hmi">% dépensé<span style="${pct>90?'color:var(--red)':pct>75?'color:var(--amber)':'color:var(--green)'}">${pct}%</span></div>
-    </div>`;
+    </div>
+    ${prevDep>0?'<div style="font-size:10px;color:rgba(165,180,252,.5);margin-top:8px">vs '+yml(prevYM)+'</div>':''}`;
   document.getElementById('dm').innerHTML=
     mc('Fixes',fix,budTot(ym,'Dépenses fixes'))+
     mc('Variables',vr,budTot(ym,'Dépenses variables'))+
     mc('Épargne',ep,budTot(ym,'Epargne'))+
     mc('Transactions',t.length,0,true);
   document.getElementById('dtabs').style.display='flex';
+  renderAlerts(ym);
   renderDC();
+}
+
+function renderAlerts(ym){
+  const t=txYM(ym);
+  const alerts=[];
+  const bud=budget[ym]||{};
+  // Check each expense poste
+  ['Dépenses fixes','Dépenses variables'].forEach(cat=>{
+    const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
+    ps.forEach(p=>{
+      const r=t.filter(x=>x.cat===cat&&x.poste===p).reduce((s,x)=>s+(x.amt||0),0);
+      const b=bud[p]||0;
+      if(b>0&&r>b){alerts.push({p,r,b,pct:Math.round(r/b*100)});}
+      else if(b>0&&r>=b*0.9&&r<b){alerts.push({p,r,b,pct:Math.round(r/b*100),warn:true});}
+    });
+  });
+  // Check recurring
+  checkRecurring(ym);
+  const el=document.getElementById('alerts-wrap');
+  if(!el)return;
+  if(!alerts.length){el.innerHTML='';return;}
+  const overBudget=alerts.filter(a=>!a.warn);
+  const nearBudget=alerts.filter(a=>a.warn);
+  let html='';
+  if(overBudget.length){
+    html+=`<div style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.25);border-radius:var(--r);padding:12px 14px;margin-bottom:8px">
+      <div style="font-size:11px;font-weight:600;color:#fb7185;margin-bottom:6px">🚨 ${overBudget.length} poste${overBudget.length>1?'s':''} dépassé${overBudget.length>1?'s':''}</div>
+      ${overBudget.map(a=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(244,63,94,.1)"><span style="color:var(--text)">${a.p}</span><span style="color:#fb7185;font-family:var(--mono)">${fmt(a.r)} / ${fmt(a.b)} F (${a.pct}%)</span></div>`).join('')}
+    </div>`;
+  }
+  if(nearBudget.length){
+    html+=`<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:var(--r);padding:12px 14px;margin-bottom:8px">
+      <div style="font-size:11px;font-weight:600;color:#fbbf24;margin-bottom:6px">⚠️ ${nearBudget.length} poste${nearBudget.length>1?'s':''} proche${nearBudget.length>1?'s':''} du budget</div>
+      ${nearBudget.map(a=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(245,158,11,.1)"><span style="color:var(--text)">${a.p}</span><span style="color:#fbbf24;font-family:var(--mono)">${fmt(a.r)} / ${fmt(a.b)} F (${a.pct}%)</span></div>`).join('')}
+    </div>`;
+  }
+  el.innerHTML=html;
 }
 
 function renderDashAnnual(){
@@ -749,12 +819,18 @@ async function saveTx(){
   if(!amt||isNaN(amt)||!date||!poste){msg.textContent='Montant et date obligatoires.';return;}
   msg.textContent='';
   const btn=document.getElementById('bsave');btn.disabled=true;
+  const isRecur=document.getElementById('f-recur')?.checked||false;
+  const recurDay=isRecur?parseInt(document.getElementById('f-recur-day')?.value||'1'):null;
   try{
     const{db,collection,addDoc}=window._fb;
-    await addDoc(collection(db,`users/${uid}/transactions`),{amt,date,cat:selCatVal,poste,cmt,ts:new Date().toISOString()});
+    const data={amt,date,cat:selCatVal,poste,cmt,ts:new Date().toISOString()};
+    if(isRecur){data.recur=true;data.recurDay=recurDay;}
+    await addDoc(collection(db,`users/${uid}/transactions`),data);
     document.getElementById('f-amt').value='';
     document.getElementById('f-cmt').value='';
-    toast('Transaction enregistrée ✓');
+    const recurCb=document.getElementById('f-recur');
+    if(recurCb&&recurCb.checked){recurCb.checked=false;toggleRecurOptions();}
+    toast(isRecur?'Transaction récurrente enregistrée ✓':'Transaction enregistrée ✓');
     goP('tx',document.querySelectorAll('.ni')[1]);
   }catch(e){msg.textContent='Erreur: '+e.message;}
   btn.disabled=false;
@@ -1000,6 +1076,53 @@ async function doImport(txList){
   document.getElementById('imp-txt').value='';
 }
 
+
+
+// TRANSACTIONS RÉCURRENTES
+function toggleRecurOptions(){
+  const cb=document.getElementById('f-recur');
+  const opts=document.getElementById('recur-options');
+  const knob=document.getElementById('recur-knob');
+  const toggle=document.getElementById('recur-toggle');
+  if(cb.checked){
+    opts.style.display='block';
+    toggle.style.background='rgba(99,102,241,.3)';
+    toggle.style.borderColor='rgba(99,102,241,.5)';
+    knob.style.background='#818cf8';
+    knob.style.left='23px';
+  } else {
+    opts.style.display='none';
+    toggle.style.background='var(--surf2)';
+    toggle.style.borderColor='var(--border)';
+    knob.style.background='var(--text3)';
+    knob.style.left='3px';
+  }
+}
+
+async function checkRecurring(ym){
+  if(!uid)return;
+  const recurring=txs.filter(t=>t.recur&&t.recur===true);
+  if(!recurring.length)return;
+  const existing=txYM(ym);
+  for(const rt of recurring){
+    const alreadyExists=existing.some(t=>t.poste===rt.poste&&t.cat===rt.cat&&t.amt===rt.amt&&t.recurId===rt.id);
+    if(!alreadyExists){
+      const[y,m]=ym.split('-');
+      const day=rt.recurDay||1;
+      const maxDay=new Date(parseInt(y),parseInt(m),0).getDate();
+      const date=ymk(y,m)+'-'+String(Math.min(day,maxDay)).padStart(2,'0');
+      const now=new Date();
+      const targetMonth=new Date(parseInt(y),parseInt(m)-1,1);
+      if(targetMonth<=now){
+        const{db,collection,addDoc}=window._fb;
+        await addDoc(collection(db,'users/'+uid+'/transactions'),{
+          amt:rt.amt,date,cat:rt.cat,poste:rt.poste,cmt:rt.cmt||'',
+          ts:new Date().toISOString(),recurId:rt.id,auto:true
+        });
+      }
+    }
+  }
+}
 
 // EDIT TRANSACTION
 let editingId=null;
