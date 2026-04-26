@@ -922,13 +922,25 @@ async function copyBudget(){
 function setBY(el,y){document.querySelectorAll('.ytab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bYear=y;renderBForm();populateCopySrc();}
 function setBM(el,m){document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bMonth=m;renderBForm();populateCopySrc();}
 function calcBudSolde(ym){
+  // Lire les valeurs en direct depuis les inputs si disponibles, sinon depuis budget sauvegardé
   const bud=budget[ym]||{};
+  const allPs=[
+    ...(CATS['Revenu']||[]),...(custom['Revenu']||[]),
+    ...(CATS['Dépenses fixes']||[]),...(custom['Dépenses fixes']||[]),
+    ...(CATS['Dépenses variables']||[]),...(custom['Dépenses variables']||[]),
+    ...(CATS['Epargne']||[]),...(custom['Epargne']||[])
+  ];
+  const live={};
+  allPs.forEach(p=>{
+    const el=document.getElementById('bi_'+btoa(encodeURIComponent(p)));
+    live[p]=el?parseFloat(el.value)||0:(bud[p]||0);
+  });
   const revPs=[...(CATS['Revenu']||[]),...(custom['Revenu']||[])];
   const depPs=[...(CATS['Dépenses fixes']||[]),...(custom['Dépenses fixes']||[]),
                ...(CATS['Dépenses variables']||[]),...(custom['Dépenses variables']||[]),
                ...(CATS['Epargne']||[]),...(custom['Epargne']||[])];
-  const bRev=revPs.reduce((s,p)=>s+(bud[p]||0),0);
-  const bDep=depPs.reduce((s,p)=>s+(bud[p]||0),0);
+  const bRev=revPs.reduce((s,p)=>s+(live[p]||0),0);
+  const bDep=depPs.reduce((s,p)=>s+(live[p]||0),0);
   return{bRev,bDep,solde:bRev-bDep};
 }
 
