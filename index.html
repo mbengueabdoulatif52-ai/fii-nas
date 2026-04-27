@@ -1589,7 +1589,7 @@ async function createSharedSpace(){
     }
   };
   await setDoc(doc(db,'spaces/'+spaceId),spaceData);
-  await setDoc(doc(db,'spaces/invites/'+inviteCode),{spaceId});
+  await setDoc(doc(db,'spaces_invites/'+inviteCode),{spaceId});
   // Save space reference in user profile
   await setDoc(doc(db,'users/'+uid+'/data/profile'),{sharedSpaceId:spaceId,role:'admin'},{merge:true});
   sharedSpaceId=spaceId;
@@ -1609,7 +1609,7 @@ async function joinSharedSpace(){
   msg.style.color='var(--text3)';msg.textContent='Recherche en cours...';
   try{
     // Search in known spaces
-    const snap=await getDoc(doc(db,'spaces/invites/'+code));
+    const snap=await getDoc(doc(db,'spaces_invites/'+code));
     let spaceId=snap.exists()?snap.data().spaceId:null;
     if(!spaceId){
       // Try direct search — for now use code as prefix
