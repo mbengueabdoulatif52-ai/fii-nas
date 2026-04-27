@@ -1996,15 +1996,7 @@ function initTheme(){
 }
 initTheme();
 
-// TOAST
-let tt;
-function toast(msg){
-  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');
-  clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('on'),2500);
-}
-</script>
-</body>
-</html>// ══════════════════════════════════════
+// ══════════════════════════════════════
 // ESPACES — Multi-espace avec switcher
 // ══════════════════════════════════════
 
@@ -2045,7 +2037,7 @@ function closeSpaceMenuOutside(e){
 function renderSpaceMenu(){
   const el=document.getElementById('space-menu-list');
   if(!el)return;
-  let html='<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding:4px 8px 8px">Changer d'espace</div>';
+  let html='<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding:4px 8px 8px">Changer d\'espace</div>';
   // Personal space
   const isPerso=!sharedSpaceId;
   html+=`<div onclick="switchSpace(null)" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;background:${isPerso?'var(--surf2)':'transparent'};margin-bottom:4px">
@@ -2205,7 +2197,7 @@ async function renderSpacesUI(){
 }
 
 function showCreateSpace(){
-  const name=prompt('Nom de l'espace (ex: Famille, Chantier Dakar)');
+  const name=prompt("Nom de l'espace (ex: Famille, Chantier Dakar)");
   if(!name||!name.trim())return;
   createSpace(name.trim(),false);
 }
@@ -2236,7 +2228,7 @@ async function createSpace(name,isPersonal){
   sharedSpaceId=spaceId;userRole='admin';
   updateSpaceBtn();subscribe();
   await renderSpacesUI();
-  toast('Espace "'+name+'" créé ✓ — partage le code d'invitation');
+  toast('Espace "'+name+'" créé ✓ — partage le code d\'invitation');
 }
 
 async function joinSpace(){
@@ -2316,7 +2308,6 @@ function copyInviteCode(code){
 }
 
 // ANALYSE DES HABITUDES
-let analysePeriod=3;
 
 function setAnalysePeriod(el,n){
   document.querySelectorAll('#analyse-period .tab').forEach(b=>b.classList.remove('active'));
@@ -2555,7 +2546,7 @@ function fmtBudInput(el){
 }
 
 // EDIT TRANSACTION
-let editingId=null;
+
 function openEditTx(id){
   const tx=txs.find(t=>t.id===id);if(!tx)return;
   editingId=id;
@@ -2609,6 +2600,16 @@ function initTheme(){
   }
 }
 initTheme();
+
+// TOAST
+let tt;
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');
+  clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('on'),2500);
+}
+</script>
+</body>
+</html>
 
 // TOAST
 let tt;
