@@ -2293,7 +2293,7 @@ async function generateInviteCode(){
   // Store code pointing to owner uid
   await setDoc(doc(db,'spaces_invites/'+code),{ownerUid:uid,ownerName:userName,ownerEmail:window._fb.auth.currentUser?.email||''});
   await setDoc(doc(db,'users/'+uid+'/data/profile'),{inviteCode:code},{merge:true});
-  await renderSpacesUI(code);
+  await renderSpacesUI();
   toast('Code d\'invitation généré ✓');
 }
 
@@ -2345,7 +2345,7 @@ async function toggleAccess(memberId,currentRole){
   const memberProfile=memberProfileDoc.exists()?memberProfileDoc.data():{};
   const accessList=(memberProfile.accessList||[]).map(e=>e.ownerUid===uid?{...e,role:newRole}:e);
   await setDoc(doc(db,'users/'+memberId+'/data/profile'),{accessList},{merge:true});
-  await renderSpacesUI(code);
+  await renderSpacesUI();
   toast('Rôle mis à jour ✓');
 }
 
@@ -2361,7 +2361,7 @@ async function revokeAccess(memberId){
   const accessList=(memberProfile.accessList||[]).filter(e=>e.ownerUid!==uid);
   const activeSpaceId=memberProfile.activeSpaceId===uid?null:memberProfile.activeSpaceId;
   await setDoc(doc(db,'users/'+memberId+'/data/profile'),{accessList,activeSpaceId},{merge:true});
-  await renderSpacesUI(code);
+  await renderSpacesUI();
   toast('Accès retiré ✓');
 }
 
@@ -2381,7 +2381,7 @@ async function leaveSharedAccess(ownerUid){
   mySpaces=mySpaces.filter(s=>s.ownerUid!==ownerUid);
   if(sharedSpaceId===ownerUid){sharedSpaceId=null;userRole='admin';subscribe();}
   updateSpaceBtn();
-  await renderSpacesUI(code);
+  await renderSpacesUI();
   toast('Espace quitté');
 }
 
@@ -3001,7 +3001,7 @@ async function leaveSpace(spaceId){
   mySpaces=mySpaces.filter(s=>s.id!==spaceId);
   if(sharedSpaceId===spaceId){sharedSpaceId=null;userRole='admin';subscribe();}
   updateSpaceBtn();
-  await renderSpacesUI(code);
+  await renderSpacesUI();
   toast('Espace quitté');
 }
 
@@ -3015,7 +3015,7 @@ async function toggleMemberRole(memberId,currentRole){
   await setDoc(doc(db,'users/'+memberId+'/data/profile'),{role:newRole},{merge:true});
   // Update local mySpaces if it's us
   if(memberId===uid){userRole=newRole;}
-  await renderSpacesUI(code);
+  await renderSpacesUI();
   toast('Rôle mis à jour ✓');
 }
 
