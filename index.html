@@ -2101,7 +2101,7 @@ async function loadUserSpaces(){
   }catch(e){subscribe();}
 }
 
-async function renderSpacesUI(){
+async function renderSpacesUI(freshCode){
   const el=document.getElementById('spaces-ui');
   if(!el)return;
 
@@ -2125,7 +2125,7 @@ async function renderSpacesUI(){
   const myProfileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
   const myProfile=myProfileDoc.exists()?myProfileDoc.data():{};
   const sharedWith=myProfile.sharedWith||[];
-  const inviteCode=myProfile.inviteCode||'';
+  const inviteCode=freshCode||myProfile.inviteCode||'';
 
   html+=`<div style="margin-bottom:16px">
     <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Mon espace — accès partagé</div>`;
@@ -2209,7 +2209,7 @@ async function generateInviteCode(){
   // Store code pointing to owner uid
   await setDoc(doc(db,'spaces_invites/'+code),{ownerUid:uid,ownerName:userName,ownerEmail:window._fb.auth.currentUser?.email||''});
   await setDoc(doc(db,'users/'+uid+'/data/profile'),{inviteCode:code},{merge:true});
-  await renderSpacesUI();
+  await renderSpacesUI(code);
   toast('Code d\'invitation généré ✓');
 }
 
@@ -2243,7 +2243,7 @@ async function joinSpace(){
     mySpaces.push({ownerUid:oUid,ownerName:oName,role:'reader'});
     sharedSpaceId=oUid;userRole='reader';
     updateSpaceBtn();subscribe();
-    await renderSpacesUI();
+    await renderSpacesUI(code);
     msg.style.color='var(--green)';msg.textContent='Espace rejoint ✓';
   }catch(e){msg.style.color='var(--red)';msg.textContent='Erreur: '+e.message;}
 }
@@ -2261,7 +2261,7 @@ async function toggleAccess(memberId,currentRole){
   const memberProfile=memberProfileDoc.exists()?memberProfileDoc.data():{};
   const accessList=(memberProfile.accessList||[]).map(e=>e.ownerUid===uid?{...e,role:newRole}:e);
   await setDoc(doc(db,'users/'+memberId+'/data/profile'),{accessList},{merge:true});
-  await renderSpacesUI();
+  await renderSpacesUI(code);
   toast('Rôle mis à jour ✓');
 }
 
@@ -2277,7 +2277,7 @@ async function revokeAccess(memberId){
   const accessList=(memberProfile.accessList||[]).filter(e=>e.ownerUid!==uid);
   const activeSpaceId=memberProfile.activeSpaceId===uid?null:memberProfile.activeSpaceId;
   await setDoc(doc(db,'users/'+memberId+'/data/profile'),{accessList,activeSpaceId},{merge:true});
-  await renderSpacesUI();
+  await renderSpacesUI(code);
   toast('Accès retiré ✓');
 }
 
@@ -2297,7 +2297,7 @@ async function leaveSharedAccess(ownerUid){
   mySpaces=mySpaces.filter(s=>s.ownerUid!==ownerUid);
   if(sharedSpaceId===ownerUid){sharedSpaceId=null;userRole='admin';subscribe();}
   updateSpaceBtn();
-  await renderSpacesUI();
+  await renderSpacesUI(code);
   toast('Espace quitté');
 }
 
@@ -2727,79 +2727,6 @@ async function loadUserSpaces(){
   }catch(e){subscribe();}
 }
 
-async function renderSpacesUI(){
-  const el=document.getElementById('spaces-ui');
-  if(!el)return;
-  let html='';
-  // Current spaces list
-  if(mySpaces.length>0){
-    html+=`<div style="margin-bottom:14px">`;
-    mySpaces.forEach(sp=>{
-      const isActive=sharedSpaceId===sp.id;
-      html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
-        <div>
-          <div style="font-size:13px;font-weight:500;color:var(--text)">${sp.name}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">
-            <span style="color:${sp.role==='admin'?'var(--green)':'var(--amber)'}">${sp.role==='admin'?'Admin':'Lecteur'}</span>
-            · ${sp.memberCount} membre${sp.memberCount>1?'s':''}
-          </div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          ${isActive?
-            '<span style="font-size:11px;color:var(--green);padding:3px 8px;border-radius:20px;background:var(--gd)">Actif</span>':
-            `<button onclick="switchSpace('${sp.id}')" style="font-size:11px;padding:4px 10px;border:0.5px solid var(--blue);border-radius:var(--rs);background:transparent;color:var(--blue);cursor:pointer;font-family:var(--font)">Activer</button>`
-          }
-          <button onclick="leaveSpace('${sp.id}')" style="font-size:11px;padding:4px 10px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">Quitter</button>
-        </div>
-      </div>`;
-    });
-    html+='</div>';
-  }
-
-  // Active space details
-  if(sharedSpaceId){
-    const{db,doc,getDoc}=window._fb;
-    try{
-      const sDoc=await getDoc(doc(db,'spaces/'+sharedSpaceId));
-      if(sDoc.exists()){
-        const d=sDoc.data();
-        const members=d.members||{};
-        const inviteCode=d.inviteCode||'';
-        html+=`<div style="background:var(--surf2);border-radius:var(--rs);padding:12px;margin-bottom:14px">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:8px">Code invitation — ${d.name||'Espace partagé'}</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <div style="background:var(--surf);border-radius:var(--rs);padding:8px 14px;font-size:16px;font-weight:600;letter-spacing:.15em;color:var(--blue);flex:1;text-align:center">${inviteCode}</div>
-            <button onclick="copyInviteCode('${inviteCode}')" class="btn-o">Copier</button>
-          </div>
-        </div>
-        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:8px">Membres</div>
-        ${Object.entries(members).map(([mid,m])=>`
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)">
-            <div>
-              <div style="font-size:13px;font-weight:500;color:var(--text)">${m.name||'Utilisateur'}${mid===uid?' <span style="font-size:10px;color:var(--text3)">(moi)</span>':''}</div>
-              <div style="font-size:11px;color:var(--text3)">${m.email||''}</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${m.role==='admin'?'var(--gd)':'rgba(245,158,11,.1)'};color:${m.role==='admin'?'var(--green)':'var(--amber)'}">${m.role==='admin'?'Admin':'Lecteur'}</span>
-              ${mid!==uid&&userRole==='admin'?`<button onclick="toggleMemberRole('${mid}','${m.role}')" class="btn-o" style="font-size:10px;padding:2px 7px">${m.role==='admin'?'→ Lecteur':'→ Admin'}</button>`:''}
-            </div>
-          </div>`).join('')}`;
-      }
-    }catch(e){}
-  }
-
-
-  html+=`<div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
-    <button class="btn-p" onclick="generateInviteCode()" style="background:var(--blue)">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-      Inviter dans mon espace
-    </button>
-    <div style="display:flex;gap:8px">
-      <input id="join-code-inp" class="finp" type="text" placeholder="Code d'invitation..." style="flex:1;padding:9px 12px;font-size:13px;text-transform:uppercase">
-      <button onclick="joinSpace()" class="btn-o" style="white-space:nowrap">Rejoindre</button>
-    </div>
-    <div id="spaces-msg" style="font-size:11px;min-height:14px;text-align:center"></div>
-  </div>`;
 
 
 
@@ -2815,8 +2742,81 @@ async function renderSpacesUI(){
 
 
 
-  el.innerHTML=html;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2885,7 +2885,7 @@ async function joinSpace(){
     mySpaces.push({id:spaceId,name:spaceData.name||'Espace partagé',role:'reader',isPersonal:spaceData.isPersonal||false,ownerUid:spaceData.ownerUid||null,memberCount:Object.keys(spaceData.members||{}).length+1});
     sharedSpaceId=spaceId;userRole='reader';
     updateSpaceBtn();subscribe();
-    await renderSpacesUI();
+    await renderSpacesUI(code);
     msg.style.color='var(--green)';msg.textContent='Espace rejoint en mode Lecteur ✓';
   }catch(e){msg.style.color='var(--red)';msg.textContent='Erreur: '+e.message;}
 }
@@ -2908,7 +2908,7 @@ async function leaveSpace(spaceId){
   mySpaces=mySpaces.filter(s=>s.id!==spaceId);
   if(sharedSpaceId===spaceId){sharedSpaceId=null;userRole='admin';subscribe();}
   updateSpaceBtn();
-  await renderSpacesUI();
+  await renderSpacesUI(code);
   toast('Espace quitté');
 }
 
@@ -2922,7 +2922,7 @@ async function toggleMemberRole(memberId,currentRole){
   await setDoc(doc(db,'users/'+memberId+'/data/profile'),{role:newRole},{merge:true});
   // Update local mySpaces if it's us
   if(memberId===uid){userRole=newRole;}
-  await renderSpacesUI();
+  await renderSpacesUI(code);
   toast('Rôle mis à jour ✓');
 }
 
