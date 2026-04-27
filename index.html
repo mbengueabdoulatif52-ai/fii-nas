@@ -662,11 +662,8 @@ function setUserUI(u){
 
 // Chemin des données — espace perso ou partagé
 function dataPath(){
-  if(!sharedSpaceId)return 'users/'+uid;
-  // For personal shared spaces, use the owner's uid path
-  const sp=mySpaces.find(s=>s.id===sharedSpaceId);
-  if(sp?.isPersonal&&sp?.ownerUid)return 'users/'+sp.ownerUid;
-  return 'spaces/'+sharedSpaceId;
+  // sharedSpaceId now stores the OWNER's uid, not a space document id
+  return sharedSpaceId ? 'users/'+sharedSpaceId : 'users/'+uid;
 }
 function isAdmin(){return userRole==='admin';}
 
@@ -1658,30 +1655,30 @@ function copyInviteCode(code){
 // toggleMemberRole moved to spaces section
 
 
-async function leaveSharedSpace(){
-  if(!sharedSpaceId)return;
-  const{db,doc,setDoc,deleteDoc,getDoc}=window._fb;
-  const spaceDoc=await getDoc(doc(db,'spaces/'+sharedSpaceId));
-  const members=spaceDoc.exists()?spaceDoc.data().members||{}:{};
-  if(isAdmin()&&Object.keys(members).length<=1){
-    // Supprimer l'espace
-    await deleteDoc(doc(db,'spaces/'+sharedSpaceId));
-  } else {
-    // Juste quitter
-    const newMembers={...members};delete newMembers[uid];
-    await setDoc(doc(db,'spaces/'+sharedSpaceId),{members:newMembers},{merge:true});
-  }
-  await setDoc(doc(db,'users/'+uid+'/data/profile'),{sharedSpaceId:null,role:'admin'},{merge:true});
-  sharedSpaceId=null;userRole='admin';
-  subscribe();renderSharedSpaceUI();
-  toast('Espace quitté');
-}
 
-async function switchToPersonal(){
-  sharedSpaceId=null;userRole='admin';
-  subscribe();renderSharedSpaceUI();
-  toast('Retour à l\'espace personnel');
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 async function loadUserSpace_old(){
   if(!uid)return;
@@ -1995,6 +1992,622 @@ function initTheme(){
 initTheme();
 
 // ══════════════════════════════════════
+// ESPACES — Partage de l'espace perso
+// ══════════════════════════════════════
+
+// sharedSpaceId = ownerUid of the person whose space we're viewing
+// mySpaces = list of spaces we have access to (other people's spaces)
+
+function updateSpaceBtn(){
+  const icon=document.getElementById('space-icon');
+  const label=document.getElementById('space-label');
+  if(!icon||!label)return;
+  if(!sharedSpaceId){
+    icon.textContent='👤';label.textContent='Perso';
+  } else {
+    const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
+    icon.textContent='👥';
+    label.textContent=sp?.ownerName||'Partagé';
+  }
+}
+
+function toggleSpaceMenu(){
+  const m=document.getElementById('space-menu');
+  if(!m)return;
+  if(m.style.display==='none'){
+    renderSpaceMenu();
+    m.style.display='block';
+    setTimeout(()=>document.addEventListener('click',closeSpaceMenuOutside),0);
+  } else {
+    m.style.display='none';
+  }
+}
+
+function closeSpaceMenuOutside(e){
+  const m=document.getElementById('space-menu');
+  const btn=document.getElementById('space-btn');
+  if(m&&!m.contains(e.target)&&btn&&!btn.contains(e.target)){
+    m.style.display='none';
+    document.removeEventListener('click',closeSpaceMenuOutside);
+  }
+}
+
+function renderSpaceMenu(){
+  const el=document.getElementById('space-menu-list');
+  if(!el)return;
+  let html='<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding:4px 8px 8px">Changer d\'espace</div>';
+  const isPerso=!sharedSpaceId;
+  html+=`<div onclick="switchSpace(null)" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;background:${isPerso?'var(--surf2)':'transparent'};margin-bottom:4px">
+    <span style="font-size:16px">👤</span>
+    <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Mon espace</div><div style="font-size:10px;color:var(--text3)">Mes données personnelles</div></div>
+    ${isPerso?'<span style="font-size:10px;color:var(--green)">✓</span>':''}
+  </div>`;
+  mySpaces.forEach(sp=>{
+    const isActive=sharedSpaceId===sp.ownerUid;
+    html+=`<div onclick="switchSpace('${sp.ownerUid}')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;background:${isActive?'var(--surf2)':'transparent'};margin-bottom:4px">
+      <span style="font-size:16px">👥</span>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">${sp.ownerName}</div><div style="font-size:10px;color:var(--text3)">${sp.role==='admin'?'Admin':'Lecteur'}</div></div>
+      ${isActive?'<span style="font-size:10px;color:var(--green)">✓</span>':''}
+    </div>`;
+  });
+  html+=`<div style="border-top:0.5px solid var(--border);margin-top:6px;padding-top:6px">
+    <div onclick="goP('pro',document.querySelectorAll('.ni')[4]);document.getElementById('space-menu').style.display='none';" style="font-size:12px;color:var(--blue);padding:6px 10px;cursor:pointer">Gérer les espaces →</div>
+  </div>`;
+  el.innerHTML=html;
+}
+
+async function switchSpace(ownerUid){
+  document.getElementById('space-menu').style.display='none';
+  sharedSpaceId=ownerUid;
+  if(ownerUid){
+    const sp=mySpaces.find(s=>s.ownerUid===ownerUid);
+    userRole=sp?.role||'reader';
+  } else {
+    userRole='admin';
+  }
+  updateSpaceBtn();
+  subscribe();
+  renderCurrent();
+  try{
+    const{db,doc,setDoc}=window._fb;
+    await setDoc(doc(db,'users/'+uid+'/data/profile'),{activeSpaceId:ownerUid||null},{merge:true});
+  }catch(e){}
+}
+
+async function loadUserSpaces(){
+  if(!uid)return;
+  const{db,doc,getDoc}=window._fb;
+  try{
+    const profileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
+    const profile=profileDoc.exists()?profileDoc.data():{};
+    // Load spaces I have access to (other people invited me)
+    const accessList=profile.accessList||[];
+    mySpaces=[];
+    for(const entry of accessList){
+      mySpaces.push({
+        ownerUid:entry.ownerUid,
+        ownerName:entry.ownerName||'Utilisateur',
+        role:entry.role||'reader'
+      });
+    }
+    // Restore active space
+    if(profile.activeSpaceId&&mySpaces.find(s=>s.ownerUid===profile.activeSpaceId)){
+      sharedSpaceId=profile.activeSpaceId;
+      const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
+      userRole=sp?.role||'reader';
+    }
+    updateSpaceBtn();
+    subscribe();
+  }catch(e){subscribe();}
+}
+
+async function renderSpacesUI(){
+  const el=document.getElementById('spaces-ui');
+  if(!el)return;
+
+  // Update role display
+  const roleEl=document.getElementById('role-display');
+  if(roleEl){
+    if(sharedSpaceId){
+      const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
+      roleEl.textContent=(userRole==='admin'?'Admin':'Lecteur')+' · Espace de '+sp?.ownerName;
+      roleEl.style.color=userRole==='admin'?'var(--green)':'var(--amber)';
+    } else {
+      roleEl.textContent='Admin · Mon espace';
+      roleEl.style.color='var(--text3)';
+    }
+  }
+
+  let html='';
+
+  // People who have access to MY space
+  const{db,doc,getDoc}=window._fb;
+  const myProfileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
+  const myProfile=myProfileDoc.exists()?myProfileDoc.data():{};
+  const sharedWith=myProfile.sharedWith||[];
+  const inviteCode=myProfile.inviteCode||'';
+
+  html+=`<div style="margin-bottom:16px">
+    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Mon espace — accès partagé</div>`;
+
+  if(sharedWith.length>0){
+    sharedWith.forEach(m=>{
+      html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:0.5px solid var(--border)">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--text)">${m.name||'Utilisateur'}</div>
+          <div style="font-size:11px;color:var(--text3)">${m.email||''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${m.role==='admin'?'var(--gd)':'rgba(245,158,11,.1)'};color:${m.role==='admin'?'var(--green)':'var(--amber)'}">${m.role==='admin'?'Admin':'Lecteur'}</span>
+          <button onclick="toggleAccess('${m.uid}','${m.role}')" class="btn-o" style="font-size:10px;padding:2px 8px">${m.role==='admin'?'→ Lecteur':'→ Admin'}</button>
+          <button onclick="revokeAccess('${m.uid}')" class="btn-o" style="font-size:10px;padding:2px 8px;color:var(--red);border-color:var(--red)">Retirer</button>
+        </div>
+      </div>`;
+    });
+  } else {
+    html+=`<div style="font-size:12px;color:var(--text3);padding:8px 0">Personne n'a accès à ton espace pour l'instant.</div>`;
+  }
+
+  // Invite section
+  if(inviteCode){
+    html+=`<div style="margin-top:12px;background:var(--surf2);border-radius:var(--rs);padding:12px">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em;font-weight:600">Code d'invitation actif</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="font-size:16px;font-weight:600;letter-spacing:.15em;color:var(--blue);flex:1;text-align:center;padding:8px;background:var(--surf);border-radius:var(--rs)">${inviteCode}</div>
+        <button onclick="copyInviteCode('${inviteCode}')" class="btn-o">Copier</button>
+      </div>
+      <button onclick="generateInviteCode()" class="btn-o" style="width:100%;margin-top:8px;font-size:11px">Générer nouveau code</button>
+    </div>`;
+  } else {
+    html+=`<button class="btn-p" onclick="generateInviteCode()" style="margin-top:12px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      Inviter quelqu'un dans mon espace
+    </button>`;
+  }
+
+  html+='</div>';
+
+  // Spaces I have access to
+  if(mySpaces.length>0){
+    html+=`<div style="border-top:0.5px solid var(--border);padding-top:14px;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Espaces auxquels j'ai accès</div>`;
+    mySpaces.forEach(sp=>{
+      const isActive=sharedSpaceId===sp.ownerUid;
+      html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:0.5px solid var(--border)">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--text)">${sp.ownerName}</div>
+          <div style="font-size:11px;color:${sp.role==='admin'?'var(--green)':'var(--amber)'}">${sp.role==='admin'?'Admin':'Lecteur'}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          ${isActive
+            ?'<span style="font-size:11px;color:var(--green);padding:3px 8px;border-radius:20px;background:var(--gd)">Actif</span>'
+            :`<button onclick="switchSpace('${sp.ownerUid}')" style="font-size:11px;padding:4px 10px;border:0.5px solid var(--blue);border-radius:var(--rs);background:transparent;color:var(--blue);cursor:pointer;font-family:var(--font)">Activer</button>`
+          }
+          <button onclick="leaveSharedAccess('${sp.ownerUid}')" style="font-size:11px;padding:4px 10px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">Quitter</button>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  }
+
+  // Join section
+  html+=`<div style="border-top:0.5px solid var(--border);padding-top:14px">
+    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Rejoindre un espace</div>
+    <div style="display:flex;gap:8px">
+      <input id="join-code-inp" class="finp" type="text" placeholder="Code d'invitation..." style="flex:1;padding:9px 12px;font-size:13px;text-transform:uppercase">
+      <button onclick="joinSpace()" class="btn-o" style="white-space:nowrap">Rejoindre</button>
+    </div>
+    <div id="spaces-msg" style="font-size:11px;margin-top:6px;min-height:14px;text-align:center"></div>
+  </div>`;
+
+  el.innerHTML=html;
+}
+
+async function generateInviteCode(){
+  const code=Math.random().toString(36).slice(2,8).toUpperCase();
+  const{db,doc,setDoc}=window._fb;
+  // Store code pointing to owner uid
+  await setDoc(doc(db,'spaces_invites/'+code),{ownerUid:uid,ownerName:userName,ownerEmail:window._fb.auth.currentUser?.email||''});
+  await setDoc(doc(db,'users/'+uid+'/data/profile'),{inviteCode:code},{merge:true});
+  await renderSpacesUI();
+  toast('Code d\'invitation généré ✓');
+}
+
+async function joinSpace(){
+  const code=document.getElementById('join-code-inp')?.value.trim().toUpperCase();
+  const msg=document.getElementById('spaces-msg');
+  if(!code){msg.style.color='var(--red)';msg.textContent='Entre un code';return;}
+  msg.style.color='var(--text3)';msg.textContent='Recherche...';
+  const{db,doc,getDoc,setDoc}=window._fb;
+  try{
+    const invDoc=await getDoc(doc(db,'spaces_invites/'+code));
+    if(!invDoc.exists()){msg.style.color='var(--red)';msg.textContent='Code invalide';return;}
+    const{ownerUid:oUid,ownerName:oName,ownerEmail:oEmail}=invDoc.data();
+    if(oUid===uid){msg.style.color='var(--red)';msg.textContent='C\'est ton propre code';return;}
+    // Already in list?
+    if(mySpaces.find(s=>s.ownerUid===oUid)){
+      await switchSpace(oUid);
+      msg.style.color='var(--green)';msg.textContent='Espace activé ✓';
+      return;
+    }
+    // Add to my accessList
+    const myProfileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
+    const myProfile=myProfileDoc.exists()?myProfileDoc.data():{};
+    const accessList=[...(myProfile.accessList||[]),{ownerUid:oUid,ownerName:oName,role:'reader'}];
+    await setDoc(doc(db,'users/'+uid+'/data/profile'),{accessList,activeSpaceId:oUid},{merge:true});
+    // Add me to owner's sharedWith
+    const ownerProfileDoc=await getDoc(doc(db,'users/'+oUid+'/data/profile'));
+    const ownerProfile=ownerProfileDoc.exists()?ownerProfileDoc.data():{};
+    const sharedWith=[...(ownerProfile.sharedWith||[]),{uid,name:userName,email:window._fb.auth.currentUser?.email||'',role:'reader'}];
+    await setDoc(doc(db,'users/'+oUid+'/data/profile'),{sharedWith},{merge:true});
+    mySpaces.push({ownerUid:oUid,ownerName:oName,role:'reader'});
+    sharedSpaceId=oUid;userRole='reader';
+    updateSpaceBtn();subscribe();
+    await renderSpacesUI();
+    msg.style.color='var(--green)';msg.textContent='Espace rejoint ✓';
+  }catch(e){msg.style.color='var(--red)';msg.textContent='Erreur: '+e.message;}
+}
+
+async function toggleAccess(memberId,currentRole){
+  const newRole=currentRole==='admin'?'reader':'admin';
+  const{db,doc,getDoc,setDoc}=window._fb;
+  // Update in my sharedWith
+  const myProfileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
+  const myProfile=myProfileDoc.exists()?myProfileDoc.data():{};
+  const sharedWith=(myProfile.sharedWith||[]).map(m=>m.uid===memberId?{...m,role:newRole}:m);
+  await setDoc(doc(db,'users/'+uid+'/data/profile'),{sharedWith},{merge:true});
+  // Update in member's accessList
+  const memberProfileDoc=await getDoc(doc(db,'users/'+memberId+'/data/profile'));
+  const memberProfile=memberProfileDoc.exists()?memberProfileDoc.data():{};
+  const accessList=(memberProfile.accessList||[]).map(e=>e.ownerUid===uid?{...e,role:newRole}:e);
+  await setDoc(doc(db,'users/'+memberId+'/data/profile'),{accessList},{merge:true});
+  await renderSpacesUI();
+  toast('Rôle mis à jour ✓');
+}
+
+async function revokeAccess(memberId){
+  const{db,doc,getDoc,setDoc}=window._fb;
+  const myProfileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
+  const myProfile=myProfileDoc.exists()?myProfileDoc.data():{};
+  const sharedWith=(myProfile.sharedWith||[]).filter(m=>m.uid!==memberId);
+  await setDoc(doc(db,'users/'+uid+'/data/profile'),{sharedWith},{merge:true});
+  // Remove from member's accessList
+  const memberProfileDoc=await getDoc(doc(db,'users/'+memberId+'/data/profile'));
+  const memberProfile=memberProfileDoc.exists()?memberProfileDoc.data():{};
+  const accessList=(memberProfile.accessList||[]).filter(e=>e.ownerUid!==uid);
+  const activeSpaceId=memberProfile.activeSpaceId===uid?null:memberProfile.activeSpaceId;
+  await setDoc(doc(db,'users/'+memberId+'/data/profile'),{accessList,activeSpaceId},{merge:true});
+  await renderSpacesUI();
+  toast('Accès retiré ✓');
+}
+
+async function leaveSharedAccess(ownerUid){
+  const{db,doc,getDoc,setDoc}=window._fb;
+  // Remove from my accessList
+  const myProfileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
+  const myProfile=myProfileDoc.exists()?myProfileDoc.data():{};
+  const accessList=(myProfile.accessList||[]).filter(e=>e.ownerUid!==ownerUid);
+  const activeSpaceId=myProfile.activeSpaceId===ownerUid?null:myProfile.activeSpaceId;
+  await setDoc(doc(db,'users/'+uid+'/data/profile'),{accessList,activeSpaceId},{merge:true});
+  // Remove from owner's sharedWith
+  const ownerProfileDoc=await getDoc(doc(db,'users/'+ownerUid+'/data/profile'));
+  const ownerProfile=ownerProfileDoc.exists()?ownerProfileDoc.data():{};
+  const sharedWith=(ownerProfile.sharedWith||[]).filter(m=>m.uid!==uid);
+  await setDoc(doc(db,'users/'+ownerUid+'/data/profile'),{sharedWith},{merge:true});
+  mySpaces=mySpaces.filter(s=>s.ownerUid!==ownerUid);
+  if(sharedSpaceId===ownerUid){sharedSpaceId=null;userRole='admin';subscribe();}
+  updateSpaceBtn();
+  await renderSpacesUI();
+  toast('Espace quitté');
+}
+
+function copyInviteCode(code){
+  navigator.clipboard.writeText(code).then(()=>toast('Code copié ✓')).catch(()=>{
+    const el=document.createElement('textarea');
+    el.value=code;document.body.appendChild(el);el.select();
+    document.execCommand('copy');document.body.removeChild(el);
+    toast('Code copié ✓');
+  });
+}
+
+// toggleMemberRole moved to spaces section
+
+// ANALYSE DES HABITUDES
+
+
+function setAnalysePeriod(el,n){
+  document.querySelectorAll('#analyse-period .tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  analysePeriod=n;
+  renderAnalyse();
+}
+
+function renderAnalyse(){
+  const el=document.getElementById('analyse-content');
+  if(!el)return;
+
+  const now=new Date();
+  const months=[];
+  for(let i=1;i<=analysePeriod;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push(ymk(d.getFullYear(),d.getMonth()+1));
+  }
+
+  // Moyennes par poste
+  const posteMap={};
+  months.forEach(m=>{
+    txYM(m).filter(t=>t.cat!=='Revenu').forEach(t=>{
+      if(!posteMap[t.poste])posteMap[t.poste]={total:0,count:0};
+      posteMap[t.poste].total+=t.amt;
+      posteMap[t.poste].count++;
+    });
+  });
+
+  const avgByPoste=Object.entries(posteMap)
+    .map(([p,v])=>({p,avg:Math.round(v.total/analysePeriod)}))
+    .filter(x=>x.avg>0)
+    .sort((a,b)=>b.avg-a.avg);
+
+  // Mois courant pour comparaison
+  const curYm=ymk(now.getFullYear(),now.getMonth()+1);
+  const curTxs=txYM(curYm);
+  const curByPoste={};
+  curTxs.filter(t=>t.cat!=='Revenu').forEach(t=>{
+    curByPoste[t.poste]=(curByPoste[t.poste]||0)+t.amt;
+  });
+
+  // Résumé intelligent
+  const totalAvgDep=avgByPoste.reduce((s,x)=>s+x.avg,0);
+  const topPoste=avgByPoste[0];
+  const mostVariable=Object.entries(posteMap)
+    .map(([p,v])=>{
+      const vals=months.map(m=>txYM(m).filter(t=>t.poste===p).reduce((s,t)=>s+t.amt,0));
+      const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+      const variance=vals.reduce((s,v)=>s+Math.abs(v-avg),0)/vals.length;
+      return{p,variance};
+    })
+    .sort((a,b)=>b.variance-a.variance)[0];
+
+  // Meilleur mois
+  const bestMonth=months.map(m=>{
+    const t=txYM(m);
+    const r=sumC(t,'Revenu');
+    const d=sumC(t,'Dépenses fixes')+sumC(t,'Dépenses variables')+sumC(t,'Epargne');
+    return{m,sol:r-d};
+  }).sort((a,b)=>b.sol-a.sol)[0];
+
+  let html='';
+
+  // Résumé
+  html+=`<div style="background:var(--surf2);border-radius:var(--rs);padding:14px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Résumé · ${analysePeriod} derniers mois</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${topPoste?`<div style="font-size:13px;color:var(--text)">💸 Poste principal : <span style="font-weight:500">${topPoste.p}</span> — moy. ${fmt(topPoste.avg)} F/mois</div>`:''}
+      ${mostVariable?`<div style="font-size:13px;color:var(--text)">📊 Plus variable : <span style="font-weight:500">${mostVariable.p}</span></div>`:''}
+      ${bestMonth&&bestMonth.sol>0?`<div style="font-size:13px;color:var(--text)">🏆 Meilleur mois : <span style="font-weight:500">${yml(bestMonth.m)}</span> (+${fmt(bestMonth.sol)} F)</div>`:''}
+      <div style="font-size:13px;color:var(--text)">📈 Dépenses moyennes : <span style="font-weight:500">${fmt(totalAvgDep)} F/mois</span></div>
+    </div>
+  </div>`;
+
+  // Tableau moyennes vs mois actuel
+  html+=`<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Moyenne vs mois actuel</div>`;
+  if(!avgByPoste.length){
+    html+='<div class="empty">Pas assez de données</div>';
+  } else {
+    html+=`<table class="rtbl"><thead><tr><th>Poste</th><th>Moyenne</th><th>Ce mois</th><th>Écart</th></tr></thead><tbody>`;
+    avgByPoste.slice(0,10).forEach(({p,avg})=>{
+      const cur=curByPoste[p]||0;
+      const diff=cur-avg;
+      const pct=avg>0?Math.round(diff/avg*100):0;
+      const cl=diff>0?'ov':diff<0?'ok':'';
+      const sign=diff>=0?'↑':'↓';
+      html+=`<tr>
+        <td>${p}</td>
+        <td style="color:var(--text2)">${fmt(avg)}</td>
+        <td style="color:var(--text2)">${cur>0?fmt(cur):'—'}</td>
+        <td class="${cl}">${cur>0?sign+Math.abs(pct)+'%':'—'}</td>
+      </tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+
+  el.innerHTML=html;
+}
+
+// MODE HORS LIGNE
+function updateOnlineStatus(){
+  const el=document.getElementById('sync-status');
+  if(!el)return;
+  if(navigator.onLine){
+    el.innerHTML='<span class="sdot"></span>Synchronisé';
+    el.style.color='';
+  } else {
+    el.innerHTML='<span style="width:5px;height:5px;border-radius:50%;background:var(--amber);display:inline-block;margin-right:4px"></span>Hors ligne · sync en attente';
+    el.style.color='var(--amber)';
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// TRANSACTIONS RÉCURRENTES
+function toggleRecurOptions(){
+  const cb=document.getElementById('f-recur');
+  const opts=document.getElementById('recur-options');
+  const knob=document.getElementById('recur-knob');
+  const toggle=document.getElementById('recur-toggle');
+  if(cb.checked){
+    opts.style.display='block';
+    toggle.style.background='rgba(10,132,255,.25)';
+    toggle.style.borderColor='rgba(10,132,255,.4)';
+    knob.style.background='var(--blue)';
+    knob.style.left='23px';
+  } else {
+    opts.style.display='none';
+    toggle.style.background='var(--surf2)';
+    toggle.style.borderColor='var(--border)';
+    knob.style.background='var(--text3)';
+    knob.style.left='3px';
+  }
+}
+
+async function checkRecurring(){
+  if(!uid)return;
+  const recurring=txs.filter(t=>t.recur===true);
+  if(!recurring.length)return;
+  const now=new Date();
+  const curYm=ymk(now.getFullYear(),now.getMonth()+1);
+  const{db,collection,addDoc}=window._fb;
+  let created=0;
+  for(const rt of recurring){
+    // Vérifier si cette récurrente existe déjà ce mois (par recurId + mois)
+    const alreadyExists=txs.some(t=>
+      t.recurId===rt.id &&
+      t.date&&t.date.startsWith(curYm)
+    );
+    if(!alreadyExists){
+      const[y,m]=curYm.split('-');
+      const day=rt.recurDay||1;
+      const maxDay=new Date(parseInt(y),parseInt(m),0).getDate();
+      const date=curYm+'-'+String(Math.min(day,maxDay)).padStart(2,'0');
+      await addDoc(collection(db,dataPath()+'/transactions'),{
+        amt:rt.amt,date,cat:rt.cat,poste:rt.poste,
+        cmt:(rt.cmt||'')+'',
+        ts:new Date().toISOString(),
+        recurId:rt.id,
+        auto:true
+      });
+      created++;
+    }
+  }
+  if(created>0)toast(created+' transaction'+(created>1?'s':'')+' récurrente'+(created>1?'s':'')+' ajoutée'+(created>1?'s':'')+' ✓');
+}
+
+
+
+function renderRecurList(){
+  const el=document.getElementById('recur-list');
+  if(!el)return;
+  const recurring=txs.filter(t=>t.recur===true);
+  if(!recurring.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Aucune transaction récurrente</div>';
+    return;
+  }
+  el.innerHTML=recurring.map(t=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">
+          ${new Intl.NumberFormat('fr-FR').format(t.amt)} F · le ${t.recurDay||1} de chaque mois
+          <span class="bdg ${CCLS[t.cat]||'v'}" style="margin-left:4px">${t.cat}</span>
+        </div>
+      </div>
+      <button onclick="deleteRecur('${t.id}')"
+        style="padding:5px 10px;font-size:11px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">
+        Supprimer
+      </button>
+    </div>`).join('');
+}
+
+async function deleteRecur(id){
+  const{db,doc,deleteDoc}=window._fb;
+  await deleteDoc(doc(db,dataPath()+'/transactions/'+id));
+  toast('Transaction récurrente supprimée');
+}
+
+
+function renderTrash(){
+  const el=document.getElementById('trash-list');
+  if(!el)return;
+  if(!trashBin.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Aucune transaction supprimée cette session</div>';
+    return;
+  }
+  el.innerHTML=trashBin.map(t=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.date} · ${new Intl.NumberFormat('fr-FR').format(t.amt)} F · ${(()=>{const left=Math.max(0,Math.round((TRASH_TTL-(Date.now()-new Date(t.deletedAt).getTime()))/60000));return left>0?'expire dans '+left+' min':'expire bientôt';})()}</div>
+      </div>
+      <button data-id="${t.id}" class="restore-btn"
+        style="padding:5px 10px;font-size:11px;border:0.5px solid var(--blue);border-radius:var(--rs);background:transparent;color:var(--blue);cursor:pointer;font-family:var(--font);white-space:nowrap">
+        Restaurer
+      </button>
+    </div>`).join('');
+  // Event delegation pour les boutons Restaurer
+  el.querySelectorAll('.restore-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>undoDelete(btn.dataset.id));
+  });
+}
+
+// FORMAT BUDGET INPUTS
+function fmtBudInput(el){
+  // Extract raw digits only
+  const raw=el.value.replace(/\s/g,'').replace(/[^0-9]/g,'');
+  const num=parseInt(raw)||0;
+  el.dataset.raw=num;
+  // Format with spaces as thousand separator
+  el.value=num>0?new Intl.NumberFormat('fr-FR').format(num):'';
+  // Keep cursor at end
+  setTimeout(()=>{el.selectionStart=el.selectionEnd=el.value.length;},0);
+}
+
+// EDIT TRANSACTION
+
+function openEditTx(id){
+  const tx=txs.find(t=>t.id===id);if(!tx)return;
+  editingId=id;
+  document.getElementById('e-amt').value=tx.amt;
+  document.getElementById('e-date').value=tx.date;
+  document.getElementById('e-cmt').value=tx.cmt||'';
+  const catSel=document.getElementById('e-cat');
+  catSel.innerHTML=Object.keys(CATS).map(c=>`<option ${c===tx.cat?'selected':''}>${c}</option>`).join('');
+  syncEditPostes(tx.poste);
+  const modal=document.getElementById('edit-modal');
+  modal.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function syncEditPostes(selected){
+  const cat=document.getElementById('e-cat').value;
+  const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
+  document.getElementById('e-poste').innerHTML=ps.map(p=>`<option ${p===selected?'selected':''}>${p}</option>`).join('');
+}
+function closeEditTx(){
+  document.getElementById('edit-modal').style.display='none';
+  document.body.style.overflow='';
+  editingId=null;
+}
+async function saveEditTx(){
+  if(!editingId)return;
+  const amt=parseFloat(document.getElementById('e-amt').value);
+  const date=document.getElementById('e-date').value;
+  const cat=document.getElementById('e-cat').value;
+  const poste=document.getElementById('e-poste').value;
+  const cmt=document.getElementById('e-cmt').value.trim();
+  if(!amt||!date){toast('Montant et date obligatoires');return;}
+  const{db,doc,setDoc}=window._fb;
+  await setDoc(doc(db,dataPath()+'/transactions/'+editingId),{amt,date,cat,poste,cmt,ts:new Date().toISOString()});
+  closeEditTx();
+  toast('Transaction modifiée ✓');
+}
+
+// THEME
+function toggleTheme(){
+  const isLight=document.documentElement.classList.toggle('light');
+  document.getElementById('theme-btn').textContent=isLight?'🌙':'☀️';
+  document.getElementById('theme-color-meta').content=isLight?'#f5f5f7':'#111111';
+  localStorage.setItem('fiinas-theme',isLight?'light':'dark');
+}
+function initTheme(){
+  const saved=localStorage.getItem('fiinas-theme');
+  if(saved==='light'){
+    document.documentElement.classList.add('light');
+    const btn=document.getElementById('theme-btn');
+    if(btn)btn.textContent='🌙';
+  }
+}
+initTheme();
+
+// ══════════════════════════════════════
 // ESPACES — Multi-espace avec switcher
 // ══════════════════════════════════════
 
@@ -2195,41 +2808,41 @@ async function renderSpacesUI(){
   el.innerHTML=html;
 }
 
-function showCreateSpace(){
-  const name=prompt("Nom de l'espace (ex: Famille, Chantier Dakar)");
-  if(!name||!name.trim())return;
-  createSpace(name.trim(),false);
-}
 
-function showSharePersonal(){
-  createSpace('Mon espace perso de '+userName,true);
-}
 
-async function createSpace(name,isPersonal){
-  const{db,doc,setDoc}=window._fb;
-  const spaceId='sp_'+uid+'_'+Date.now();
-  const inviteCode=Math.random().toString(36).slice(2,8).toUpperCase();
-  await setDoc(doc(db,'spaces/'+spaceId),{
-    name,isPersonal,
-    ownerUid:isPersonal?uid:null,
-    createdBy:uid,
-    createdAt:new Date().toISOString(),
-    inviteCode,
-    members:{[uid]:{name:userName,email:window._fb.auth.currentUser?.email||'',role:'admin',joinedAt:new Date().toISOString()}}
-  });
-  await setDoc(doc(db,'spaces_invites/'+inviteCode),{spaceId});
-  // Add to user spaces list
-  const{getDoc}=window._fb;
-  const profileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
-  const profile=profileDoc.exists()?profileDoc.data():{};
-  const spaceIds=[...(profile.spaceIds||[]),spaceId];
-  await setDoc(doc(db,'users/'+uid+'/data/profile'),{spaceIds,activeSpaceId:spaceId},{merge:true});
-  mySpaces.push({id:spaceId,name,role:'admin',isPersonal,memberCount:1});
-  sharedSpaceId=spaceId;userRole='admin';
-  updateSpaceBtn();subscribe();
-  await renderSpacesUI();
-  toast('Espace "'+name+'" créé ✓ — partage le code d\'invitation');
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 async function joinSpace(){
   const code=document.getElementById('join-code-inp')?.value.trim().toUpperCase();
