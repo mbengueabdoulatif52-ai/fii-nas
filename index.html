@@ -661,7 +661,13 @@ function setUserUI(u){
 
 
 // Chemin des données — espace perso ou partagé
-function dataPath(){return sharedSpaceId?'spaces/'+sharedSpaceId:'users/'+uid;}
+function dataPath(){
+  if(!sharedSpaceId)return 'users/'+uid;
+  // For personal shared spaces, use the owner's uid path
+  const sp=mySpaces.find(s=>s.id===sharedSpaceId);
+  if(sp?.isPersonal&&sp?.ownerUid)return 'users/'+sp.ownerUid;
+  return 'spaces/'+sharedSpaceId;
+}
 function isAdmin(){return userRole==='admin';}
 
 function subscribe(){
@@ -1649,16 +1655,8 @@ function copyInviteCode(code){
   });
 }
 
-async function toggleMemberRole(memberId,currentRole){
-  if(!isAdmin())return;
-  const newRole=currentRole==='admin'?'reader':'admin';
-  const{db,doc,setDoc}=window._fb;
-  await setDoc(doc(db,'spaces/'+sharedSpaceId),{members:{[memberId]:{role:newRole}}},{merge:true});
-  // Update their profile
-  await setDoc(doc(db,'users/'+memberId+'/data/profile'),{role:newRole},{merge:true});
-  renderSharedSpaceUI();
-  toast('Rôle mis à jour ✓');
-}
+// toggleMemberRole moved to spaces section
+
 
 async function leaveSharedSpace(){
   if(!sharedSpaceId)return;
@@ -2099,6 +2097,7 @@ async function loadUserSpaces(){
             name:d.name||'Espace partagé',
             role:member.role||'reader',
             isPersonal:d.isPersonal||false,
+            ownerUid:d.ownerUid||null,
             memberCount:Object.keys(d.members||{}).length
           });
         }
@@ -2212,6 +2211,7 @@ async function createSpace(name,isPersonal){
   const inviteCode=Math.random().toString(36).slice(2,8).toUpperCase();
   await setDoc(doc(db,'spaces/'+spaceId),{
     name,isPersonal,
+    ownerUid:isPersonal?uid:null,
     createdBy:uid,
     createdAt:new Date().toISOString(),
     inviteCode,
@@ -2259,7 +2259,7 @@ async function joinSpace(){
     const profile=profileDoc.exists()?profileDoc.data():{};
     const spaceIds=[...(profile.spaceIds||[]),spaceId];
     await setDoc(doc(db,'users/'+uid+'/data/profile'),{spaceIds,activeSpaceId:spaceId},{merge:true});
-    mySpaces.push({id:spaceId,name:spaceData.name||'Espace partagé',role:'reader',isPersonal:false,memberCount:Object.keys(spaceData.members||{}).length+1});
+    mySpaces.push({id:spaceId,name:spaceData.name||'Espace partagé',role:'reader',isPersonal:spaceData.isPersonal||false,ownerUid:spaceData.ownerUid||null,memberCount:Object.keys(spaceData.members||{}).length+1});
     sharedSpaceId=spaceId;userRole='reader';
     updateSpaceBtn();subscribe();
     await renderSpacesUI();
@@ -2293,7 +2293,12 @@ async function toggleMemberRole(memberId,currentRole){
   if(userRole!=='admin')return;
   const newRole=currentRole==='admin'?'reader':'admin';
   const{db,doc,setDoc}=window._fb;
+  // Update role in space document
   await setDoc(doc(db,'spaces/'+sharedSpaceId),{members:{[memberId]:{role:newRole}}},{merge:true});
+  // Update member profile so they get the new role on next load
+  await setDoc(doc(db,'users/'+memberId+'/data/profile'),{role:newRole},{merge:true});
+  // Update local mySpaces if it's us
+  if(memberId===uid){userRole=newRole;}
   await renderSpacesUI();
   toast('Rôle mis à jour ✓');
 }
