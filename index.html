@@ -2149,6 +2149,33 @@ async function renderSpacesUI(freshCode){
   }
 
   // Invite section
+  // Pending join requests
+  const{collection,query,where,getDocs}=window._fb;
+  let pendingHtml='';
+  try{
+    const reqQuery=query(collection(db,'join_requests'),where('ownerUid','==',uid),where('status','==','pending'));
+    const reqSnap=await getDocs(reqQuery);
+    if(!reqSnap.empty){
+      pendingHtml+=`<div style="background:rgba(10,132,255,.1);border:0.5px solid rgba(10,132,255,.25);border-radius:var(--rs);padding:12px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:600;color:var(--blue);margin-bottom:10px">🔔 Demandes d'accès en attente</div>`;
+      reqSnap.forEach(d=>{
+        const r=d.data();
+        pendingHtml+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border)">
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text)">${r.requesterName}</div>
+            <div style="font-size:11px;color:var(--text3)">${r.requesterEmail}</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button onclick="approveRequest('${d.id}','${r.requesterUid}','${r.requesterName}','${r.requesterEmail}')" style="padding:5px 10px;font-size:11px;border:none;border-radius:var(--rs);background:var(--green);color:#fff;cursor:pointer;font-family:var(--font)">Accepter</button>
+            <button onclick="denyRequest('${d.id}')" style="padding:5px 10px;font-size:11px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">Refuser</button>
+          </div>
+        </div>`;
+      });
+      pendingHtml+='</div>';
+    }
+  }catch(e){}
+  html+=pendingHtml;
+
   if(inviteCode){
     html+=`<div style="margin-top:12px;background:var(--surf2);border-radius:var(--rs);padding:12px">
       <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em;font-weight:600">Code d'invitation actif</div>
@@ -2203,6 +2230,34 @@ async function renderSpacesUI(freshCode){
   el.innerHTML=html;
 }
 
+
+async function approveRequest(reqId,requesterUid,requesterName,requesterEmail){
+  const{db,doc,getDoc,setDoc,deleteDoc}=window._fb;
+  // Add to MY sharedWith (I am the owner — writing to MY own profile — allowed)
+  const myProfileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
+  const myProfile=myProfileDoc.exists()?myProfileDoc.data():{};
+  const sharedWith=[...(myProfile.sharedWith||[]).filter(m=>m.uid!==requesterUid),
+    {uid:requesterUid,name:requesterName,email:requesterEmail,role:'reader'}];
+  await setDoc(doc(db,'users/'+uid+'/data/profile'),{sharedWith},{merge:true});
+  // Add to requester's accessList (write to THEIR profile — allowed by new rules)
+  const reqProfileDoc=await getDoc(doc(db,'users/'+requesterUid+'/data/profile'));
+  const reqProfile=reqProfileDoc.exists()?reqProfileDoc.data():{};
+  const accessList=[...(reqProfile.accessList||[]).filter(e=>e.ownerUid!==uid),
+    {ownerUid:uid,ownerName:userName,role:'reader'}];
+  await setDoc(doc(db,'users/'+requesterUid+'/data/profile'),{accessList,activeSpaceId:uid},{merge:true});
+  // Delete the request
+  await deleteDoc(doc(db,'join_requests/'+reqId));
+  await renderSpacesUI();
+  toast(requesterName+' a maintenant accès à ton espace ✓');
+}
+
+async function denyRequest(reqId){
+  const{db,doc,deleteDoc}=window._fb;
+  await deleteDoc(doc(db,'join_requests/'+reqId));
+  await renderSpacesUI();
+  toast('Demande refusée');
+}
+
 async function generateInviteCode(){
   const code=Math.random().toString(36).slice(2,8).toUpperCase();
   const{db,doc,setDoc}=window._fb;
@@ -2220,31 +2275,31 @@ async function joinSpace(){
   msg.style.color='var(--text3)';msg.textContent='Recherche...';
   const{db,doc,getDoc,setDoc}=window._fb;
   try{
+    // Find invite
     const invDoc=await getDoc(doc(db,'spaces_invites/'+code));
     if(!invDoc.exists()){msg.style.color='var(--red)';msg.textContent='Code invalide';return;}
-    const{ownerUid:oUid,ownerName:oName,ownerEmail:oEmail}=invDoc.data();
+    const{ownerUid:oUid,ownerName:oName}=invDoc.data();
     if(oUid===uid){msg.style.color='var(--red)';msg.textContent='C\'est ton propre code';return;}
-    // Already in list?
+    // Already in list — just activate
     if(mySpaces.find(s=>s.ownerUid===oUid)){
       await switchSpace(oUid);
       msg.style.color='var(--green)';msg.textContent='Espace activé ✓';
       return;
     }
-    // Add to my accessList
-    const myProfileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
-    const myProfile=myProfileDoc.exists()?myProfileDoc.data():{};
-    const accessList=[...(myProfile.accessList||[]),{ownerUid:oUid,ownerName:oName,role:'reader'}];
-    await setDoc(doc(db,'users/'+uid+'/data/profile'),{accessList,activeSpaceId:oUid},{merge:true});
-    // Add me to owner's sharedWith
-    const ownerProfileDoc=await getDoc(doc(db,'users/'+oUid+'/data/profile'));
-    const ownerProfile=ownerProfileDoc.exists()?ownerProfileDoc.data():{};
-    const sharedWith=[...(ownerProfile.sharedWith||[]),{uid,name:userName,email:window._fb.auth.currentUser?.email||'',role:'reader'}];
-    await setDoc(doc(db,'users/'+oUid+'/data/profile'),{sharedWith},{merge:true});
-    mySpaces.push({ownerUid:oUid,ownerName:oName,role:'reader'});
-    sharedSpaceId=oUid;userRole='reader';
-    updateSpaceBtn();subscribe();
-    await renderSpacesUI(code);
-    msg.style.color='var(--green)';msg.textContent='Espace rejoint ✓';
+    // Create a join request — only writes to join_requests collection (open to all)
+    const reqId=oUid+'_'+uid;
+    await setDoc(doc(db,'join_requests/'+reqId),{
+      requesterUid:uid,
+      requesterName:userName,
+      requesterEmail:window._fb.auth.currentUser?.email||'',
+      ownerUid:oUid,
+      ownerName:oName,
+      status:'pending',
+      createdAt:new Date().toISOString()
+    });
+    msg.style.color='var(--green)';
+    msg.textContent='Demande envoyée à '+oName+' — en attente d\'approbation';
+    document.getElementById('join-code-inp').value='';
   }catch(e){msg.style.color='var(--red)';msg.textContent='Erreur: '+e.message;}
 }
 
@@ -2854,41 +2909,41 @@ async function loadUserSpaces(){
 
 
 
-async function joinSpace(){
-  const code=document.getElementById('join-code-inp')?.value.trim().toUpperCase();
-  const msg=document.getElementById('spaces-msg');
-  if(!code){msg.style.color='var(--red)';msg.textContent='Entre un code';return;}
-  msg.style.color='var(--text3)';msg.textContent='Recherche...';
-  const{db,doc,getDoc,setDoc}=window._fb;
-  try{
-    const invDoc=await getDoc(doc(db,'spaces_invites/'+code));
-    if(!invDoc.exists()){msg.style.color='var(--red)';msg.textContent='Code invalide';return;}
-    const spaceId=invDoc.data().spaceId;
-    // Check if already member
-    if(mySpaces.find(s=>s.id===spaceId)){
-      switchSpace(spaceId);
-      msg.style.color='var(--green)';msg.textContent='Espace activé ✓';
-      return;
-    }
-    const sDoc=await getDoc(doc(db,'spaces/'+spaceId));
-    if(!sDoc.exists()){msg.style.color='var(--red)';msg.textContent='Espace introuvable';return;}
-    const spaceData=sDoc.data();
-    // Add as member
-    await setDoc(doc(db,'spaces/'+spaceId),{
-      members:{[uid]:{name:userName,email:window._fb.auth.currentUser?.email||'',role:'reader',joinedAt:new Date().toISOString()}}
-    },{merge:true});
-    // Add to user spaces
-    const profileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
-    const profile=profileDoc.exists()?profileDoc.data():{};
-    const spaceIds=[...(profile.spaceIds||[]),spaceId];
-    await setDoc(doc(db,'users/'+uid+'/data/profile'),{spaceIds,activeSpaceId:spaceId},{merge:true});
-    mySpaces.push({id:spaceId,name:spaceData.name||'Espace partagé',role:'reader',isPersonal:spaceData.isPersonal||false,ownerUid:spaceData.ownerUid||null,memberCount:Object.keys(spaceData.members||{}).length+1});
-    sharedSpaceId=spaceId;userRole='reader';
-    updateSpaceBtn();subscribe();
-    await renderSpacesUI(code);
-    msg.style.color='var(--green)';msg.textContent='Espace rejoint en mode Lecteur ✓';
-  }catch(e){msg.style.color='var(--red)';msg.textContent='Erreur: '+e.message;}
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 async function leaveSpace(spaceId){
   if(!confirm('Quitter cet espace ? Tu pourras y revenir avec le code.'))return;
