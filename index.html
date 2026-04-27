@@ -778,7 +778,7 @@ function goP(p,btn){
 function txYM(ym){return txs.filter(t=>t.date&&t.date.startsWith(ym));}
 function sumC(t,cat){return t.filter(x=>x.cat===cat).reduce((s,x)=>s+(x.amt||0),0);}
 function gBud(ym,p){return(budget[ym]&&budget[ym][p])||0;}
-function budTot(ym,cat){returngetAllPostes(cat).reduce((s,p)=>s+gBud(ym,p),0);}
+function budTot(ym,cat){return getAllPostes(cat).reduce((s,p)=>s+gBud(ym,p),0);}
 
 function setDTab(el,k){
   document.querySelectorAll('#dtabs .tab').forEach(b=>b.classList.remove('active'));
