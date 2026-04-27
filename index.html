@@ -449,27 +449,68 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
       Retour
     </button>
+
+    <!-- IMPORT WAVE / ORANGE MONEY -->
     <div class="card">
-      <div class="ct">Import transactions Excel</div>
+      <div class="ct">Import Wave / Orange Money</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Fais une capture d'écran de ton historique Wave ou Orange Money et uploade-la. L'IA va lire les transactions automatiquement.</p>
+
+      <!-- Upload zone -->
+      <div id="img-drop-zone" onclick="document.getElementById('img-input').click()"
+        style="border:1.5px dashed var(--border2);border-radius:var(--r);padding:28px 20px;text-align:center;cursor:pointer;transition:.15s;margin-bottom:12px">
+        <div style="font-size:24px;margin-bottom:8px">📸</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">Appuie pour choisir une image</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Wave ou Orange Money · JPG, PNG</div>
+      </div>
+      <input type="file" id="img-input" accept="image/*" style="display:none" onchange="onImgSelected(this)">
+
+      <!-- Preview -->
+      <div id="img-preview" style="display:none;margin-bottom:12px">
+        <img id="img-thumb" style="width:100%;border-radius:var(--rs);max-height:200px;object-fit:contain;background:var(--surf2)" alt="Preview">
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:center" id="img-name"></div>
+      </div>
+
+      <!-- Analyse btn -->
+      <button class="btn-p" id="analyse-img-btn" onclick="analyseImage()" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        Analyser avec l'IA
+      </button>
+
+      <!-- Loading -->
+      <div id="img-loading" style="display:none;text-align:center;padding:20px">
+        <div class="spin" style="margin:0 auto 10px"></div>
+        <div style="font-size:12px;color:var(--text2)">L'IA analyse votre historique...</div>
+      </div>
+
+      <!-- Résultats détectés -->
+      <div id="img-results" style="display:none">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 10px">Transactions détectées</div>
+        <div id="img-tx-list"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0" id="img-stats"></div>
+        <div style="background:var(--surf2);border-radius:var(--rs);overflow:hidden;height:4px;margin-bottom:6px"><div id="img-pb" style="height:4px;background:var(--green);border-radius:var(--rs);width:0%;transition:width .3s"></div></div>
+        <div id="img-pt" style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:10px"></div>
+        <button class="btn-p" id="img-import-btn" onclick="importDetectedTx()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+          Importer les transactions sélectionnées
+        </button>
+      </div>
+    </div>
+
+    <!-- IMPORT EXCEL (gardé) -->
+    <div class="card">
+      <div class="ct">Import Excel</div>
       <div id="imp-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px"></div>
-      <div style="background:var(--surf2);border-radius:var(--rs);overflow:hidden;height:6px;margin-bottom:6px"><div id="imp-pb" style="height:6px;background:var(--green);border-radius:var(--rs);width:0%;transition:width .3s"></div></div>
-      <div id="imp-pt" style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:12px">En attente</div>
+      <div style="background:var(--surf2);border-radius:var(--rs);overflow:hidden;height:4px;margin-bottom:6px"><div id="imp-pb" style="height:4px;background:var(--green);border-radius:var(--rs);width:0%;transition:width .3s"></div></div>
+      <div id="imp-pt" style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:10px">En attente</div>
       <div style="margin-bottom:12px">
-        <div class="flbl">Coller les données Excel (colonnes: date, catégorie, poste, montant, commentaire)</div>
-        <textarea id="imp-txt" class="finp" rows="6" placeholder="Colle ici tes lignes Excel copiées..." style="resize:vertical;font-size:12px;font-family:var(--mono)"></textarea>
+        <div class="flbl">Coller les données Excel</div>
+        <textarea id="imp-txt" class="finp" rows="4" placeholder="Colle ici tes lignes Excel copiées..." style="resize:vertical;font-size:12px"></textarea>
       </div>
       <button class="btn-p" id="imp-btn" onclick="parseAndImport()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Importer
       </button>
-      <div id="imp-log" style="margin-top:10px;background:var(--surf2);border-radius:var(--rs);padding:10px;max-height:180px;overflow-y:auto;font-size:10px;font-family:var(--mono);color:var(--text3);display:none"></div>
-    </div>
-    <div class="card" style="font-size:12px;color:var(--text2);line-height:1.7">
-      <div class="ct">Comment utiliser</div>
-      <p>1. Ouvre ton fichier Excel</p>
-      <p>2. Sélectionne les lignes de transactions (colonnes date, catégorie, poste, montant, commentaire)</p>
-      <p>3. Copie (Ctrl+C) et colle ici (Ctrl+V)</p>
-      <p>4. Clique Importer</p>
+      <div id="imp-log" style="margin-top:10px;background:var(--surf2);border-radius:var(--rs);padding:10px;max-height:150px;overflow-y:auto;font-size:10px;color:var(--text3);display:none"></div>
     </div>
   </div>
   <!-- NAVBAR -->
@@ -1246,6 +1287,202 @@ async function doImport(txList){
 
 
 
+
+
+// IMPORT WAVE / ORANGE MONEY VIA IA
+let imgBase64=null;
+let detectedTxs=[];
+
+function onImgSelected(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    imgBase64=e.target.result.split(',')[1];
+    document.getElementById('img-thumb').src=e.target.result;
+    document.getElementById('img-name').textContent=file.name;
+    document.getElementById('img-preview').style.display='block';
+    document.getElementById('analyse-img-btn').style.display='flex';
+    document.getElementById('img-results').style.display='none';
+    document.getElementById('img-drop-zone').style.borderColor='var(--blue)';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyseImage(){
+  if(!imgBase64){toast('Aucune image sélectionnée');return;}
+  document.getElementById('analyse-img-btn').style.display='none';
+  document.getElementById('img-loading').style.display='block';
+  document.getElementById('img-results').style.display='none';
+
+  try{
+    const prompt=`Tu es un assistant qui extrait des transactions financières depuis des captures d'écran d'historiques Wave ou Orange Money sénégalais.
+
+Analyse cette image et extrais uniquement les transactions PERTINENTES selon ces règles strictes :
+
+INCLURE comme SORTIE :
+- Transfert envoyé / Transfert effectué / Envoi effectué
+- "À [nom]" avec montant négatif
+- Achat crédit, achat forfait
+- Paiement marchand
+
+INCLURE comme ENTREE :
+- Transfert reçu
+- "De [nom]" avec montant positif
+
+IGNORER complètement :
+- Retraits (l'argent reste dans le patrimoine, juste changement de forme)
+- Dépôts reçus (rechargement de compte mobile)
+- Frais de transaction
+
+Pour chaque transaction retenue, retourne un objet JSON avec :
+- date: format YYYY-MM-DD (si seulement jour/mois visible, utilise 2026 comme année)
+- montant: nombre positif (valeur absolue)
+- sens: "sortie" ou "entree"
+- commentaire: nom de la personne ou description courte
+- operateur: "Wave" ou "Orange Money" selon le style de l'interface
+
+Réponds UNIQUEMENT avec un tableau JSON valide, sans texte avant ou après.
+Exemple: [{"date":"2026-04-26","montant":5000,"sens":"sortie","commentaire":"Adja Diaw","operateur":"Wave"}]`;
+
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{
+          role:'user',
+          content:[
+            {type:'image',source:{type:'base64',media_type:'image/jpeg',data:imgBase64}},
+            {type:'text',text:prompt}
+          ]
+        }]
+      })
+    });
+
+    const data=await response.json();
+    const raw=data.content?.[0]?.text||'[]';
+    const clean=raw.replace(/```json|```/g,'').trim();
+    detectedTxs=JSON.parse(clean);
+
+    document.getElementById('img-loading').style.display='none';
+    renderDetectedTxs();
+
+  }catch(e){
+    document.getElementById('img-loading').style.display='none';
+    document.getElementById('analyse-img-btn').style.display='flex';
+    toast('Erreur analyse: '+e.message);
+  }
+}
+
+function renderDetectedTxs(){
+  if(!detectedTxs.length){
+    toast('Aucune transaction détectée');
+    document.getElementById('analyse-img-btn').style.display='flex';
+    return;
+  }
+
+  const totEntree=detectedTxs.filter(t=>t.sens==='entree').reduce((s,t)=>s+t.montant,0);
+  const totSortie=detectedTxs.filter(t=>t.sens==='sortie').reduce((s,t)=>s+t.montant,0);
+
+  document.getElementById('img-stats').innerHTML=`
+    <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Détectées</div>
+      <div style="font-size:18px;font-weight:600;color:var(--text)">${detectedTxs.length}</div>
+    </div>
+    <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Entrées</div>
+      <div style="font-size:13px;font-weight:600;color:var(--green)">${fmt(totEntree)} F</div>
+    </div>
+    <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Sorties</div>
+      <div style="font-size:13px;font-weight:600;color:var(--red)">${fmt(totSortie)} F</div>
+    </div>`;
+
+  // Liste avec sélecteur de poste
+  const allCats=Object.keys(CATS);
+  document.getElementById('img-tx-list').innerHTML=detectedTxs.map((t,i)=>{
+    const isEntree=t.sens==='entree';
+    const defaultCat=isEntree?'Revenu':'Dépenses variables';
+    const defaultPoste=isEntree?'Extras professionnels':'Dons';
+    const postesOpts=[...(CATS[defaultCat]||[]),...(custom[defaultCat]||[])].map(p=>`<option value="${p}"${p===defaultPoste?' selected':''}>${p}</option>`).join('');
+    return `<div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--text)">${t.commentaire||t.operateur}</div>
+          <div style="font-size:11px;color:var(--text3)">${t.date} · <span style="color:var(--text2)">${t.operateur}</span></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:600;color:${isEntree?'var(--green)':'var(--red)'}">${isEntree?'+':'−'}${fmt(t.montant)} F</div>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);cursor:pointer;justify-content:flex-end;margin-top:3px">
+            <input type="checkbox" checked id="tx-sel-${i}" style="cursor:pointer">
+            Inclure
+          </label>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <select class="fsel" id="tx-cat-${i}" style="flex:1;font-size:12px;padding:7px 10px" onchange="updateTxPoste(${i})">
+          ${allCats.map(c=>`<option value="${c}"${c===defaultCat?' selected':''}>${c}</option>`).join('')}
+        </select>
+        <select class="fsel" id="tx-poste-${i}" style="flex:1;font-size:12px;padding:7px 10px">
+          ${postesOpts}
+        </select>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('img-results').style.display='block';
+  document.getElementById('img-pt').textContent='Vérifie et ajuste les catégories avant d\'importer';
+}
+
+function updateTxPoste(i){
+  const cat=document.getElementById('tx-cat-'+i).value;
+  const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
+  document.getElementById('tx-poste-'+i).innerHTML=ps.map(p=>`<option>${p}</option>`).join('');
+}
+
+async function importDetectedTx(){
+  const btn=document.getElementById('img-import-btn');
+  btn.disabled=true;
+  const{db,collection,addDoc}=window._fb;
+  let ok=0;
+  const toImport=detectedTxs.filter((_,i)=>document.getElementById('tx-sel-'+i)?.checked);
+
+  for(let i=0;i<detectedTxs.length;i++){
+    if(!document.getElementById('tx-sel-'+i)?.checked)continue;
+    const t=detectedTxs[i];
+    const cat=document.getElementById('tx-cat-'+i)?.value||'Dépenses variables';
+    const poste=document.getElementById('tx-poste-'+i)?.value||'Dons';
+    try{
+      addDoc(collection(db,`users/${uid}/transactions`),{
+        amt:t.montant,date:t.date,cat,poste,
+        cmt:t.commentaire||'',
+        ts:new Date().toISOString(),
+        source:t.operateur
+      });
+      ok++;
+    }catch(e){console.warn(e);}
+    const pct=Math.round((ok)/toImport.length*100);
+    document.getElementById('img-pb').style.width=pct+'%';
+    document.getElementById('img-pt').textContent=ok+' / '+toImport.length+' importées';
+    await new Promise(r=>setTimeout(r,30));
+  }
+
+  btn.disabled=false;
+  toast(ok+' transactions importées depuis '+( detectedTxs[0]?.operateur||'image')+' ✓');
+  // Reset
+  setTimeout(()=>{
+    document.getElementById('img-results').style.display='none';
+    document.getElementById('img-preview').style.display='none';
+    document.getElementById('analyse-img-btn').style.display='none';
+    document.getElementById('img-drop-zone').style.borderColor='var(--border2)';
+    document.getElementById('img-pb').style.width='0%';
+    document.getElementById('img-pt').textContent='';
+    imgBase64=null;detectedTxs=[];
+    document.getElementById('img-input').value='';
+  },2000);
+}
 
 // ANALYSE DES HABITUDES
 let analysePeriod=3;
