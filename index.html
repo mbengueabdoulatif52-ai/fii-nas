@@ -2094,9 +2094,45 @@ async function switchSpace(ownerUid){
 
 let unsubProfile=null;
 
+let unsubJoinReq=null;
+
+async function watchJoinRequests(){
+  if(!uid)return;
+  const{db,collection,query,where,onSnapshot}=window._fb;
+  if(unsubJoinReq)unsubJoinReq();
+  unsubJoinReq=onSnapshot(
+    query(collection(db,'join_requests'),where('ownerUid','==',uid),where('status','==','pending')),
+    snap=>{
+      const count=snap.size;
+      // Update badge on profil nav button
+      const proBtn=document.querySelector('.ni[onclick*="pro"]');
+      if(proBtn){
+        const existing=proBtn.querySelector('.req-badge');
+        if(count>0){
+          if(!existing){
+            const badge=document.createElement('span');
+            badge.className='req-badge';
+            badge.style.cssText='position:absolute;top:-3px;right:-3px;width:8px;height:8px;background:var(--red);border-radius:50%;display:block';
+            proBtn.style.position='relative';
+            proBtn.appendChild(badge);
+          }
+        } else if(existing){
+          existing.remove();
+        }
+      }
+      // If on profil page, refresh spaces UI
+      const spacesEl=document.getElementById('spaces-ui');
+      if(spacesEl&&spacesEl.innerHTML){
+        renderSpacesUI();
+      }
+    }
+  );
+}
+
 async function loadUserSpaces(){
   if(!uid)return;
   const{db,doc,onSnapshot}=window._fb;
+  watchJoinRequests();
   // Real-time listener on profile — detects when someone grants access
   if(unsubProfile)unsubProfile();
   unsubProfile=onSnapshot(doc(db,'users/'+uid+'/data/profile'),snap=>{
