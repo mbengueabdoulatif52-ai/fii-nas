@@ -2138,7 +2138,7 @@ async function loadUserSpaces(){
   unsubProfile=onSnapshot(doc(db,'users/'+uid+'/data/profile'),snap=>{
     const profile=snap.exists()?snap.data():{};
     const accessList=profile.accessList||[];
-    mySpaces=accessList.map(ee=>({
+    mySpaces=accessList.map(e=>({
       ownerUid:e.ownerUid,
       ownerName:e.ownerName||'Utilisateur',
       role:e.role||'reader'
