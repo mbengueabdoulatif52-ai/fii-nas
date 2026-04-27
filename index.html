@@ -609,12 +609,36 @@ select option{background:#2c2c2e;color:#f5f5f7}
 </div>
 
 <script>
-const CATS={
+const DEFAULT_CATS={
   'Revenu':['Salaire net','Revenus investissements','Extras professionnels','Entrée exceptionnelles','Autres'],
   'Dépenses fixes':['Frais bancaires','Assurances','Mensualité de prêt','Aides versées','Frais de scolarité','Gardien','Electricité','Eau','Location','Abonnements','Téléphone'],
   'Dépenses variables':['Achats divers','Alimentation','Entretien auto','Santé','Dons','Loisir','Prêts','Remboursement','Imprévus','Transport','Voiture','Sport','Investissements'],
   'Epargne':['Epargne projet','Epargne de précaution']
 };
+// CATS est maintenant dynamique — initialisé depuis Firebase ou DEFAULT_CATS au premier login
+let CATS={...DEFAULT_CATS};
+
+// POSTES — entièrement personnalisables
+function getAllPostes(cat){
+  return CATS[cat]||[];
+}
+
+const DEFAULT_CATS_REF = JSON.parse(JSON.stringify(DEFAULT_CATS));
+
+async function initCats(){
+  // Si CATS déjà chargé depuis Firebase → rien à faire
+  // sinon initialiser avec DEFAULT_CATS et sauvegarder
+  if(Object.keys(CATS['Revenu']||{}).length > 0) return;
+}
+
+function loadCatsFromSettings(settings){
+  if(settings && settings.cats && Object.keys(settings.cats).length > 0){
+    CATS = settings.cats;
+  } else {
+    CATS = JSON.parse(JSON.stringify(DEFAULT_CATS));
+  }
+}
+
 const CICO={'Revenu':'💚','Dépenses fixes':'🔵','Dépenses variables':'🔴','Epargne':'💜'};
 const CCLS={'Revenu':'r','Dépenses fixes':'f','Dépenses variables':'v','Epargne':'e'};
 const PC=['#3b82f6','#ef4444','#f59e0b','#a855f7','#22c55e','#ec4899','#06b6d4','#f97316','#84cc16'];
@@ -696,14 +720,23 @@ function subscribe(){
   });
   if(unsub2)unsub2();
   unsub2=onSnapshot(doc(db,dataPath()+'/data/settings'),snap=>{
-    if(snap.exists()){const d=snap.data();budget=d.budget||{};custom=d.custom||{};}
+    if(snap.exists()){
+      const d=snap.data();
+      budget=d.budget||{};
+      custom=d.custom||{};
+      loadCatsFromSettings(d);
+    } else {
+      // Premier login — initialiser avec DEFAULT_CATS
+      CATS=JSON.parse(JSON.stringify(DEFAULT_CATS));
+      saveSettings();
+    }
     renderCurrent();renderCPUI();
   });
 }
 
 async function saveSettings(){
   const{db,doc,setDoc}=window._fb;
-  await setDoc(doc(db,dataPath()+'/data/settings'),{budget,custom},{merge:true});
+  await setDoc(doc(db,dataPath()+'/data/settings'),{budget,custom,cats:CATS},{merge:true});
 }
 
 function buildMonthSel(){
@@ -745,7 +778,7 @@ function goP(p,btn){
 function txYM(ym){return txs.filter(t=>t.date&&t.date.startsWith(ym));}
 function sumC(t,cat){return t.filter(x=>x.cat===cat).reduce((s,x)=>s+(x.amt||0),0);}
 function gBud(ym,p){return(budget[ym]&&budget[ym][p])||0;}
-function budTot(ym,cat){return[...(CATS[cat]||[]),...(custom[cat]||[])].reduce((s,p)=>s+gBud(ym,p),0);}
+function budTot(ym,cat){returngetAllPostes(cat).reduce((s,p)=>s+gBud(ym,p),0);}
 
 function setDTab(el,k){
   document.querySelectorAll('#dtabs .tab').forEach(b=>b.classList.remove('active'));
@@ -796,7 +829,7 @@ function renderAlerts(ym){
   const bud=budget[ym]||{};
   // Check each expense poste
   ['Dépenses fixes','Dépenses variables'].forEach(cat=>{
-    const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
+    const ps=getAllPostes(cat);
     ps.forEach(p=>{
       const r=t.filter(x=>x.cat===cat&&x.poste===p).reduce((s,x)=>s+(x.amt||0),0);
       const b=bud[p]||0;
@@ -904,7 +937,7 @@ function renderDC(){
     dTab==='rev'?['Revenu']:dTab==='fix'?['Dépenses fixes']:dTab==='var'?['Dépenses variables']:['Epargne'];
   let html='';
   cats.forEach(cat=>{
-    const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
+    const ps=getAllPostes(cat);
     const act={};t.filter(x=>x.cat===cat).forEach(x=>{act[x.poste]=(act[x.poste]||0)+x.amt;});
     let rows='';let tR=0,tB=0;
     ps.forEach(p=>{
@@ -936,7 +969,7 @@ function selCat(el,cat,cls){
   el.classList.add(cls);selCatVal=cat;syncPostes();
 }
 function syncPostes(){
-  const p=[...(CATS[selCatVal]||[]),...(custom[selCatVal]||[])];
+  const p=getAllPostes(selCatVal);
   document.getElementById('f-poste').innerHTML=p.map(x=>`<option>${x}</option>`).join('');
 }
 async function saveTx(){
@@ -1133,7 +1166,7 @@ function calcBudSolde(ym){
   // Lire les valeurs en direct depuis les inputs si disponibles, sinon depuis budget sauvegardé
   const bud=budget[ym]||{};
   const allPs=[
-    ...(CATS['Revenu']||[]),...(custom['Revenu']||[]),
+    ...getAllPostes('Revenu'),
     ...(CATS['Dépenses fixes']||[]),...(custom['Dépenses fixes']||[]),
     ...(CATS['Dépenses variables']||[]),...(custom['Dépenses variables']||[]),
     ...(CATS['Epargne']||[]),...(custom['Epargne']||[])
@@ -1143,10 +1176,8 @@ function calcBudSolde(ym){
     const el=document.getElementById('bi_'+btoa(encodeURIComponent(p)));
     live[p]=el?parseFloat((el.dataset.raw||'').replace(/\s/g,''))||0:(bud[p]||0);
   });
-  const revPs=[...(CATS['Revenu']||[]),...(custom['Revenu']||[])];
-  const depPs=[...(CATS['Dépenses fixes']||[]),...(custom['Dépenses fixes']||[]),
-               ...(CATS['Dépenses variables']||[]),...(custom['Dépenses variables']||[]),
-               ...(CATS['Epargne']||[]),...(custom['Epargne']||[])];
+  const revPs=getAllPostes('Revenu');
+  const depPs=[...getAllPostes('Dépenses fixes'),...getAllPostes('Dépenses variables'),...getAllPostes('Epargne')];
   const bRev=revPs.reduce((s,p)=>s+(live[p]||0),0);
   const bDep=depPs.reduce((s,p)=>s+(live[p]||0),0);
   return{bRev,bDep,solde:bRev-bDep};
@@ -1176,7 +1207,7 @@ function renderBForm(){
   const ym=ymk(bYear,bMonth);const bud=budget[ym]||{};
   let html='';
   ['Revenu','Dépenses fixes','Dépenses variables','Epargne'].forEach(cat=>{
-    const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
+    const ps=getAllPostes(cat);
     const total=ps.reduce((s,p)=>s+(bud[p]||0),0);
     html+=`<div class="card"><div class="ct">${CICO[cat]} ${cat}${total>0?` <span style="float:right;color:${cat==='Revenu'?'#34d399':'#fb7185'};font-family:var(--mono)">${fmt(total)} F</span>`:''}</div>
       ${ps.map(p=>{
@@ -1201,7 +1232,7 @@ function renderBForm(){
 }
 async function saveBudget(){
   const ym=ymk(bYear,bMonth);const bud={};
-  const all=[...Object.values(CATS).flat(),...Object.values(custom).flat()];
+  const all=Object.keys(CATS).flatMap(c=>CATS[c]||[]);
   all.forEach(p=>{
     const el=document.getElementById('bi_'+btoa(encodeURIComponent(p)));
     if(el){
@@ -1251,14 +1282,16 @@ function renderCPUI(){
   const el=document.getElementById('cpui');if(!el)return;
   let html='';
   ['Revenu','Dépenses fixes','Dépenses variables','Epargne'].forEach(cat=>{
-    const cust=custom[cat]||[];
-    const cl=CCLS[cat]||'v';
-    html+=`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+    const postes=CATS[cat]||[];
+    const defaults=DEFAULT_CATS[cat]||[];
+    html+=`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid var(--border)">
       <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px">${CICO[cat]} ${cat}</div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
-        ${(CATS[cat]||[]).map(p=>`<span class="bdg ${cl}" style="opacity:.6">${p}</span>`).join('')}
-        ${cust.map(p=>`<span class="bdg" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818cf8;padding:3px 8px">${p} <button onclick="removeCP('${cat}','${p}')" style="border:none;background:none;color:#fb7185;cursor:pointer;font-size:11px;padding:0 2px;margin-left:2px">✕</button></span>`).join('')}
-        ${cust.length===0?'<span style="font-size:11px;color:var(--text3);font-style:italic">Aucun poste personnalisé</span>':''}
+        ${postes.map(p=>{
+          const isDef=defaults.includes(p);
+          return '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;background:'+(isDef?'var(--surf2)':'rgba(99,102,241,.15)')+';border:1px solid '+(isDef?'var(--border)':'rgba(99,102,241,.3)')+';color:'+(isDef?'var(--text2)':'#818cf8')+'">'+p+' <button onclick="removePoste(''+cat+'',''+p+'')" style="border:none;background:none;color:#fb7185;cursor:pointer;font-size:11px;padding:0;line-height:1">✕</button></span>';
+        }).join('')}
+        ${postes.length===0?'<span style="font-size:11px;color:var(--text3);font-style:italic">Aucun poste</span>':''}
       </div>
       <div style="display:flex;gap:8px">
         <input id="ncp_${cat.replace(/ /g,'_')}" type="text" class="finp" placeholder="Nouveau poste..." style="flex:1;padding:8px 12px;font-size:12px">
@@ -1268,6 +1301,20 @@ function renderCPUI(){
   });
   el.innerHTML=html;
 }
+async function addCP(cat){
+  const id='ncp_'+cat.replace(/ /g,'_');
+  const v=document.getElementById(id)?.value.trim();if(!v)return;
+  if(!CATS[cat])CATS[cat]=[];
+  if(!CATS[cat].includes(v))CATS[cat].push(v);
+  document.getElementById(id).value='';
+  await saveSettings();syncPostes();renderCPUI();toast('Poste ajouté ✓');
+}
+async function removePoste(cat,p){
+  CATS[cat]=(CATS[cat]||[]).filter(x=>x!==p);
+  await saveSettings();syncPostes();renderCPUI();toast('Poste supprimé');
+}
+async function removeCP(cat,p){return removePoste(cat,p);}
+
 async function addCP(cat){
   const id='ncp_'+cat.replace(/ /g,'_');
   const v=document.getElementById(id).value.trim();if(!v)return;
@@ -1457,7 +1504,7 @@ function renderDetectedTxs(){
     const isEntree=t.sens==='entree';
     const defaultCat=isEntree?'Revenu':'Dépenses variables';
     const defaultPoste=isEntree?'Extras professionnels':'Dons';
-    const postesOpts=[...(CATS[defaultCat]||[]),...(custom[defaultCat]||[])].map(p=>`<option value="${p}"${p===defaultPoste?' selected':''}>${p}</option>`).join('');
+    const postesOpts=getAllPostes(defaultCat).map(p=>`<option value="${p}"${p===defaultPoste?' selected':''}>${p}</option>`).join('');
     return `<div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
@@ -1489,7 +1536,7 @@ function renderDetectedTxs(){
 
 function updateTxPoste(i){
   const cat=document.getElementById('tx-cat-'+i).value;
-  const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
+  const ps=getAllPostes(cat);
   document.getElementById('tx-poste-'+i).innerHTML=ps.map(p=>`<option>${p}</option>`).join('');
 }
 
@@ -1988,7 +2035,7 @@ function openEditTx(id){
 }
 function syncEditPostes(selected){
   const cat=document.getElementById('e-cat').value;
-  const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
+  const ps=getAllPostes(cat);
   document.getElementById('e-poste').innerHTML=ps.map(p=>`<option ${p===selected?'selected':''}>${p}</option>`).join('');
 }
 function closeEditTx(){
@@ -3119,7 +3166,7 @@ function openEditTx(id){
 }
 function syncEditPostes(selected){
   const cat=document.getElementById('e-cat').value;
-  const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
+  const ps=getAllPostes(cat);
   document.getElementById('e-poste').innerHTML=ps.map(p=>`<option ${p===selected?'selected':''}>${p}</option>`).join('');
 }
 function closeEditTx(){
@@ -4144,7 +4191,7 @@ function openEditTx(id){
 }
 function syncEditPostes(selected){
   const cat=document.getElementById('e-cat').value;
-  const ps=[...(CATS[cat]||[]),...(custom[cat]||[])];
+  const ps=getAllPostes(cat);
   document.getElementById('e-poste').innerHTML=ps.map(p=>`<option ${p===selected?'selected':''}>${p}</option>`).join('');
 }
 function closeEditTx(){
