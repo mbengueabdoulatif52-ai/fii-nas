@@ -12,7 +12,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, enableIndexedDbPersistence, doc, setDoc, getDoc, onSnapshot, collection, addDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, enableIndexedDbPersistence, doc, setDoc, getDoc, getDocs, onSnapshot, collection, addDoc, deleteDoc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -37,7 +37,7 @@ enableIndexedDbPersistence(db).catch(err=>{
   }
 });
 
-window._fb = { db, auth, doc, setDoc, getDoc, onSnapshot, collection, addDoc, deleteDoc, query, orderBy, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut };
+window._fb = { db, auth, doc, setDoc, getDoc, getDocs, onSnapshot, collection, addDoc, deleteDoc, query, orderBy, where, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut };
 </script>
 
 <style>
