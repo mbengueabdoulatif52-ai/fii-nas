@@ -1345,26 +1345,23 @@ Pour chaque transaction retenue, retourne un objet JSON avec :
 Réponds UNIQUEMENT avec un tableau JSON valide, sans texte avant ou après.
 Exemple: [{"date":"2026-04-26","montant":5000,"sens":"sortie","commentaire":"Adja Diaw","operateur":"Wave"}]`;
 
-    const response=await fetch('https://api.anthropic.com/v1/messages',{
+    // Détection du type d'image
+    const mediaType=imgBase64.startsWith('/9j')?'image/jpeg':
+                    imgBase64.startsWith('iVBOR')?'image/png':'image/jpeg';
+
+    const response=await fetch('/api/analyse',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        messages:[{
-          role:'user',
-          content:[
-            {type:'image',source:{type:'base64',media_type:'image/jpeg',data:imgBase64}},
-            {type:'text',text:prompt}
-          ]
-        }]
-      })
+      body:JSON.stringify({image:imgBase64,mediaType})
     });
 
+    if(!response.ok){
+      const err=await response.json();
+      throw new Error(err.error||'Erreur serveur');
+    }
+
     const data=await response.json();
-    const raw=data.content?.[0]?.text||'[]';
-    const clean=raw.replace(/```json|```/g,'').trim();
-    detectedTxs=JSON.parse(clean);
+    detectedTxs=data.transactions||[];
 
     document.getElementById('img-loading').style.display='none';
     renderDetectedTxs();
