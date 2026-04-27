@@ -1284,23 +1284,35 @@ function renderCPUI(){
   ['Revenu','Dépenses fixes','Dépenses variables','Epargne'].forEach(cat=>{
     const postes=CATS[cat]||[];
     const defaults=DEFAULT_CATS[cat]||[];
+    const catId=cat.replace(/ /g,'_');
     html+=`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid var(--border)">
       <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px">${CICO[cat]} ${cat}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px" id="postes_${catId}">
         ${postes.map(p=>{
           const isDef=defaults.includes(p);
-          return '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;background:'+(isDef?'var(--surf2)':'rgba(99,102,241,.15)')+';border:1px solid '+(isDef?'var(--border)':'rgba(99,102,241,.3)')+';color:'+(isDef?'var(--text2)':'#818cf8')+'">'+p+' <button onclick=\"removePoste('"+cat+"','"+p+"')\" style="border:none;background:none;color:#fb7185;cursor:pointer;font-size:11px;padding:0;line-height:1">✕</button></span>';
+          const bg=isDef?'var(--surf2)':'rgba(99,102,241,.15)';
+          const br=isDef?'var(--border)':'rgba(99,102,241,.3)';
+          const cl=isDef?'var(--text2)':'#818cf8';
+          return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;background:${bg};border:1px solid ${br};color:${cl}">${p}<button class="rm-poste-btn" data-cat="${cat}" data-p="${p}" style="border:none;background:none;color:#fb7185;cursor:pointer;font-size:11px;padding:0 0 0 4px;line-height:1">✕</button></span>`;
         }).join('')}
         ${postes.length===0?'<span style="font-size:11px;color:var(--text3);font-style:italic">Aucun poste</span>':''}
       </div>
       <div style="display:flex;gap:8px">
-        <input id="ncp_${cat.replace(/ /g,'_')}" type="text" class="finp" placeholder="Nouveau poste..." style="flex:1;padding:8px 12px;font-size:12px">
-        <button class="btn-o" onclick="addCP('${cat}')">+ Ajouter</button>
+        <input id="ncp_${catId}" type="text" class="finp" placeholder="Nouveau poste..." style="flex:1;padding:8px 12px;font-size:12px">
+        <button class="btn-o add-poste-btn" data-cat="${cat}">+ Ajouter</button>
       </div>
     </div>`;
   });
   el.innerHTML=html;
+  // Event delegation — no inline onclick
+  el.querySelectorAll('.rm-poste-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>removePoste(btn.dataset.cat,btn.dataset.p));
+  });
+  el.querySelectorAll('.add-poste-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>addCP(btn.dataset.cat));
+  });
 }
+
 async function addCP(cat){
   const id='ncp_'+cat.replace(/ /g,'_');
   const v=document.getElementById(id)?.value.trim();if(!v)return;
