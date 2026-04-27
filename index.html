@@ -1322,6 +1322,10 @@ async function addCP(cat){
   await saveSettings();syncPostes();renderCPUI();toast('Poste ajouté ✓');
 }
 async function removePoste(cat,p){
+  const isDefault=(DEFAULT_CATS[cat]||[]).includes(p);
+  if(isDefault){
+    if(!confirm('Supprimer le poste "'+p+'" ?\nLes transactions existantes ne seront pas affectées.'))return;
+  }
   CATS[cat]=(CATS[cat]||[]).filter(x=>x!==p);
   await saveSettings();syncPostes();renderCPUI();toast('Poste supprimé');
 }
