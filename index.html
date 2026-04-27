@@ -1063,7 +1063,7 @@ function renderTX(){
       <div class="txin">
         <div class="txp">${hi(x.poste||'',q)}</div>
         <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span>${x.auto?' <span style="font-size:9px;color:var(--text3)">🔄</span>':''}</div>
-        ${sharedSpaceId?'<div style="font-size:10px;margin-top:2px">'+getTxBadge(x)+'</div>':''}
+        ${getTxBadge(x)?'<div style="font-size:10px;margin-top:2px">'+getTxBadge(x)+'</div>':''}
       </div>
       <div class="txr">
         <div class="txa ${ac}">${isR?'+':'−'}${fmt(x.amt)} F</div>
@@ -1824,10 +1824,9 @@ window.addEventListener('offline', updateOnlineStatus);
 
 
 function getTxBadge(x){
-  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
-  const ownerName=sp?.ownerName||'Propriétaire';
-  const isMyTx=x.createdById===uid;
-  const name=x.createdBy||(isMyTx?userName:ownerName);
+  const isMyTx=x.createdById===uid||(!x.createdById&&!sharedSpaceId);
+  const name=x.createdBy||(isMyTx?userName:'');
+  if(!name)return '';
   const color=isMyTx?'var(--blue)':'var(--green)';
   return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
 }
@@ -2103,7 +2102,7 @@ async function loadUserSpaces(){
   unsubProfile=onSnapshot(doc(db,'users/'+uid+'/data/profile'),snap=>{
     const profile=snap.exists()?snap.data():{};
     const accessList=profile.accessList||[];
-    mySpaces=accessList.map(e=>({
+    mySpaces=accessList.map(ee=>({
       ownerUid:e.ownerUid,
       ownerName:e.ownerName||'Utilisateur',
       role:e.role||'reader'
@@ -2516,10 +2515,9 @@ window.addEventListener('offline', updateOnlineStatus);
 
 
 function getTxBadge(x){
-  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
-  const ownerName=sp?.ownerName||'Propriétaire';
-  const isMyTx=x.createdById===uid;
-  const name=x.createdBy||(isMyTx?userName:ownerName);
+  const isMyTx=x.createdById===uid||(!x.createdById&&!sharedSpaceId);
+  const name=x.createdBy||(isMyTx?userName:'');
+  if(!name)return '';
   const color=isMyTx?'var(--blue)':'var(--green)';
   return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
 }
@@ -3148,10 +3146,9 @@ window.addEventListener('offline', updateOnlineStatus);
 
 
 function getTxBadge(x){
-  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
-  const ownerName=sp?.ownerName||'Propriétaire';
-  const isMyTx=x.createdById===uid;
-  const name=x.createdBy||(isMyTx?userName:ownerName);
+  const isMyTx=x.createdById===uid||(!x.createdById&&!sharedSpaceId);
+  const name=x.createdBy||(isMyTx?userName:'');
+  if(!name)return '';
   const color=isMyTx?'var(--blue)':'var(--green)';
   return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
 }
