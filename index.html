@@ -981,16 +981,20 @@ function saveTrash(items){
 const trashBin=loadTrash();
 
 async function delTx(id){
+  // Debug toast — role info
+  toast('Rôle: '+userRole+' | Space: '+(sharedSpaceId?sharedSpaceId.slice(0,8):'perso')+' | Admin: '+isAdmin());
   if(!isAdmin()){toast('Mode lecture — modification non autorisée');return;}
   const tx=txs.find(t=>t.id===id);
   if(!tx)return;
-  // Sauvegarder en corbeille avant suppression
   trashBin.unshift({...tx, deletedAt: new Date().toISOString()});
   if(trashBin.length>10)trashBin.pop();
   saveTrash(trashBin);
   const{db,doc,deleteDoc}=window._fb;
-  await deleteDoc(doc(db,`users/${uid}/transactions/${id}`));
-  showUndoToast(tx);
+  // Use dataPath to delete from correct location
+  try{
+    await deleteDoc(doc(db,dataPath()+'/transactions/'+id));
+    showUndoToast(tx);
+  }catch(e){toast('Erreur suppr: '+e.message.slice(0,50));}
 }
 
 let lastDeleted=null;
@@ -1058,7 +1062,8 @@ function renderTX(){
       <div class="txic ${cl}">${CICO[x.cat]||'💰'}</div>
       <div class="txin">
         <div class="txp">${hi(x.poste||'',q)}</div>
-        <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span>${sharedSpaceId&&x.createdBy?' · <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:'+(x.createdById===uid?'rgba(99,102,241,.15)':'rgba(16,185,129,.15)')+';color:'+(x.createdById===uid?'var(--blue)':'var(--green)')+'">'+x.createdBy+'</span>':''} ${x.auto?' <span style="font-size:9px;color:var(--text3)">🔄 auto</span>':''}</div>
+        <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span>${x.auto?' <span style="font-size:9px;color:var(--text3)">🔄</span>':''}</div>
+        ${sharedSpaceId?'<div style="font-size:10px;margin-top:2px">'+getTxBadge(x)+'</div>':''}
       </div>
       <div class="txr">
         <div class="txa ${ac}">${isR?'+':'−'}${fmt(x.amt)} F</div>
@@ -1817,6 +1822,16 @@ function updateOnlineStatus(){
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
+
+function getTxBadge(x){
+  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
+  const ownerName=sp?.ownerName||'Propriétaire';
+  const isMyTx=x.createdById===uid;
+  const name=x.createdBy||(isMyTx?userName:ownerName);
+  const color=isMyTx?'var(--blue)':'var(--green)';
+  return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
+}
+
 // TRANSACTIONS RÉCURRENTES
 function toggleRecurOptions(){
   const cb=document.getElementById('f-recur');
@@ -2499,6 +2514,16 @@ function updateOnlineStatus(){
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
+
+function getTxBadge(x){
+  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
+  const ownerName=sp?.ownerName||'Propriétaire';
+  const isMyTx=x.createdById===uid;
+  const name=x.createdBy||(isMyTx?userName:ownerName);
+  const color=isMyTx?'var(--blue)':'var(--green)';
+  return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
+}
+
 // TRANSACTIONS RÉCURRENTES
 function toggleRecurOptions(){
   const cb=document.getElementById('f-recur');
@@ -3120,6 +3145,16 @@ function updateOnlineStatus(){
 }
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
+
+
+function getTxBadge(x){
+  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
+  const ownerName=sp?.ownerName||'Propriétaire';
+  const isMyTx=x.createdById===uid;
+  const name=x.createdBy||(isMyTx?userName:ownerName);
+  const color=isMyTx?'var(--blue)':'var(--green)';
+  return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
+}
 
 // TRANSACTIONS RÉCURRENTES
 function toggleRecurOptions(){
