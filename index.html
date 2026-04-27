@@ -665,7 +665,11 @@ function dataPath(){
   // sharedSpaceId now stores the OWNER's uid, not a space document id
   return sharedSpaceId ? 'users/'+sharedSpaceId : 'users/'+uid;
 }
-function isAdmin(){return userRole==='admin';}
+function isAdmin(){
+  if(!sharedSpaceId)return true; // own space — always admin
+  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
+  return (sp?.role||userRole)==='admin';
+}
 
 function subscribe(){
   const{db,collection,query,orderBy,onSnapshot,doc}=window._fb;
@@ -1054,7 +1058,7 @@ function renderTX(){
       <div class="txic ${cl}">${CICO[x.cat]||'💰'}</div>
       <div class="txin">
         <div class="txp">${hi(x.poste||'',q)}</div>
-        <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span>${x.createdBy&&x.createdBy!==userName?' · <span style="font-size:10px;color:var(--blue)">👤 '+x.createdBy+'</span>':''} ${x.auto?' <span style="font-size:9px;color:var(--text3)">🔄 auto</span>':''}</div>
+        <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span>${sharedSpaceId&&x.createdBy?' · <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:'+(x.createdById===uid?'rgba(99,102,241,.15)':'rgba(16,185,129,.15)')+';color:'+(x.createdById===uid?'var(--blue)':'var(--green)')+'">'+x.createdBy+'</span>':''} ${x.auto?' <span style="font-size:9px;color:var(--text3)">🔄 auto</span>':''}</div>
       </div>
       <div class="txr">
         <div class="txa ${ac}">${isR?'+':'−'}${fmt(x.amt)} F</div>
