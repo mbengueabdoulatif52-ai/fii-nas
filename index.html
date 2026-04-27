@@ -1824,8 +1824,12 @@ window.addEventListener('offline', updateOnlineStatus);
 
 
 function getTxBadge(x){
+  // If no createdBy — attribute to owner of current space or to me
   const isMyTx=x.createdById===uid||(!x.createdById&&!sharedSpaceId);
-  const name=x.createdBy||(isMyTx?userName:'');
+  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
+  const ownerName=sp?.ownerName||'';
+  // Old tx without createdBy: if viewing someone's space → belongs to owner
+  const name=x.createdBy||(isMyTx?userName:ownerName);
   if(!name)return '';
   const color=isMyTx?'var(--blue)':'var(--green)';
   return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
@@ -2551,8 +2555,12 @@ window.addEventListener('offline', updateOnlineStatus);
 
 
 function getTxBadge(x){
+  // If no createdBy — attribute to owner of current space or to me
   const isMyTx=x.createdById===uid||(!x.createdById&&!sharedSpaceId);
-  const name=x.createdBy||(isMyTx?userName:'');
+  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
+  const ownerName=sp?.ownerName||'';
+  // Old tx without createdBy: if viewing someone's space → belongs to owner
+  const name=x.createdBy||(isMyTx?userName:ownerName);
   if(!name)return '';
   const color=isMyTx?'var(--blue)':'var(--green)';
   return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
@@ -3182,8 +3190,12 @@ window.addEventListener('offline', updateOnlineStatus);
 
 
 function getTxBadge(x){
+  // If no createdBy — attribute to owner of current space or to me
   const isMyTx=x.createdById===uid||(!x.createdById&&!sharedSpaceId);
-  const name=x.createdBy||(isMyTx?userName:'');
+  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
+  const ownerName=sp?.ownerName||'';
+  // Old tx without createdBy: if viewing someone's space → belongs to owner
+  const name=x.createdBy||(isMyTx?userName:ownerName);
   if(!name)return '';
   const color=isMyTx?'var(--blue)':'var(--green)';
   return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
