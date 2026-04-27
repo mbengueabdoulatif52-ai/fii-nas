@@ -2788,15 +2788,11 @@ async function renderSpacesUI(){
     }catch(e){}
   }
 
-  // Actions
+
   html+=`<div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
-    <button class="btn-p" onclick="showCreateSpace()" style="background:var(--blue)">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-      Créer un espace commun
-    </button>
-    <button class="btn-p" onclick="showSharePersonal()" style="background:var(--surf2);color:var(--text);border:0.5px solid var(--border)">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-      Partager mon espace perso
+    <button class="btn-p" onclick="generateInviteCode()" style="background:var(--blue)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      Inviter dans mon espace
     </button>
     <div style="display:flex;gap:8px">
       <input id="join-code-inp" class="finp" type="text" placeholder="Code d'invitation..." style="flex:1;padding:9px 12px;font-size:13px;text-transform:uppercase">
@@ -2804,6 +2800,20 @@ async function renderSpacesUI(){
     </div>
     <div id="spaces-msg" style="font-size:11px;min-height:14px;text-align:center"></div>
   </div>`;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   el.innerHTML=html;
 }
