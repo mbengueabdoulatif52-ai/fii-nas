@@ -1289,7 +1289,7 @@ function renderCPUI(){
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
         ${postes.map(p=>{
           const isDef=defaults.includes(p);
-          return '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;background:'+(isDef?'var(--surf2)':'rgba(99,102,241,.15)')+';border:1px solid '+(isDef?'var(--border)':'rgba(99,102,241,.3)')+';color:'+(isDef?'var(--text2)':'#818cf8')+'">'+p+' <button onclick="removePoste(''+cat+'',''+p+'')" style="border:none;background:none;color:#fb7185;cursor:pointer;font-size:11px;padding:0;line-height:1">✕</button></span>';
+          return '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;background:'+(isDef?'var(--surf2)':'rgba(99,102,241,.15)')+';border:1px solid '+(isDef?'var(--border)':'rgba(99,102,241,.3)')+';color:'+(isDef?'var(--text2)':'#818cf8')+'">'+p+' <button onclick=\"removePoste('"+cat+"','"+p+"')\" style="border:none;background:none;color:#fb7185;cursor:pointer;font-size:11px;padding:0;line-height:1">✕</button></span>';
         }).join('')}
         ${postes.length===0?'<span style="font-size:11px;color:var(--text3);font-style:italic">Aucun poste</span>':''}
       </div>
