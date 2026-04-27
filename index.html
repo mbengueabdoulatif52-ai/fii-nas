@@ -2074,31 +2074,42 @@ async function switchSpace(ownerUid){
   }catch(e){}
 }
 
+let unsubProfile=null;
+
 async function loadUserSpaces(){
   if(!uid)return;
-  const{db,doc,getDoc}=window._fb;
-  try{
-    const profileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
-    const profile=profileDoc.exists()?profileDoc.data():{};
-    // Load spaces I have access to (other people invited me)
+  const{db,doc,onSnapshot}=window._fb;
+  // Real-time listener on profile — detects when someone grants access
+  if(unsubProfile)unsubProfile();
+  unsubProfile=onSnapshot(doc(db,'users/'+uid+'/data/profile'),snap=>{
+    const profile=snap.exists()?snap.data():{};
     const accessList=profile.accessList||[];
-    mySpaces=[];
-    for(const entry of accessList){
-      mySpaces.push({
-        ownerUid:entry.ownerUid,
-        ownerName:entry.ownerName||'Utilisateur',
-        role:entry.role||'reader'
-      });
-    }
-    // Restore active space
+    mySpaces=accessList.map(e=>({
+      ownerUid:e.ownerUid,
+      ownerName:e.ownerName||'Utilisateur',
+      role:e.role||'reader'
+    }));
+    // Restore or update active space
     if(profile.activeSpaceId&&mySpaces.find(s=>s.ownerUid===profile.activeSpaceId)){
+      const wasAlreadyActive=sharedSpaceId===profile.activeSpaceId;
       sharedSpaceId=profile.activeSpaceId;
       const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
       userRole=sp?.role||'reader';
+      if(!wasAlreadyActive){subscribe();}
+    } else if(sharedSpaceId&&!mySpaces.find(s=>s.ownerUid===sharedSpaceId)){
+      // Space was revoked
+      sharedSpaceId=null;userRole='admin';
+      subscribe();
+      toast('Accès à l\'espace retiré');
     }
     updateSpaceBtn();
-    subscribe();
-  }catch(e){subscribe();}
+    // If on profil page, refresh
+    if(document.getElementById('spaces-ui')&&document.getElementById('spaces-ui').innerHTML){
+      renderSpacesUI();
+    }
+  });
+  // Initial subscribe
+  subscribe();
 }
 
 async function renderSpacesUI(freshCode){
@@ -2746,41 +2757,41 @@ async function switchSpace(spaceId){
   }catch(e){}
 }
 
-async function loadUserSpaces(){
-  if(!uid)return;
-  const{db,doc,getDoc,collection,query,where,onSnapshot}=window._fb;
-  try{
-    const profileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
-    const profile=profileDoc.exists()?profileDoc.data():{};
-    const spaceIds=profile.spaceIds||[];
-    mySpaces=[];
-    for(const sid of spaceIds){
-      try{
-        const sDoc=await getDoc(doc(db,'spaces/'+sid));
-        if(sDoc.exists()){
-          const d=sDoc.data();
-          const member=d.members?.[uid]||{};
-          mySpaces.push({
-            id:sid,
-            name:d.name||'Espace partagé',
-            role:member.role||'reader',
-            isPersonal:d.isPersonal||false,
-            ownerUid:d.ownerUid||null,
-            memberCount:Object.keys(d.members||{}).length
-          });
-        }
-      }catch(e){}
-    }
-    // Restore active space
-    if(profile.activeSpaceId&&mySpaces.find(s=>s.id===profile.activeSpaceId)){
-      sharedSpaceId=profile.activeSpaceId;
-      const sp=mySpaces.find(s=>s.id===sharedSpaceId);
-      userRole=sp?.role||'reader';
-    }
-    updateSpaceBtn();
-    subscribe();
-  }catch(e){subscribe();}
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
