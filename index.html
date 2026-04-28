@@ -796,34 +796,56 @@ function setDTab(el,k){
   el.classList.add('active');dTab=k;renderDC();
 }
 
-function renderDash(){
+async function renderDash(){
   if(isAnnual()){renderDashAnnual();return;}
   const ym=curYM();const t=txYM(ym);
   const rev=sumC(t,'Revenu');const fix=sumC(t,'Dépenses fixes');
   const vr=sumC(t,'Dépenses variables');const ep=sumC(t,'Epargne');
-  const dep=fix+vr+ep;const sol=rev-dep;const pct=rev>0?Math.round(dep/rev*100):0;
-  // Comparaison N-1
-  const prevYM=(()=>{const[y,m]=ym.split('-');const d=new Date(parseInt(y),parseInt(m)-2,1);return ymk(d.getFullYear(),d.getMonth()+1);})();
-  const prevT=txYM(prevYM);
-  const prevDep=sumC(prevT,'Dépenses fixes')+sumC(prevT,'Dépenses variables')+sumC(prevT,'Epargne');
+  const dep=fix+vr;const sol=rev-dep-ep;
+  const pct=rev>0?Math.round((dep+ep)/rev*100):0;
+  const prevYm=(()=>{const[y,m]=ym.split('-');const d=new Date(parseInt(y),parseInt(m)-2,1);return ymk(d.getFullYear(),d.getMonth()+1);})();
+  const prevT=txYM(prevYm);
+  const prevDep=sumC(prevT,'Dépenses fixes')+sumC(prevT,'Dépenses variables');
   const prevRev=sumC(prevT,'Revenu');
-  const diffDep=prevDep>0?Math.round((dep-prevDep)/prevDep*100):null;
-  const diffRev=prevRev>0?Math.round((rev-prevRev)/prevRev*100):null;
+  const prevEp=sumC(prevT,'Epargne');
+  const prevSol=prevRev-prevDep-prevEp;
+  const diffSol=prevSol!==0?Math.round((sol-prevSol)/Math.abs(prevSol)*100):null;
   const diffTag=(val,inv=false)=>{
     if(val===null)return'';
     const good=inv?(val>=0):(val<=0);
     const sign=val>=0?'↑':'↓';
     return ' <span style="font-size:10px;color:'+(good?'var(--green)':'var(--red)')+'">'+sign+Math.abs(val)+'%</span>';
   };
+
+  // Patrimoine temps réel
+  const{epaCumul,solCumul,patrimoine}=await computePatrimoineToday();
+
   document.getElementById('hero').innerHTML=`
-    <div class="hlbl">Solde net · ${yml(ym)}</div>
+    <div class="hlbl">SOLDE NET · ${yml(ym).toUpperCase()}</div>
     <div class="hamt ${sol>=0?'pos':'neg'}">${fmt(sol)} <span style="font-size:15px;opacity:.55">FCFA</span></div>
     <div class="hmeta">
-      <div class="hmi">Revenus<span style="color:var(--green)">${fmt(rev)} F${diffTag(diffRev,true)}</span></div>
-      <div class="hmi">Dépenses<span style="color:var(--red)">${fmt(dep)} F${diffTag(diffDep,false)}</span></div>
-      <div class="hmi">% dépensé<span style="${pct>90?'color:var(--red)':pct>75?'color:var(--amber)':'color:var(--green)'}">${pct}%</span></div>
+      <div class="hmi">Revenus<span style="color:var(--green)">${fmt(rev)} F</span></div>
+      <div class="hmi">Dépenses<span style="color:var(--red)">${fmt(dep)} F</span></div>
+      <div class="hmi">Épargne<span style="color:var(--blue)">${fmt(ep)} F</span></div>
     </div>
-    ${prevDep>0?'<div style="font-size:10px;color:rgba(165,180,252,.5);margin-top:8px">vs '+yml(prevYM)+'</div>':''}`;
+    ${prevSol!==0?`<div style="font-size:10px;color:rgba(165,180,252,.5);margin-top:4px">vs ${yml(prevYm)} ${diffTag(diffSol,false)}</div>`:''}
+    <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,.1)">
+      <div class="hlbl" style="margin-bottom:6px">PATRIMOINE NET · À AUJOURD'HUI</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+        <div style="text-align:center">
+          <div style="font-size:9px;color:rgba(255,255,255,.5);margin-bottom:2px">Épargne cumulée</div>
+          <div style="font-size:12px;font-weight:600;color:var(--green)">${fmt(epaCumul)} F</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:9px;color:rgba(255,255,255,.5);margin-bottom:2px">Solde net cumulé</div>
+          <div style="font-size:12px;font-weight:600;color:${solCumul>=0?'var(--green)':'var(--red)'}">${solCumul>=0?'+':''}${fmt(solCumul)} F</div>
+        </div>
+        <div style="text-align:center;background:rgba(255,255,255,.08);border-radius:8px;padding:4px">
+          <div style="font-size:9px;color:rgba(255,255,255,.5);margin-bottom:2px">Patrimoine net</div>
+          <div style="font-size:13px;font-weight:700;color:${patrimoine>=0?'var(--green)':'var(--red)'}">${patrimoine>=0?'+':''}${fmt(patrimoine)} F</div>
+        </div>
+      </div>
+    </div>`;
   document.getElementById('dm').innerHTML=
     mc('Fixes',fix,budTot(ym,'Dépenses fixes'))+
     mc('Variables',vr,budTot(ym,'Dépenses variables'))+
