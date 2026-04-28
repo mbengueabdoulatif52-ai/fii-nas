@@ -664,6 +664,7 @@ let charts={};
 let selCatVal='Dépenses variables';
 
 const fmt=v=>new Intl.NumberFormat('fr-FR').format(Math.round(Math.abs(v)));
+const fmtS=v=>(v<0?'-':v>0?'+':'')+new Intl.NumberFormat('fr-FR').format(Math.round(Math.abs(v)));
 function ymk(y,m){return `${y}-${String(m).padStart(2,'0')}`;}
 function curYM(){const s=document.getElementById('gm');return s?s.value:ymk(new Date().getFullYear(),new Date().getMonth()+1);}
 function yml(ym){const[y,m]=ym.split('-');return MFR[parseInt(m)-1]+' '+y;}
@@ -822,7 +823,7 @@ async function renderDash(){
 
   document.getElementById('hero').innerHTML=`
     <div class="hlbl">SOLDE NET · ${yml(ym).toUpperCase()}</div>
-    <div class="hamt ${sol>=0?'pos':'neg'}">${fmt(sol)} <span style="font-size:15px;opacity:.55">FCFA</span></div>
+    <div class="hamt ${sol>=0?'pos':'neg'}">${fmtS(sol)} <span style="font-size:15px;opacity:.55">FCFA</span></div>
     <div class="hmeta">
       <div class="hmi">Revenus<span style="color:var(--green)">${fmt(rev)} F</span></div>
       <div class="hmi">Dépenses<span style="color:var(--red)">${fmt(dep)} F</span></div>
@@ -907,7 +908,7 @@ function renderDashAnnual(){
   const worst=soldes.length?soldes.reduce((a,b)=>b.sol<a.sol?b:a):null;
   document.getElementById('hero').innerHTML=`
     <div class="hlbl">Récap annuel · ${y}</div>
-    <div class="hamt ${sol>=0?'pos':'neg'}">${fmt(sol)} <span style="font-size:15px;opacity:.55">FCFA</span></div>
+    <div class="hamt ${sol>=0?'pos':'neg'}">${fmtS(sol)} <span style="font-size:15px;opacity:.55">FCFA</span></div>
     <div class="hmeta">
       <div class="hmi">Revenus totaux<span style="color:var(--green)">${fmt(rev)} F</span></div>
       <div class="hmi">Dépenses totales<span style="color:var(--red)">${fmt(dep)} F</span></div>
@@ -1915,9 +1916,14 @@ async function computePatrimoineToday(){
     let epaCumul=0,solCumul=0;
     allTx.docs.forEach(d=>{
       const t=d.data();
-      if(t.cat==='Epargne') epaCumul+=t.amt;
-      else if(t.cat==='Revenu') solCumul+=t.amt;
-      else solCumul-=t.amt;
+      if(t.cat==='Epargne'){
+        epaCumul+=t.amt;   // épargne cumulée
+        solCumul-=t.amt;   // épargne = sortie du solde net
+      } else if(t.cat==='Revenu'){
+        solCumul+=t.amt;
+      } else {
+        solCumul-=t.amt;   // dépenses fixes + variables
+      }
     });
     return{epaCumul,solCumul,patrimoine:epaCumul+solCumul};
   }catch(e){return{epaCumul:0,solCumul:0,patrimoine:0};}
@@ -3208,9 +3214,14 @@ async function computePatrimoineToday(){
     let epaCumul=0,solCumul=0;
     allTx.docs.forEach(d=>{
       const t=d.data();
-      if(t.cat==='Epargne') epaCumul+=t.amt;
-      else if(t.cat==='Revenu') solCumul+=t.amt;
-      else solCumul-=t.amt;
+      if(t.cat==='Epargne'){
+        epaCumul+=t.amt;   // épargne cumulée
+        solCumul-=t.amt;   // épargne = sortie du solde net
+      } else if(t.cat==='Revenu'){
+        solCumul+=t.amt;
+      } else {
+        solCumul-=t.amt;   // dépenses fixes + variables
+      }
     });
     return{epaCumul,solCumul,patrimoine:epaCumul+solCumul};
   }catch(e){return{epaCumul:0,solCumul:0,patrimoine:0};}
@@ -4396,9 +4407,14 @@ async function computePatrimoineToday(){
     let epaCumul=0,solCumul=0;
     allTx.docs.forEach(d=>{
       const t=d.data();
-      if(t.cat==='Epargne') epaCumul+=t.amt;
-      else if(t.cat==='Revenu') solCumul+=t.amt;
-      else solCumul-=t.amt;
+      if(t.cat==='Epargne'){
+        epaCumul+=t.amt;   // épargne cumulée
+        solCumul-=t.amt;   // épargne = sortie du solde net
+      } else if(t.cat==='Revenu'){
+        solCumul+=t.amt;
+      } else {
+        solCumul-=t.amt;   // dépenses fixes + variables
+      }
     });
     return{epaCumul,solCumul,patrimoine:epaCumul+solCumul};
   }catch(e){return{epaCumul:0,solCumul:0,patrimoine:0};}
