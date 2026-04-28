@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2037,7 +2037,7 @@ function showLockScreen(isSetup=false){
   overlay.innerHTML=`
     <div style="text-align:center;margin-bottom:32px">
       <div style="font-size:28px;font-weight:700;color:var(--text)">FII'NAS</div>
-      <div style="font-size:13px;color:var(--text3);margin-top:4px">${isSetup?'Créer un code PIN':'Entrer le code PIN'}</div>
+      <div id="pin-subtitle" style="font-size:13px;color:var(--text3);margin-top:4px">${isSetup?'Créer un code PIN':'Entrer le code PIN'}</div>
     </div>
     <div id="pin-dots" style="display:flex;gap:14px;margin-bottom:32px">
       ${[0,1,2,3,4,5].map(i=>`<div id="dot-${i}" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:.15s"></div>`).join('')}
@@ -2089,7 +2089,7 @@ function pinKey(k){
           overlay._firstPin=pinInput;
           pinInput='';
           document.getElementById('pin-error').textContent='';
-          document.querySelector('[style*="Créer un code PIN"]').textContent='Confirmer le code PIN';
+          const sub=document.getElementById('pin-subtitle');if(sub)sub.textContent='Confirmer le code PIN';
           for(let i=0;i<6;i++){
             const dot=document.getElementById('dot-'+i);
             if(dot){dot.style.background='transparent';dot.style.borderColor='var(--border)';}
@@ -2200,21 +2200,13 @@ function renderSecurityUI(){
         `:`<button onclick="setupPin()" class="btn-p" style="font-size:11px">Activer</button>`}
       </div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">Masquer les montants</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">Remplace les chiffres par ••••••</div>
-      </div>
-      <button onclick="toggleHide()" style="width:44px;height:26px;border-radius:13px;border:none;background:${hideAmounts?'var(--blue)':'var(--border)'};cursor:pointer;position:relative;transition:.2s">
-        <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;transition:.2s;${hideAmounts?'right:3px':'left:3px'}"></div>
-      </button>
-    </div>
+
     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:0.5px solid var(--border)">
       <div>
         <div style="font-size:13px;font-weight:500;color:var(--text)">Verrouiller maintenant</div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px">Verrouillage automatique après 5 min</div>
       </div>
-      <button onclick="lockApp()" class="btn-o" style="font-size:11px" ${!hasp?'disabled style="opacity:.4"':''}>Verrouiller</button>
+      <button onclick="lockApp()" class="btn-o" style="font-size:11px;${!hasp?'opacity:.4':''};" ${!hasp?'disabled':''}>Verrouiller</button>
     </div>
   `;
 }
