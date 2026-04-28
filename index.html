@@ -2611,17 +2611,23 @@ async function exportPDF(){
   doc.setFillColor(...BLUE);
   doc.rect(0,0,W,42,'F');
 
-  // Icône
-  doc.setFillColor(29,52,97);
-  doc.roundedRect(M,8,22,22,3,3,'F');
-  doc.setFillColor(59,130,246);
-  doc.rect(M+4,20,3,7,'F');
-  doc.setFillColor(96,165,250);
-  doc.rect(M+9,17,3,10,'F');
-  doc.setFillColor(...GREEN);
-  doc.rect(M+14,13,3,14,'F');
-  doc.setFillColor(...GREEN);
-  doc.circle(M+19,11,1.5,'F');
+  // Icône — nouvelle version (blocs géométriques abstraits)
+  const ix=M, iy=8, is=22; // icon x, y, size
+  // Fond bleu foncé arrondi
+  doc.setFillColor(26,47,90);
+  doc.roundedRect(ix,iy,is,is,3,3,'F');
+  // Bloc gauche — bleu acier (bas)
+  doc.setFillColor(58,111,216);
+  doc.roundedRect(ix+2.5,iy+11,5.5,8,1,1,'F');
+  // Bloc milieu — bleu clair (moyen)
+  doc.setFillColor(91,142,240);
+  doc.roundedRect(ix+9,iy+7.5,5,9.5,1,1,'F');
+  // Bloc droit — vert (haut, plus grand)
+  doc.setFillColor(46,204,138);
+  doc.roundedRect(ix+15.5,iy+3.5,4,15,1,1,'F');
+  // Point accent vert clair
+  doc.setFillColor(78,255,184);
+  doc.circle(ix+19,iy+2.5,1.2,'F');
 
   // Texte FII'NAS
   doc.setFont('helvetica','bold');
