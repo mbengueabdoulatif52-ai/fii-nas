@@ -469,6 +469,10 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <div class="pleg" id="cpleg"></div>
     </div>
     <div class="card">
+      <div class="ct">Évolution patrimoniale</div>
+      <div id="patrimoine-ui"><div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Chargement...</div></div>
+    </div>
+    <div class="card">
       <div class="ct">Analyse des habitudes</div>
       <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="analyse-period">
         <button class="tab active" onclick="setAnalysePeriod(this,3)">3 mois</button>
@@ -679,6 +683,7 @@ waitFB(()=>{
       setUserUI(user);
       buildMonthSel();
       loadUserSpaces();
+  buildMissingSnapshots().catch(()=>{});
       document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
       syncPostes();
     } else {
@@ -776,7 +781,7 @@ function goP(p,btn){
   if(p==='dash')renderDash();
   else if(p==='tx')renderTX();
   else if(p==='bud')renderBudPage();
-  else if(p==='pro'){renderCharts();renderCPUI();renderRecurList();renderTrash();renderAnalyse();renderSpacesUI();}
+  else if(p==='pro'){renderCharts();renderCPUI();renderRecurList();renderTrash();renderPatrimoine();renderAnalyse();renderSpacesUI();}
   else if(p==='add'){syncPostes();document.getElementById('fmsg').textContent='';}
   else if(p==='imp'){document.getElementById('imp-log').style.display='none';document.getElementById('imp-pb').style.width='0%';document.getElementById('imp-pt').textContent='En attente';}
 }
@@ -1786,6 +1791,168 @@ async function loadUserSpace_old(){
       }
     }
   }catch(e){console.warn('Profile load:',e);}
+}
+
+
+// ══════════════════════════════════════════
+// SNAPSHOTS — Patrimoine mensuel
+// ══════════════════════════════════════════
+
+async function computeSnapshot(ym){
+  // Reconstruit le snapshot d'un mois depuis les transactions Firebase
+  const{db,collection,query,where,getDocs}=window._fb;
+  try{
+    const txRef=collection(db,dataPath()+'/transactions');
+    const snap=await getDocs(query(txRef,where('ym','==',ym)));
+    const txList=snap.docs.map(d=>({...d.data(),id:d.id}));
+    const rev=txList.filter(t=>t.cat==='Revenu').reduce((s,t)=>s+t.amt,0);
+    const dep=txList.filter(t=>t.cat==='Dépenses fixes'||t.cat==='Dépenses variables').reduce((s,t)=>s+t.amt,0);
+    const epa=txList.filter(t=>t.cat==='Epargne').reduce((s,t)=>s+t.amt,0);
+    return{ym,rev,dep,epa,sol:rev-dep-epa};
+  }catch(e){return{ym,rev:0,dep:0,epa:0,sol:0};}
+}
+
+async function saveSnapshot(ym,data){
+  const{db,doc,setDoc}=window._fb;
+  await setDoc(doc(db,dataPath()+'/data/snapshots/'+ym),{
+    ...data,
+    savedAt:new Date().toISOString()
+  });
+}
+
+async function loadSnapshots(){
+  const{db,collection,getDocs}=window._fb;
+  try{
+    const snap=await getDocs(collection(db,dataPath()+'/data/snapshots'));
+    const result={};
+    snap.docs.forEach(d=>{result[d.id]=d.data();});
+    return result;
+  }catch(e){return{};}
+}
+
+async function buildMissingSnapshots(){
+  // Reconstruit tous les snapshots manquants depuis les transactions existantes
+  const{db,collection,getDocs}=window._fb;
+  try{
+    const txRef=collection(db,dataPath()+'/transactions');
+    const allTx=await getDocs(txRef);
+    const months=new Set();
+    allTx.docs.forEach(d=>{
+      const ym=d.data().ym||d.data().date?.slice(0,7);
+      if(ym)months.add(ym);
+    });
+    const existing=await loadSnapshots();
+    const today=new Date();
+    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+    for(const ym of [...months].sort()){
+      if(ym>=curYm)continue; // Ne pas snapshoter le mois en cours
+      if(!existing[ym]){
+        const data=await computeSnapshot(ym);
+        await saveSnapshot(ym,data);
+        console.log('Snapshot built:',ym);
+      }
+    }
+  }catch(e){console.error('buildMissingSnapshots:',e);}
+}
+
+async function triggerSnapshotOnTx(txYm){
+  // Appelé à chaque nouvelle transaction
+  // Si c'est la première tx du mois en cours → snapshoter le mois précédent
+  const today=new Date();
+  const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+  if(txYm!==curYm)return;
+  // Calculer le mois précédent
+  const d=new Date(today.getFullYear(),today.getMonth()-1,1);
+  const prevYm=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  // Vérifier si snapshot existe déjà
+  const{db,doc,getDoc}=window._fb;
+  try{
+    const snap=await getDoc(doc(db,dataPath()+'/data/snapshots/'+prevYm));
+    if(!snap.exists()){
+      const data=await computeSnapshot(prevYm);
+      await saveSnapshot(prevYm,data);
+      console.log('Auto snapshot:',prevYm);
+    }
+  }catch(e){}
+}
+
+async function recalculateSnapshot(ym){
+  const data=await computeSnapshot(ym);
+  await saveSnapshot(ym,data);
+  toast('Snapshot '+yml(ym)+' recalculé ✓');
+  renderPatrimoine();
+}
+
+async function computePatrimoineToday(){
+  // Calcule épargne cumulée, solde net cumulé, patrimoine net depuis toutes les transactions
+  const{db,collection,getDocs}=window._fb;
+  try{
+    const today=new Date();
+    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+    const allTx=await getDocs(collection(db,dataPath()+'/transactions'));
+    let epaCumul=0,solCumul=0;
+    allTx.docs.forEach(d=>{
+      const t=d.data();
+      if(t.cat==='Epargne') epaCumul+=t.amt;
+      else if(t.cat==='Revenu') solCumul+=t.amt;
+      else solCumul-=t.amt;
+    });
+    return{epaCumul,solCumul,patrimoine:epaCumul+solCumul};
+  }catch(e){return{epaCumul:0,solCumul:0,patrimoine:0};}
+}
+
+async function renderPatrimoine(){
+  const el=document.getElementById('patrimoine-ui');
+  if(!el)return;
+  el.innerHTML='<div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Calcul en cours...</div>';
+  const snapshots=await loadSnapshots();
+  const{epaCumul,solCumul,patrimoine}=await computePatrimoineToday();
+  const sorted=Object.keys(snapshots).sort();
+  let html=`<div style="margin-bottom:16px">
+    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:12px">À aujourd'hui</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Épargne cumulée</div>
+        <div style="font-size:13px;font-weight:600;color:var(--green)">${fmt(epaCumul)} F</div>
+      </div>
+      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Solde net cumulé</div>
+        <div style="font-size:13px;font-weight:600;color:${solCumul>=0?'var(--green)':'var(--red)'}">${solCumul>=0?'+':''}${fmt(solCumul)} F</div>
+      </div>
+      <div style="background:${patrimoine>=0?'var(--gd)':'rgba(255,59,48,.1)'};border-radius:var(--rs);padding:10px;text-align:center;border:1px solid ${patrimoine>=0?'rgba(16,185,129,.3)':'rgba(255,59,48,.3)'}">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Patrimoine net</div>
+        <div style="font-size:13px;font-weight:700;color:${patrimoine>=0?'var(--green)':'var(--red)'}">${patrimoine>=0?'+':''}${fmt(patrimoine)} F</div>
+      </div>
+    </div>
+  </div>`;
+
+  if(sorted.length>0){
+    html+=`<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Historique mensuel</div>`;
+    let cumEpa=0,cumSol=0;
+    sorted.forEach(ym=>{
+      const s=snapshots[ym];
+      cumEpa+=s.epa||0;
+      cumSol+=s.sol||0;
+      const pat=cumEpa+cumSol;
+      const barW=Math.min(100,Math.abs(pat)/Math.max(...sorted.map(y=>{
+        let ce=0,cs=0;
+        sorted.filter(yy=>yy<=y).forEach(yy=>{ce+=snapshots[yy].epa||0;cs+=snapshots[yy].sol||0;});
+        return Math.abs(ce+cs);
+      }))*100)||0;
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)">
+        <div style="font-size:12px;color:var(--text2);width:70px;flex-shrink:0">${yml(ym)}</div>
+        <div style="flex:1;height:4px;background:var(--surf2);border-radius:2px;overflow:hidden">
+          <div style="width:${barW}%;height:100%;background:${pat>=0?'var(--green)':'var(--red)'};border-radius:2px"></div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:${pat>=0?'var(--green)':'var(--red)'};width:80px;text-align:right">${pat>=0?'+':''}${fmt(pat)} F</div>
+        <button onclick="recalculateSnapshot('${ym}')" style="font-size:10px;padding:2px 6px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">↺</button>
+      </div>`;
+    });
+  } else {
+    html+=`<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">Les snapshots se constituent automatiquement dès ta première transaction du mois.</div>`;
+  }
+
+  el.innerHTML=html;
 }
 
 // ANALYSE DES HABITUDES
@@ -2919,6 +3086,168 @@ function copyInviteCode(code){
 
 // toggleMemberRole moved to spaces section
 
+
+// ══════════════════════════════════════════
+// SNAPSHOTS — Patrimoine mensuel
+// ══════════════════════════════════════════
+
+async function computeSnapshot(ym){
+  // Reconstruit le snapshot d'un mois depuis les transactions Firebase
+  const{db,collection,query,where,getDocs}=window._fb;
+  try{
+    const txRef=collection(db,dataPath()+'/transactions');
+    const snap=await getDocs(query(txRef,where('ym','==',ym)));
+    const txList=snap.docs.map(d=>({...d.data(),id:d.id}));
+    const rev=txList.filter(t=>t.cat==='Revenu').reduce((s,t)=>s+t.amt,0);
+    const dep=txList.filter(t=>t.cat==='Dépenses fixes'||t.cat==='Dépenses variables').reduce((s,t)=>s+t.amt,0);
+    const epa=txList.filter(t=>t.cat==='Epargne').reduce((s,t)=>s+t.amt,0);
+    return{ym,rev,dep,epa,sol:rev-dep-epa};
+  }catch(e){return{ym,rev:0,dep:0,epa:0,sol:0};}
+}
+
+async function saveSnapshot(ym,data){
+  const{db,doc,setDoc}=window._fb;
+  await setDoc(doc(db,dataPath()+'/data/snapshots/'+ym),{
+    ...data,
+    savedAt:new Date().toISOString()
+  });
+}
+
+async function loadSnapshots(){
+  const{db,collection,getDocs}=window._fb;
+  try{
+    const snap=await getDocs(collection(db,dataPath()+'/data/snapshots'));
+    const result={};
+    snap.docs.forEach(d=>{result[d.id]=d.data();});
+    return result;
+  }catch(e){return{};}
+}
+
+async function buildMissingSnapshots(){
+  // Reconstruit tous les snapshots manquants depuis les transactions existantes
+  const{db,collection,getDocs}=window._fb;
+  try{
+    const txRef=collection(db,dataPath()+'/transactions');
+    const allTx=await getDocs(txRef);
+    const months=new Set();
+    allTx.docs.forEach(d=>{
+      const ym=d.data().ym||d.data().date?.slice(0,7);
+      if(ym)months.add(ym);
+    });
+    const existing=await loadSnapshots();
+    const today=new Date();
+    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+    for(const ym of [...months].sort()){
+      if(ym>=curYm)continue; // Ne pas snapshoter le mois en cours
+      if(!existing[ym]){
+        const data=await computeSnapshot(ym);
+        await saveSnapshot(ym,data);
+        console.log('Snapshot built:',ym);
+      }
+    }
+  }catch(e){console.error('buildMissingSnapshots:',e);}
+}
+
+async function triggerSnapshotOnTx(txYm){
+  // Appelé à chaque nouvelle transaction
+  // Si c'est la première tx du mois en cours → snapshoter le mois précédent
+  const today=new Date();
+  const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+  if(txYm!==curYm)return;
+  // Calculer le mois précédent
+  const d=new Date(today.getFullYear(),today.getMonth()-1,1);
+  const prevYm=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  // Vérifier si snapshot existe déjà
+  const{db,doc,getDoc}=window._fb;
+  try{
+    const snap=await getDoc(doc(db,dataPath()+'/data/snapshots/'+prevYm));
+    if(!snap.exists()){
+      const data=await computeSnapshot(prevYm);
+      await saveSnapshot(prevYm,data);
+      console.log('Auto snapshot:',prevYm);
+    }
+  }catch(e){}
+}
+
+async function recalculateSnapshot(ym){
+  const data=await computeSnapshot(ym);
+  await saveSnapshot(ym,data);
+  toast('Snapshot '+yml(ym)+' recalculé ✓');
+  renderPatrimoine();
+}
+
+async function computePatrimoineToday(){
+  // Calcule épargne cumulée, solde net cumulé, patrimoine net depuis toutes les transactions
+  const{db,collection,getDocs}=window._fb;
+  try{
+    const today=new Date();
+    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+    const allTx=await getDocs(collection(db,dataPath()+'/transactions'));
+    let epaCumul=0,solCumul=0;
+    allTx.docs.forEach(d=>{
+      const t=d.data();
+      if(t.cat==='Epargne') epaCumul+=t.amt;
+      else if(t.cat==='Revenu') solCumul+=t.amt;
+      else solCumul-=t.amt;
+    });
+    return{epaCumul,solCumul,patrimoine:epaCumul+solCumul};
+  }catch(e){return{epaCumul:0,solCumul:0,patrimoine:0};}
+}
+
+async function renderPatrimoine(){
+  const el=document.getElementById('patrimoine-ui');
+  if(!el)return;
+  el.innerHTML='<div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Calcul en cours...</div>';
+  const snapshots=await loadSnapshots();
+  const{epaCumul,solCumul,patrimoine}=await computePatrimoineToday();
+  const sorted=Object.keys(snapshots).sort();
+  let html=`<div style="margin-bottom:16px">
+    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:12px">À aujourd'hui</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Épargne cumulée</div>
+        <div style="font-size:13px;font-weight:600;color:var(--green)">${fmt(epaCumul)} F</div>
+      </div>
+      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Solde net cumulé</div>
+        <div style="font-size:13px;font-weight:600;color:${solCumul>=0?'var(--green)':'var(--red)'}">${solCumul>=0?'+':''}${fmt(solCumul)} F</div>
+      </div>
+      <div style="background:${patrimoine>=0?'var(--gd)':'rgba(255,59,48,.1)'};border-radius:var(--rs);padding:10px;text-align:center;border:1px solid ${patrimoine>=0?'rgba(16,185,129,.3)':'rgba(255,59,48,.3)'}">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Patrimoine net</div>
+        <div style="font-size:13px;font-weight:700;color:${patrimoine>=0?'var(--green)':'var(--red)'}">${patrimoine>=0?'+':''}${fmt(patrimoine)} F</div>
+      </div>
+    </div>
+  </div>`;
+
+  if(sorted.length>0){
+    html+=`<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Historique mensuel</div>`;
+    let cumEpa=0,cumSol=0;
+    sorted.forEach(ym=>{
+      const s=snapshots[ym];
+      cumEpa+=s.epa||0;
+      cumSol+=s.sol||0;
+      const pat=cumEpa+cumSol;
+      const barW=Math.min(100,Math.abs(pat)/Math.max(...sorted.map(y=>{
+        let ce=0,cs=0;
+        sorted.filter(yy=>yy<=y).forEach(yy=>{ce+=snapshots[yy].epa||0;cs+=snapshots[yy].sol||0;});
+        return Math.abs(ce+cs);
+      }))*100)||0;
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)">
+        <div style="font-size:12px;color:var(--text2);width:70px;flex-shrink:0">${yml(ym)}</div>
+        <div style="flex:1;height:4px;background:var(--surf2);border-radius:2px;overflow:hidden">
+          <div style="width:${barW}%;height:100%;background:${pat>=0?'var(--green)':'var(--red)'};border-radius:2px"></div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:${pat>=0?'var(--green)':'var(--red)'};width:80px;text-align:right">${pat>=0?'+':''}${fmt(pat)} F</div>
+        <button onclick="recalculateSnapshot('${ym}')" style="font-size:10px;padding:2px 6px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">↺</button>
+      </div>`;
+    });
+  } else {
+    html+=`<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">Les snapshots se constituent automatiquement dès ta première transaction du mois.</div>`;
+  }
+
+  el.innerHTML=html;
+}
+
 // ANALYSE DES HABITUDES
 
 
@@ -3943,6 +4272,168 @@ function copyInviteCode(code){
     document.execCommand('copy');document.body.removeChild(el);
     toast('Code copié ✓');
   });
+}
+
+
+// ══════════════════════════════════════════
+// SNAPSHOTS — Patrimoine mensuel
+// ══════════════════════════════════════════
+
+async function computeSnapshot(ym){
+  // Reconstruit le snapshot d'un mois depuis les transactions Firebase
+  const{db,collection,query,where,getDocs}=window._fb;
+  try{
+    const txRef=collection(db,dataPath()+'/transactions');
+    const snap=await getDocs(query(txRef,where('ym','==',ym)));
+    const txList=snap.docs.map(d=>({...d.data(),id:d.id}));
+    const rev=txList.filter(t=>t.cat==='Revenu').reduce((s,t)=>s+t.amt,0);
+    const dep=txList.filter(t=>t.cat==='Dépenses fixes'||t.cat==='Dépenses variables').reduce((s,t)=>s+t.amt,0);
+    const epa=txList.filter(t=>t.cat==='Epargne').reduce((s,t)=>s+t.amt,0);
+    return{ym,rev,dep,epa,sol:rev-dep-epa};
+  }catch(e){return{ym,rev:0,dep:0,epa:0,sol:0};}
+}
+
+async function saveSnapshot(ym,data){
+  const{db,doc,setDoc}=window._fb;
+  await setDoc(doc(db,dataPath()+'/data/snapshots/'+ym),{
+    ...data,
+    savedAt:new Date().toISOString()
+  });
+}
+
+async function loadSnapshots(){
+  const{db,collection,getDocs}=window._fb;
+  try{
+    const snap=await getDocs(collection(db,dataPath()+'/data/snapshots'));
+    const result={};
+    snap.docs.forEach(d=>{result[d.id]=d.data();});
+    return result;
+  }catch(e){return{};}
+}
+
+async function buildMissingSnapshots(){
+  // Reconstruit tous les snapshots manquants depuis les transactions existantes
+  const{db,collection,getDocs}=window._fb;
+  try{
+    const txRef=collection(db,dataPath()+'/transactions');
+    const allTx=await getDocs(txRef);
+    const months=new Set();
+    allTx.docs.forEach(d=>{
+      const ym=d.data().ym||d.data().date?.slice(0,7);
+      if(ym)months.add(ym);
+    });
+    const existing=await loadSnapshots();
+    const today=new Date();
+    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+    for(const ym of [...months].sort()){
+      if(ym>=curYm)continue; // Ne pas snapshoter le mois en cours
+      if(!existing[ym]){
+        const data=await computeSnapshot(ym);
+        await saveSnapshot(ym,data);
+        console.log('Snapshot built:',ym);
+      }
+    }
+  }catch(e){console.error('buildMissingSnapshots:',e);}
+}
+
+async function triggerSnapshotOnTx(txYm){
+  // Appelé à chaque nouvelle transaction
+  // Si c'est la première tx du mois en cours → snapshoter le mois précédent
+  const today=new Date();
+  const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+  if(txYm!==curYm)return;
+  // Calculer le mois précédent
+  const d=new Date(today.getFullYear(),today.getMonth()-1,1);
+  const prevYm=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  // Vérifier si snapshot existe déjà
+  const{db,doc,getDoc}=window._fb;
+  try{
+    const snap=await getDoc(doc(db,dataPath()+'/data/snapshots/'+prevYm));
+    if(!snap.exists()){
+      const data=await computeSnapshot(prevYm);
+      await saveSnapshot(prevYm,data);
+      console.log('Auto snapshot:',prevYm);
+    }
+  }catch(e){}
+}
+
+async function recalculateSnapshot(ym){
+  const data=await computeSnapshot(ym);
+  await saveSnapshot(ym,data);
+  toast('Snapshot '+yml(ym)+' recalculé ✓');
+  renderPatrimoine();
+}
+
+async function computePatrimoineToday(){
+  // Calcule épargne cumulée, solde net cumulé, patrimoine net depuis toutes les transactions
+  const{db,collection,getDocs}=window._fb;
+  try{
+    const today=new Date();
+    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+    const allTx=await getDocs(collection(db,dataPath()+'/transactions'));
+    let epaCumul=0,solCumul=0;
+    allTx.docs.forEach(d=>{
+      const t=d.data();
+      if(t.cat==='Epargne') epaCumul+=t.amt;
+      else if(t.cat==='Revenu') solCumul+=t.amt;
+      else solCumul-=t.amt;
+    });
+    return{epaCumul,solCumul,patrimoine:epaCumul+solCumul};
+  }catch(e){return{epaCumul:0,solCumul:0,patrimoine:0};}
+}
+
+async function renderPatrimoine(){
+  const el=document.getElementById('patrimoine-ui');
+  if(!el)return;
+  el.innerHTML='<div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Calcul en cours...</div>';
+  const snapshots=await loadSnapshots();
+  const{epaCumul,solCumul,patrimoine}=await computePatrimoineToday();
+  const sorted=Object.keys(snapshots).sort();
+  let html=`<div style="margin-bottom:16px">
+    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:12px">À aujourd'hui</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Épargne cumulée</div>
+        <div style="font-size:13px;font-weight:600;color:var(--green)">${fmt(epaCumul)} F</div>
+      </div>
+      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Solde net cumulé</div>
+        <div style="font-size:13px;font-weight:600;color:${solCumul>=0?'var(--green)':'var(--red)'}">${solCumul>=0?'+':''}${fmt(solCumul)} F</div>
+      </div>
+      <div style="background:${patrimoine>=0?'var(--gd)':'rgba(255,59,48,.1)'};border-radius:var(--rs);padding:10px;text-align:center;border:1px solid ${patrimoine>=0?'rgba(16,185,129,.3)':'rgba(255,59,48,.3)'}">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Patrimoine net</div>
+        <div style="font-size:13px;font-weight:700;color:${patrimoine>=0?'var(--green)':'var(--red)'}">${patrimoine>=0?'+':''}${fmt(patrimoine)} F</div>
+      </div>
+    </div>
+  </div>`;
+
+  if(sorted.length>0){
+    html+=`<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Historique mensuel</div>`;
+    let cumEpa=0,cumSol=0;
+    sorted.forEach(ym=>{
+      const s=snapshots[ym];
+      cumEpa+=s.epa||0;
+      cumSol+=s.sol||0;
+      const pat=cumEpa+cumSol;
+      const barW=Math.min(100,Math.abs(pat)/Math.max(...sorted.map(y=>{
+        let ce=0,cs=0;
+        sorted.filter(yy=>yy<=y).forEach(yy=>{ce+=snapshots[yy].epa||0;cs+=snapshots[yy].sol||0;});
+        return Math.abs(ce+cs);
+      }))*100)||0;
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)">
+        <div style="font-size:12px;color:var(--text2);width:70px;flex-shrink:0">${yml(ym)}</div>
+        <div style="flex:1;height:4px;background:var(--surf2);border-radius:2px;overflow:hidden">
+          <div style="width:${barW}%;height:100%;background:${pat>=0?'var(--green)':'var(--red)'};border-radius:2px"></div>
+        </div>
+        <div style="font-size:12px;font-weight:600;color:${pat>=0?'var(--green)':'var(--red)'};width:80px;text-align:right">${pat>=0?'+':''}${fmt(pat)} F</div>
+        <button onclick="recalculateSnapshot('${ym}')" style="font-size:10px;padding:2px 6px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">↺</button>
+      </div>`;
+    });
+  } else {
+    html+=`<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">Les snapshots se constituent automatiquement dès ta première transaction du mois.</div>`;
+  }
+
+  el.innerHTML=html;
 }
 
 // ANALYSE DES HABITUDES
