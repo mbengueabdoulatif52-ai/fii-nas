@@ -69,8 +69,8 @@ window._fb = { db, auth, doc, setDoc, getDoc, getDocs, onSnapshot, collection, a
 select{color-scheme:dark}
 :root.light select{color-scheme:light}
 body{font-feature-settings:'tnum';-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-html,body{background:var(--bg);min-height:100vh}
-body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;padding-bottom:88px}
+html,body{background:var(--bg);min-height:100vh;overflow-x:hidden;max-width:100vw}
+body{font-family:var(--font);color:var(--text);max-width:480px;width:100%;margin:0 auto;padding-bottom:88px;overflow-x:hidden}
 
 /* AUTH */
 #auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;background:var(--bg)}
@@ -2058,7 +2058,9 @@ function showLockScreen(isSetup=false){
   document.body.appendChild(overlay);
   overlay._pin='';
   overlay._isSetup=isSetup;
-  // Biometric auto-trigger disabled — user must tap button manually
+  if(!isSetup && localStorage.getItem('fiinas-passkey')==='1'){
+    setTimeout(()=>tryBiometric(), 400);
+  }
 }
 
 let pinInput='';
