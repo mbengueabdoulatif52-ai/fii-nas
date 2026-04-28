@@ -2049,7 +2049,7 @@ function showLockScreen(isSetup=false){
           ${k}
         </button>`).join('')}
     </div>
-    ${!isSetup&&typeof PublicKeyCredential!=='undefined'?`
+    ${!isSetup&&localStorage.getItem('fiinas-passkey')==='1'?`
     <button onclick="tryBiometric()" style="margin-top:24px;padding:10px 24px;border-radius:var(--r);border:0.5px solid var(--border);background:var(--surf);color:var(--text2);font-size:13px;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:8px">
       <span style="font-size:18px">🔐</span> Utiliser l'empreinte
     </button>`:''}
@@ -2058,9 +2058,7 @@ function showLockScreen(isSetup=false){
   document.body.appendChild(overlay);
   overlay._pin='';
   overlay._isSetup=isSetup;
-  if(!isSetup&&typeof PublicKeyCredential!=='undefined'){
-    setTimeout(()=>tryBiometric(),500);
-  }
+  // Biometric auto-trigger disabled — user must tap button manually
 }
 
 let pinInput='';
@@ -2102,6 +2100,17 @@ function pinKey(k){
             toast('Code PIN créé ✓');
             renderSecurityUI();
             resetLockTimer();
+            // Proposer l'enregistrement de l'empreinte
+            if(typeof PublicKeyCredential!=='undefined'){
+              PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(avail=>{
+                if(avail){
+                  setTimeout(async()=>{
+                    const ok = await registerPasskey();
+                    if(ok){ toast('Empreinte enregistrée ✓'); renderSecurityUI(); }
+                  }, 500);
+                }
+              }).catch(()=>{});
+            }
           } else {
             document.getElementById('pin-error').textContent='Les codes ne correspondent pas';
             pinInput='';
@@ -2131,30 +2140,65 @@ function pinKey(k){
   }
 }
 
-async function tryBiometric(){
-  if(typeof PublicKeyCredential==='undefined')return;
+async function registerPasskey(){
+  // Enregistre une passkey liée au PIN (appelé après création du PIN)
+  if(typeof PublicKeyCredential==='undefined') return false;
   try{
-    const result=await navigator.credentials.get({
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if(!available) return false;
+    const cred = await navigator.credentials.create({
       publicKey:{
-        challenge:new Uint8Array(32),
-        timeout:60000,
-        userVerification:'required',
-        rpId:window.location.hostname
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp:{ name:"FII'NAS", id: window.location.hostname },
+        user:{ id: new TextEncoder().encode(uid||'fiinas-user'), name:'fiinas', displayName:"FII'NAS" },
+        pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+        authenticatorSelection:{ authenticatorAttachment:'platform', userVerification:'required' },
+        timeout: 60000
       }
-    }).catch(async()=>{
-      // Fallback — try platform authenticator
-      return null;
+    });
+    if(cred){
+      // Stocker l'ID de la clé pour usage futur
+      const idB64 = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+      localStorage.setItem('fiinas-passkey','1');
+      localStorage.setItem('fiinas-passkey-id', idB64);
+      return true;
+    }
+  }catch(e){
+    // Utilisateur a refusé ou pas disponible — silencieux
+    console.log('Passkey registration skipped:', e.name);
+  }
+  return false;
+}
+
+async function tryBiometric(){
+  if(typeof PublicKeyCredential==='undefined') return;
+  const idB64 = localStorage.getItem('fiinas-passkey-id');
+  if(!idB64){ toast('Empreinte non configurée'); return; }
+  try{
+    const idBytes = Uint8Array.from(atob(idB64), c=>c.charCodeAt(0));
+    const result = await navigator.credentials.get({
+      publicKey:{
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        timeout: 60000,
+        userVerification: 'required',
+        rpId: window.location.hostname,
+        allowCredentials:[{ type:'public-key', id: idBytes }]
+      }
     });
     if(result){
       const overlay=document.getElementById('lock-overlay');
-      if(overlay){overlay.remove();isLocked=false;resetLockTimer();}
+      if(overlay){ overlay.remove(); isLocked=false; resetLockTimer(); }
     }
   }catch(e){
-    // Try simpler approach with conditional UI
-    try{
-      const available=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      if(!available)return;
-    }catch(e2){}
+    if(e.name==='NotAllowedError'){
+      // Utilisateur a annulé — ne rien faire
+    } else {
+      // Clé plus disponible (ex: empreintes réinitialisées)
+      localStorage.removeItem('fiinas-passkey');
+      localStorage.removeItem('fiinas-passkey-id');
+      toast('Empreinte non reconnue — réactivez dans Sécurité');
+      showLockScreen(false);
+    }
   }
 }
 
@@ -2199,6 +2243,15 @@ function renderSecurityUI(){
           <button onclick="removePin()" class="btn-o" style="font-size:11px;color:var(--red);border-color:var(--red)">Supprimer</button>
         `:`<button onclick="setupPin()" class="btn-p" style="font-size:11px">Activer</button>`}
       </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:0.5px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">Empreinte digitale</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${localStorage.getItem('fiinas-passkey')==='1'?'\u25CF Activée':'Non configurée'}</div>
+      </div>
+      <button onclick="registerPasskey().then(ok=>{if(ok){renderSecurityUI();toast('Empreinte enregistrée ✓');}else{toast('Annulé ou non disponible');}})" class="btn-o" style="font-size:11px;${!hasp?'opacity:.4':''}" ${!hasp?'disabled':''}>
+        ${localStorage.getItem('fiinas-passkey')==='1'?'Réenregistrer':'Activer'}
+      </button>
     </div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:0.5px solid var(--border)">
