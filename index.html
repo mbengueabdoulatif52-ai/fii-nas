@@ -759,6 +759,7 @@ function subscribe(){
       saveSettings();
     }
     renderCurrent();renderCPUI();
+    if(document.getElementById('page-pro')?.classList.contains('active'))renderCharts();
   });
 }
 
@@ -1310,7 +1311,7 @@ function renderCharts(){
       {label:'Fixes',data:l6.map(m=>sumC(txYM(m),'Dépenses fixes')),backgroundColor:'#3b82f6',borderRadius:4},
       {label:'Variables',data:l6.map(m=>sumC(txYM(m),'Dépenses variables')),backgroundColor:'#ef4444',borderRadius:4}
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},
       scales:{x:{ticks:{color:'#555',font:{size:10}},grid:{display:false},border:{display:false}},
               y:{ticks:{color:'#555',font:{size:9},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}}}
   });
@@ -1324,7 +1325,7 @@ function renderCharts(){
   charts.p=new Chart(document.getElementById('cp'),{
     type:'doughnut',
     data:{labels:pe.map(([n])=>n),datasets:[{data:pe.map(([,v])=>v),backgroundColor:PC,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false}}}
+    options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'60%',plugins:{legend:{display:false}}}
   });
   const tot=pe.reduce((s,[,v])=>s+v,0);
   document.getElementById('cpleg').innerHTML=pe.map(([n,v],i)=>`<div class="pli"><div class="pld" style="background:${PC[i]}"></div>${n} <span style="color:var(--text3);margin-left:2px">${Math.round(v/tot*100)}%</span></div>`).join('');
