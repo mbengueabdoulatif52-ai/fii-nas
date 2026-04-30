@@ -635,7 +635,9 @@ let CATS={...DEFAULT_CATS};
 
 // POSTES — entièrement personnalisables
 function getAllPostes(cat){
-  return CATS[cat]||[];
+  const base=CATS[cat]||[];
+  const extra=(custom[cat]||[]).filter(x=>!base.includes(x));
+  return [...base,...extra];
 }
 
 const DEFAULT_CATS_REF = JSON.parse(JSON.stringify(DEFAULT_CATS));
@@ -651,6 +653,14 @@ function loadCatsFromSettings(settings){
     CATS = settings.cats;
   } else {
     CATS = JSON.parse(JSON.stringify(DEFAULT_CATS));
+  }
+  // Fusionner custom dans CATS pour garantir visibilité complète
+  if(settings && settings.custom){
+    custom = settings.custom;
+    Object.keys(custom).forEach(cat=>{
+      if(!CATS[cat]) CATS[cat]=[];
+      (custom[cat]||[]).forEach(p=>{ if(!CATS[cat].includes(p)) CATS[cat].push(p); });
+    });
   }
 }
 
@@ -1385,18 +1395,7 @@ async function removePoste(cat,p){
 }
 async function removeCP(cat,p){return removePoste(cat,p);}
 
-async function addCP(cat){
-  const id='ncp_'+cat.replace(/ /g,'_');
-  const v=document.getElementById(id).value.trim();if(!v)return;
-  if(!custom[cat])custom[cat]=[];
-  if(!custom[cat].includes(v))custom[cat].push(v);
-  document.getElementById(id).value='';
-  await saveSettings();syncPostes();renderCPUI();toast('Poste ajouté ✓');
-}
-async function removeCP(cat,p){
-  custom[cat]=(custom[cat]||[]).filter(x=>x!==p);
-  await saveSettings();syncPostes();renderCPUI();
-}
+
 
 
 // IMPORT
