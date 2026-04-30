@@ -1069,11 +1069,11 @@ async function saveTx(){
   const{db,collection,addDoc}=window._fb;
   const data={amt,date,cat:selCatVal,poste,cmt,ts:new Date().toISOString(),createdBy:userName,createdById:uid};
   if(isRecur){data.recur=true;data.recurDay=recurDay;}
-  // Lancer sans await — Firebase gère le hors ligne en arrière-plan
-  addDoc(collection(db,dataPath()+'/transactions'),data).catch(e=>{
+  try{
+    await addDoc(collection(db,dataPath()+'/transactions'),data);
+  }catch(e){
     console.warn('Sync en attente:',e.message);
-  });
-  // Réinitialiser immédiatement sans attendre Firebase
+  }
   document.getElementById('f-amt').value='';
   document.getElementById('f-cmt').value='';
   document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
@@ -1109,16 +1109,31 @@ function saveTrash(items){
 const trashBin=loadTrash();
 
 async function delTx(id){
-  // Debug toast — role info
-  toast('Rôle: '+userRole+' | Space: '+(sharedSpaceId?sharedSpaceId.slice(0,8):'perso')+' | Admin: '+isAdmin());
   if(!isAdmin()){toast('Mode lecture — modification non autorisée');return;}
   const tx=txs.find(t=>t.id===id);
   if(!tx)return;
-  trashBin.unshift({...tx, deletedAt: new Date().toISOString()});
+  // Modale de confirmation
+  const confirmed=await new Promise(resolve=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;font-family:var(--font)';
+    ov.innerHTML=`<div style="background:var(--surf);border-radius:var(--r);padding:22px;max-width:320px;width:100%;border:0.5px solid var(--border2)">
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Supprimer la transaction ?</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:20px">${tx.poste||''} · ${tx.amt?parseInt(tx.amt).toLocaleString('fr-FR'):''} F · ${tx.date||''}</div>
+      <div style="display:flex;gap:10px">
+        <button id="dc-no" style="flex:1;padding:11px;border-radius:10px;border:0.5px solid var(--border);background:var(--surf2);color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer">Annuler</button>
+        <button id="dc-yes" style="flex:1;padding:11px;border-radius:10px;border:none;background:#ef4444;color:#fff;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">Supprimer</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.querySelector('#dc-yes').onclick=()=>{ov.remove();resolve(true);};
+    ov.querySelector('#dc-no').onclick=()=>{ov.remove();resolve(false);};
+    ov.onclick=e=>{if(e.target===ov){ov.remove();resolve(false);}};
+  });
+  if(!confirmed)return;
+  trashBin.unshift({...tx,deletedAt:new Date().toISOString()});
   if(trashBin.length>10)trashBin.pop();
   saveTrash(trashBin);
   const{db,doc,deleteDoc}=window._fb;
-  // Use dataPath to delete from correct location
   try{
     await deleteDoc(doc(db,dataPath()+'/transactions/'+id));
     showUndoToast(tx);
