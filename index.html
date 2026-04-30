@@ -300,7 +300,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
         <div class="flbl">Montant (FCFA)</div>
         <div class="amtwrap">
           <div class="amtcur">FCFA</div>
-          <input class="amtinp" type="text" id="f-amt" placeholder="0" inputmode="numeric" oninput="fmtAmtInput(this)">
+          <input class="amtinp" type="text" id="f-amt" placeholder="0" inputmode="numeric" oninput="fmtAmtInput(this);setFormDirty(true)">
         </div>
       </div>
       <div class="fgrp">
@@ -344,8 +344,10 @@ select option{background:#2c2c2e;color:#f5f5f7}
         </select>
       </div>
       <button class="btn-p" id="bsave" onclick="saveTx()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
-        Enregistrer
+        <span id="bsave-inner" style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+          Enregistrer
+        </span>
       </button>
       <div id="fmsg" style="font-size:11px;text-align:center;margin-top:7px;min-height:14px;color:var(--red)"></div>
     </div>
@@ -670,6 +672,8 @@ const MFR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','S
 const MS=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
 let uid=null,txs=[],budget={},custom={},unsub1=null,unsub2=null;
+let formDirty=false;
+function setFormDirty(v){formDirty=v;}
 let sharedSpaceId=null; // ID de l'espace partagé (null = espace perso)
 let userRole='admin';   // 'admin' ou 'reader'
 let userName='';        // Nom affiché sur les transactions
@@ -751,8 +755,12 @@ function subscribe(){
   if(unsub1)unsub1();
   unsub1=onSnapshot(query(collection(db,dataPath()+'/transactions'),orderBy('ts','desc')),snap=>{
     const firstLoad=txs.length===0;
-    txs=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderCurrent();
+    const newTxs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    // Ne re-rendre que si les données ont changé
+    const newHash=newTxs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
+    const oldHash=txs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
+    txs=newTxs;
+    if(firstLoad||newHash!==oldHash)renderCurrent();
     if(firstLoad)checkRecurring();
   });
   if(unsub2)unsub2();
@@ -801,6 +809,14 @@ function renderCurrent(){
 }
 
 function goP(p,btn){
+  // Confirmation si formulaire d'ajout en cours
+  if(p!=='add' && formDirty){
+    const amt=document.getElementById('f-amt')?.value;
+    if(amt && amt!=='0' && amt!==''){
+      if(!confirm('Tu as un montant saisi non enregistré. Quitter quand même ?'))return;
+    }
+  }
+  if(p!=='add') setFormDirty(false);
   document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(e=>e.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
@@ -1045,8 +1061,9 @@ async function saveTx(){
   if(!amt||isNaN(amt)||!date||!poste){msg.textContent='Montant et date obligatoires.';return;}
   msg.textContent='';
   const btn=document.getElementById('bsave');
+  const inner=document.getElementById('bsave-inner');
   btn.disabled=true;
-  btn.style.opacity='0.7';
+  if(inner)inner.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" style="animation:sp .8s linear infinite" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Enregistrement…';
   const isRecur=document.getElementById('f-recur')?.checked||false;
   const recurDay=isRecur?parseInt(document.getElementById('f-recur-day')?.value||'1'):null;
   const{db,collection,addDoc}=window._fb;
@@ -1063,10 +1080,11 @@ async function saveTx(){
   const recurCb=document.getElementById('f-recur');
   if(recurCb&&recurCb.checked){recurCb.checked=false;toggleRecurOptions();}
   btn.disabled=false;
-  btn.style.opacity='1';
+  if(inner)inner.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg> Enregistrer';
   toast(navigator.onLine
     ?(isRecur?'Transaction récurrente enregistrée ✓':'Transaction enregistrée ✓')
     :'Enregistré hors ligne · sync au retour du réseau');
+  setFormDirty(false);
   goP('tx',document.querySelectorAll('.ni')[1]);
 }
 // Corbeille temporaire (session)
