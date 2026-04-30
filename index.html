@@ -300,7 +300,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
         <div class="flbl">Montant (FCFA)</div>
         <div class="amtwrap">
           <div class="amtcur">FCFA</div>
-          <input class="amtinp" type="number" id="f-amt" placeholder="0" min="0" inputmode="numeric">
+          <input class="amtinp" type="text" id="f-amt" placeholder="0" inputmode="numeric" oninput="fmtAmtInput(this)">
         </div>
       </div>
       <div class="fgrp">
@@ -1037,7 +1037,7 @@ function syncPostes(){
 }
 async function saveTx(){
   if(!isAdmin()){toast('Mode lecture — modification non autorisée');return;}
-  const amt=parseFloat(document.getElementById('f-amt').value);
+  const amt=parseFloat(document.getElementById('f-amt').value.replace(/\s/g,'').replace(/,/g,'.'));
   const date=document.getElementById('f-date').value;
   const poste=document.getElementById('f-poste').value;
   const cmt=document.getElementById('f-cmt').value.trim();
@@ -2519,6 +2519,15 @@ function fmtBudInput(el){
   // Keep cursor at end
   setTimeout(()=>{el.selectionStart=el.selectionEnd=el.value.length;},0);
 }
+
+function fmtAmtInput(el){
+  // Remove all non-digit chars except dot/comma
+  let raw=el.value.replace(/[^0-9]/g,'');
+  if(!raw){el.value='';return;}
+  // Format with spaces as thousands separator
+  el.value=parseInt(raw,10).toLocaleString('fr-FR');
+}
+
 
 // EDIT TRANSACTION
 let editingId=null;
