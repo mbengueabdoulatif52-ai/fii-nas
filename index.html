@@ -242,7 +242,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
 <div id="loading"><div class="spin"></div><p style="font-size:13px;color:var(--text3)">Chargement...</p></div>
 
 <div id="auth" style="display:none">
-  <div class="logo">💰</div>
+  <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2m0 8v2M9.5 9h3a1.5 1.5 0 0 1 0 3h-3m0 0h3.5a1.5 1.5 0 0 1 0 3H9.5"/></svg></div>
   <h1 style="color:var(--text);font-weight:500">FII'NAS</h1>
   <p>Suivez revenus, dépenses et épargne. Synchronisé sur tous vos appareils en temps réel.</p>
   <button class="btn-g" onclick="doSignIn()">
@@ -306,10 +306,10 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <div class="fgrp">
         <div class="flbl">Catégorie</div>
         <div class="cat-chips">
-          <button class="chip" onclick="selCat(this,'Revenu','r')">💚 Revenu</button>
-          <button class="chip v" onclick="selCat(this,'Dépenses variables','v')">🔴 Variables</button>
-          <button class="chip" onclick="selCat(this,'Dépenses fixes','f')">🔵 Fixes</button>
-          <button class="chip" onclick="selCat(this,'Epargne','e')">💜 Épargne</button>
+          <button class="chip" onclick="selCat(this,'Revenu','r')"><span style="display:inline-flex;align-items:center;gap:4px"><svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#30d158"/></svg> Revenu</span></button>
+          <button class="chip v" onclick="selCat(this,'Dépenses variables','v')"><span style="display:inline-flex;align-items:center;gap:4px"><svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#ef4444"/></svg> Variables</span></button>
+          <button class="chip" onclick="selCat(this,'Dépenses fixes','f')"><span style="display:inline-flex;align-items:center;gap:4px"><svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#3b82f6"/></svg> Fixes</span></button>
+          <button class="chip" onclick="selCat(this,'Epargne','e')"><span style="display:inline-flex;align-items:center;gap:4px"><svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#a855f7"/></svg> Épargne</span></button>
         </div>
       </div>
       <div class="frow">
@@ -664,7 +664,7 @@ function loadCatsFromSettings(settings){
   }
 }
 
-const CICO={'Revenu':'💚','Dépenses fixes':'🔵','Dépenses variables':'🔴','Epargne':'💜'};
+const CICO={'Revenu':'<svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#30d158"/></svg>','Dépenses fixes':'<svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#3b82f6"/></svg>','Dépenses variables':'<svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#ef4444"/></svg>','Epargne':'<svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#a855f7"/></svg>'};
 const CCLS={'Revenu':'r','Dépenses fixes':'f','Dépenses variables':'v','Epargne':'e'};
 const PC=['#3b82f6','#ef4444','#f59e0b','#a855f7','#22c55e','#ec4899','#06b6d4','#f97316','#84cc16'];
 const MFR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -1170,7 +1170,7 @@ function renderTX(){
     const ac=isR?'g':isE?'p':'r';
     const hi=(s,q)=>{if(!q||!s)return s||"";const i=s.toLowerCase().indexOf(q.toLowerCase());if(i<0)return s;return s.slice(0,i)+'<mark style="background:rgba(99,102,241,.3);color:#a5b4fc;border-radius:3px;padding:0 2px">'+s.slice(i,i+q.length)+'</mark>'+s.slice(i+q.length);};
     return `<div class="txi">
-      <div class="txic ${cl}">${CICO[x.cat]||'💰'}</div>
+      <div class="txic ${cl}">${CICO[x.cat]||'●'}</div>
       <div class="txin">
         <div class="txp">${hi(x.poste||'',q)}</div>
         <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span>${x.auto?' <span style="font-size:9px;color:var(--text3)">🔄</span>':''}</div>
@@ -2396,7 +2396,7 @@ function getTxBadge(x){
   const name=x.createdBy||(isMyTx?userName:ownerName);
   if(!name)return '';
   const color=isMyTx?'var(--blue)':'var(--green)';
-  return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
+  return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+';display:inline-flex;align-items:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> '+name+'</span>';
 }
 
 // TRANSACTIONS RÉCURRENTES
@@ -2991,7 +2991,7 @@ function updateSpaceBtn(){
     icon.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';label.textContent='Perso';
   } else {
     const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
-    icon.textContent='👥';
+    icon.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
     label.textContent=sp?.ownerName||'Partagé';
   }
 }
@@ -3030,7 +3030,7 @@ function renderSpaceMenu(){
   mySpaces.forEach(sp=>{
     const isActive=sharedSpaceId===sp.ownerUid;
     html+=`<div onclick="switchSpace('${sp.ownerUid}')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;background:${isActive?'var(--surf2)':'transparent'};margin-bottom:4px">
-      <span style="font-size:16px">👥</span>
+      <span style="display:flex;align-items:center;color:var(--text2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
       <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">${sp.ownerName}</div><div style="font-size:10px;color:var(--text3)">${sp.role==='admin'?'Admin':'Lecteur'}</div></div>
       ${isActive?'<span style="font-size:10px;color:var(--green)">✓</span>':''}
     </div>`;
