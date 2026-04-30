@@ -281,7 +281,6 @@ select option{background:#2c2c2e;color:#f5f5f7}
   <!-- PAGE DASHBOARD -->
   <div id="page-dash" class="page active">
     <div class="hero" id="hero"></div>
-    <div id="alerts-wrap"></div>
     <div class="mgrid" id="dm"></div>
     <div class="tabs" id="dtabs">
       <button class="tab active" onclick="setDTab(this,'all')">Vue globale</button>
@@ -291,6 +290,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <button class="tab" onclick="setDTab(this,'epa')">Épargne</button>
     </div>
     <div id="dc"></div>
+    <div id="alerts-wrap"></div>
   </div>
 
   <!-- PAGE AJOUTER -->
@@ -2569,10 +2569,12 @@ function toggleTheme(){
 }
 function initTheme(){
   const saved=localStorage.getItem('fiinas-theme');
+  const btn=document.getElementById('theme-btn');
   if(saved==='light'){
     document.documentElement.classList.add('light');
-    const btn=document.getElementById('theme-btn');
-    if(btn)btn.textContent='🌙';
+    if(btn)btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  } else {
+    if(btn)btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
   }
 }
 initTheme();
@@ -2986,7 +2988,7 @@ function updateSpaceBtn(){
   const label=document.getElementById('space-label');
   if(!icon||!label)return;
   if(!sharedSpaceId){
-    icon.textContent='👤';label.textContent='Perso';
+    icon.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';label.textContent='Perso';
   } else {
     const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
     icon.textContent='👥';
@@ -3021,7 +3023,7 @@ function renderSpaceMenu(){
   let html='<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding:4px 8px 8px">Changer d\'espace</div>';
   const isPerso=!sharedSpaceId;
   html+=`<div onclick="switchSpace(null)" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;background:${isPerso?'var(--surf2)':'transparent'};margin-bottom:4px">
-    <span style="font-size:16px">👤</span>
+    <span style="display:flex;align-items:center;color:var(--text2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
     <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Mon espace</div><div style="font-size:10px;color:var(--text3)">Mes données personnelles</div></div>
     ${isPerso?'<span style="font-size:10px;color:var(--green)">✓</span>':''}
   </div>`;
@@ -3870,7 +3872,7 @@ function updateSpaceBtn(){
   const label=document.getElementById('space-label');
   if(!icon||!label)return;
   if(!sharedSpaceId){
-    icon.textContent='👤';label.textContent='Perso';
+    icon.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';label.textContent='Perso';
   } else {
     const sp=mySpaces.find(s=>s.id===sharedSpaceId);
     icon.textContent=sp?.isPersonal?'👥':'🏠';
@@ -3906,7 +3908,7 @@ function renderSpaceMenu(){
   // Personal space
   const isPerso=!sharedSpaceId;
   html+=`<div onclick="switchSpace(null)" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;background:${isPerso?'var(--surf2)':'transparent'};margin-bottom:4px">
-    <span style="font-size:16px">👤</span>
+    <span style="display:flex;align-items:center;color:var(--text2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
     <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Espace personnel</div><div style="font-size:10px;color:var(--text3)">Mes données privées</div></div>
     ${isPerso?'<span style="font-size:10px;color:var(--green)">✓</span>':''}
   </div>`;
