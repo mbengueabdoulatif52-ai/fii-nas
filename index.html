@@ -596,7 +596,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
     </div>
     <div class="fgrp"><div class="flbl">Montant</div>
       <div class="amtwrap"><div class="amtcur">FCFA</div>
-        <input class="amtinp" type="number" id="e-amt" inputmode="numeric">
+        <input class="amtinp" type="text" id="e-amt" inputmode="numeric" oninput="fmtAmtInput(this)">
       </div>
     </div>
     <div class="frow" style="margin-bottom:11px">
@@ -2534,7 +2534,8 @@ let editingId=null;
 function openEditTx(id){
   const tx=txs.find(t=>t.id===id);if(!tx)return;
   editingId=id;
-  document.getElementById('e-amt').value=tx.amt;
+  const fmtd=tx.amt?parseInt(tx.amt).toLocaleString('fr-FR'):'';
+  document.getElementById('e-amt').value=fmtd;
   document.getElementById('e-date').value=tx.date;
   document.getElementById('e-cmt').value=tx.cmt||'';
   const catSel=document.getElementById('e-cat');
@@ -2556,7 +2557,7 @@ function closeEditTx(){
 }
 async function saveEditTx(){
   if(!editingId)return;
-  const amt=parseFloat(document.getElementById('e-amt').value);
+  const amt=parseFloat(document.getElementById('e-amt').value.replace(/\s/g,'').replace(/,/g,'.'));
   const date=document.getElementById('e-date').value;
   const cat=document.getElementById('e-cat').value;
   const poste=document.getElementById('e-poste').value;
