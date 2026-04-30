@@ -996,8 +996,11 @@ function renderDC(){
       const isPos=cat==='Revenu'||cat==='Epargne';
       const pc=b>0?Math.round(r/b*100):null;
       const cl=pc===null?(r>0?(isPos?'ok':'ov'):''):isPos?(pc>=100?'ok':pc>=80?'wa':'ov'):(pc>100?'ov':pc>80?'wa':'ok');
-      const bw=b>0?Math.min(100,Math.round(r/b*100)):r>0?100:0;
-      const bc=isPos?(b===0&&r>0?'var(--green)':bw>=100?'var(--green)':bw>=80?'var(--amber)':'var(--red)'):(b===0&&r>0?'var(--red)':bw>100?'var(--red)':bw===100?'var(--amber)':'var(--green)');
+      const rawPct=b>0?Math.round(r/b*100):(r>0?999:0);
+      const bw=Math.min(100,rawPct);
+      const bc=isPos
+        ?(b===0&&r>0?'var(--green)':rawPct>=100?'var(--green)':rawPct>=80?'var(--amber)':'var(--red)')
+        :(b===0&&r>0?'var(--red)':rawPct>100?'var(--red)':rawPct===100?'var(--amber)':'var(--green)');
       const pctTxt=pc!==null?(pc+'%'):(r>0?(isPos?'✓':'⚠'):'—');
       rows+=`<tr><td>${p}</td><td class="${cl}">${fmt(r)}</td><td style="color:var(--text3)">${b>0?fmt(b):'—'}</td><td style="color:var(--text3)">${pctTxt}</td></tr><tr><td colspan="4" style="padding:0 5px 6px"><div class="pb"><div class="pbr" style="width:${bw}%;background:${bc};min-width:${r>0?'4px':'0'}"></div></div></td></tr>`;
     });
