@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -69,8 +69,8 @@ window._fb = { db, auth, doc, setDoc, getDoc, getDocs, onSnapshot, collection, a
 select{color-scheme:dark}
 :root.light select{color-scheme:light}
 body{font-feature-settings:'tnum';-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-html,body{background:var(--bg);min-height:100vh}
-body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;padding-bottom:88px}
+html,body{background:var(--bg);min-height:100vh;overflow-x:hidden;max-width:100vw}
+body{font-family:var(--font);color:var(--text);max-width:480px;width:100%;margin:0 auto;padding-top:57px;padding-bottom:88px;overflow-x:hidden}
 
 /* AUTH */
 #auth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;background:var(--bg)}
@@ -81,7 +81,7 @@ body{font-family:var(--font);color:var(--text);max-width:480px;margin:0 auto;pad
 .btn-g:hover{background:var(--surf2)}
 
 /* TOPBAR */
-#topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;position:sticky;top:0;z-index:50;background:rgba(17,17,17,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:0.5px solid var(--border)}
+#topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:100;background:rgba(17,17,17,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:0.5px solid var(--border)}
 .av{width:32px;height:32px;border-radius:50%;background:var(--gd);border:1px solid rgba(34,197,94,.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--green);overflow:hidden}
 .av img{width:100%;height:100%;object-fit:cover}
 .topbar-l{display:flex;align-items:center;gap:10px}
@@ -232,7 +232,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
 .pld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 @media(min-width:481px){body{border-left:1px solid var(--border);border-right:1px solid var(--border)}}
 .light #nav{background:rgba(245,245,247,.96);border-top:0.5px solid rgba(0,0,0,.08)}
-.light #topbar{background:rgba(245,245,247,.94);border-bottom:0.5px solid rgba(0,0,0,.08)}
+.light #topbar{background:rgba(245,245,247,.97);border-bottom:0.5px solid rgba(0,0,0,.08)}
 .light .hero{border-left-color:var(--green)}
 .light .hamt.pos{color:var(--green)}.light .hamt.neg{color:var(--red)}
 </style>
@@ -242,7 +242,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
 <div id="loading"><div class="spin"></div><p style="font-size:13px;color:var(--text3)">Chargement...</p></div>
 
 <div id="auth" style="display:none">
-  <div class="logo">💰</div>
+  <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2m0 8v2M9.5 9h3a1.5 1.5 0 0 1 0 3h-3m0 0h3.5a1.5 1.5 0 0 1 0 3H9.5"/></svg></div>
   <h1 style="color:var(--text);font-weight:500">FII'NAS</h1>
   <p>Suivez revenus, dépenses et épargne. Synchronisé sur tous vos appareils en temps réel.</p>
   <button class="btn-g" onclick="doSignIn()">
@@ -262,10 +262,10 @@ select option{background:#2c2c2e;color:#f5f5f7}
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:6px">
-      <button id="hide-btn" onclick="toggleHide()" style="width:32px;height:32px;border-radius:10px;border:0.5px solid var(--border);background:var(--surf2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:.2s">👁</button>
-      <button id="theme-btn" onclick="toggleTheme()" style="width:32px;height:32px;border-radius:10px;border:0.5px solid var(--border);background:var(--surf2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:.2s">🌙</button>
+      <button id="hide-btn" onclick="toggleHide()" style="width:32px;height:32px;border-radius:10px;border:0.5px solid var(--border);background:var(--surf2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:.2s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      <button id="theme-btn" onclick="toggleTheme()" style="width:32px;height:32px;border-radius:10px;border:0.5px solid var(--border);background:var(--surf2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:.2s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
       <button id="space-btn" onclick="toggleSpaceMenu()" style="display:flex;align-items:center;gap:4px;padding:5px 9px;background:var(--surf2);border:0.5px solid var(--border);border-radius:var(--rs);cursor:pointer;font-family:var(--font);font-size:11px;font-weight:500;color:var(--text2);max-width:90px">
-        <span id="space-icon">👤</span>
+        <span id="space-icon" style="display:flex;align-items:center;color:var(--text2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
         <span id="space-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Perso</span>
       </button>
       <div class="msel-wrap">
@@ -281,7 +281,6 @@ select option{background:#2c2c2e;color:#f5f5f7}
   <!-- PAGE DASHBOARD -->
   <div id="page-dash" class="page active">
     <div class="hero" id="hero"></div>
-    <div id="alerts-wrap"></div>
     <div class="mgrid" id="dm"></div>
     <div class="tabs" id="dtabs">
       <button class="tab active" onclick="setDTab(this,'all')">Vue globale</button>
@@ -291,6 +290,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <button class="tab" onclick="setDTab(this,'epa')">Épargne</button>
     </div>
     <div id="dc"></div>
+    <div id="alerts-wrap"></div>
   </div>
 
   <!-- PAGE AJOUTER -->
@@ -300,16 +300,16 @@ select option{background:#2c2c2e;color:#f5f5f7}
         <div class="flbl">Montant (FCFA)</div>
         <div class="amtwrap">
           <div class="amtcur">FCFA</div>
-          <input class="amtinp" type="number" id="f-amt" placeholder="0" min="0" inputmode="numeric">
+          <input class="amtinp" type="text" id="f-amt" placeholder="0" inputmode="numeric" oninput="fmtAmtInput(this);setFormDirty(true)">
         </div>
       </div>
       <div class="fgrp">
         <div class="flbl">Catégorie</div>
         <div class="cat-chips">
-          <button class="chip" onclick="selCat(this,'Revenu','r')">💚 Revenu</button>
-          <button class="chip v" onclick="selCat(this,'Dépenses variables','v')">🔴 Variables</button>
-          <button class="chip" onclick="selCat(this,'Dépenses fixes','f')">🔵 Fixes</button>
-          <button class="chip" onclick="selCat(this,'Epargne','e')">💜 Épargne</button>
+          <button class="chip" onclick="selCat(this,'Revenu','r')"><span style="display:inline-flex;align-items:center;gap:4px"><svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#30d158"/></svg> Revenu</span></button>
+          <button class="chip v" onclick="selCat(this,'Dépenses variables','v')"><span style="display:inline-flex;align-items:center;gap:4px"><svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#ef4444"/></svg> Variables</span></button>
+          <button class="chip" onclick="selCat(this,'Dépenses fixes','f')"><span style="display:inline-flex;align-items:center;gap:4px"><svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#3b82f6"/></svg> Fixes</span></button>
+          <button class="chip" onclick="selCat(this,'Epargne','e')"><span style="display:inline-flex;align-items:center;gap:4px"><svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#a855f7"/></svg> Épargne</span></button>
         </div>
       </div>
       <div class="frow">
@@ -344,8 +344,10 @@ select option{background:#2c2c2e;color:#f5f5f7}
         </select>
       </div>
       <button class="btn-p" id="bsave" onclick="saveTx()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
-        Enregistrer
+        <span id="bsave-inner" style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+          Enregistrer
+        </span>
       </button>
       <div id="fmsg" style="font-size:11px;text-align:center;margin-top:7px;min-height:14px;color:var(--red)"></div>
     </div>
@@ -355,14 +357,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
   <div id="page-tx" class="page">
     <div style="position:relative;margin-bottom:10px">
       <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <div id="poste-filter-banner" style="display:none;align-items:center;justify-content:space-between;background:var(--bd);border:0.5px solid rgba(10,132,255,.3);border-radius:var(--rs);padding:8px 12px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--blue)">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        Poste : <strong id="poste-filter-label"></strong>
-      </div>
-      <button onclick="clearPosteFilter()" style="background:transparent;border:none;color:var(--blue);cursor:pointer;font-size:12px;font-family:var(--font);padding:0">× Effacer</button>
-    </div>
-    <input id="tx-search" class="finp" type="text" placeholder="Rechercher poste, commentaire, montant..." style="padding-left:36px;font-size:13px" oninput="renderTX()">
+      <input id="tx-search" class="finp" type="text" placeholder="Rechercher poste, commentaire, montant..." style="padding-left:36px;font-size:13px" oninput="renderTX()">
     </div>
     <div class="tabs" id="txf">
       <button class="tab active" onclick="setTF(this,'all')">Toutes</button>
@@ -448,8 +443,16 @@ select option{background:#2c2c2e;color:#f5f5f7}
       </div>
     </div>
     <div class="card">
+      <div class="ct">Sécurité</div>
+      <div id="security-ui"></div>
+    </div>
+    <div class="card">
       <div class="ct">Mes espaces</div>
       <div id="spaces-ui"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Postes personnalisés</div>
+      <div id="cpui"></div>
     </div>
     <div class="card">
       <div class="ct">Transactions récurrentes</div>
@@ -463,8 +466,8 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <div id="trash-list"></div>
     </div>
     <div class="card">
-      <div class="ct">Postes personnalisés</div>
-      <div id="cpui"></div>
+      <div class="ct">Évolution patrimoniale</div>
+      <div id="patrimoine-ui"><div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Chargement...</div></div>
     </div>
     <div class="card">
       <div class="ct">Évolution 6 mois</div>
@@ -477,14 +480,6 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <div class="pleg" id="cpleg"></div>
     </div>
     <div class="card">
-      <div class="ct">Sécurité</div>
-      <div id="security-ui"></div>
-    </div>
-    <div class="card">
-      <div class="ct">Évolution patrimoniale</div>
-      <div id="patrimoine-ui"><div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Chargement...</div></div>
-    </div>
-    <div class="card">
       <div class="ct">Analyse des habitudes</div>
       <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="analyse-period">
         <button class="tab active" onclick="setAnalysePeriod(this,3)">3 mois</button>
@@ -494,7 +489,6 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <div id="analyse-content"></div>
     </div>
   </div>
-
 
   <!-- PAGE IMPORT -->
   <div id="page-imp" class="page">
@@ -604,7 +598,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
     </div>
     <div class="fgrp"><div class="flbl">Montant</div>
       <div class="amtwrap"><div class="amtcur">FCFA</div>
-        <input class="amtinp" type="number" id="e-amt" inputmode="numeric">
+        <input class="amtinp" type="text" id="e-amt" inputmode="numeric" oninput="fmtAmtInput(this)">
       </div>
     </div>
     <div class="frow" style="margin-bottom:11px">
@@ -642,7 +636,9 @@ let CATS={...DEFAULT_CATS};
 
 // POSTES — entièrement personnalisables
 function getAllPostes(cat){
-  return CATS[cat]||[];
+  const base=CATS[cat]||[];
+  const extra=(custom[cat]||[]).filter(x=>!base.includes(x));
+  return [...base,...extra];
 }
 
 const DEFAULT_CATS_REF = JSON.parse(JSON.stringify(DEFAULT_CATS));
@@ -659,19 +655,29 @@ function loadCatsFromSettings(settings){
   } else {
     CATS = JSON.parse(JSON.stringify(DEFAULT_CATS));
   }
+  // Fusionner custom dans CATS pour garantir visibilité complète
+  if(settings && settings.custom){
+    custom = settings.custom;
+    Object.keys(custom).forEach(cat=>{
+      if(!CATS[cat]) CATS[cat]=[];
+      (custom[cat]||[]).forEach(p=>{ if(!CATS[cat].includes(p)) CATS[cat].push(p); });
+    });
+  }
 }
 
-const CICO={'Revenu':'💚','Dépenses fixes':'🔵','Dépenses variables':'🔴','Epargne':'💜'};
+const CICO={'Revenu':'<svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#30d158"/></svg>','Dépenses fixes':'<svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#3b82f6"/></svg>','Dépenses variables':'<svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#ef4444"/></svg>','Epargne':'<svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#a855f7"/></svg>'};
 const CCLS={'Revenu':'r','Dépenses fixes':'f','Dépenses variables':'v','Epargne':'e'};
 const PC=['#3b82f6','#ef4444','#f59e0b','#a855f7','#22c55e','#ec4899','#06b6d4','#f97316','#84cc16'];
 const MFR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const MS=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
 let uid=null,txs=[],budget={},custom={},unsub1=null,unsub2=null;
+let formDirty=false;
+function setFormDirty(v){formDirty=v;}
 let sharedSpaceId=null; // ID de l'espace partagé (null = espace perso)
 let userRole='admin';   // 'admin' ou 'reader'
 let userName='';        // Nom affiché sur les transactions
-let txFilt='all',txPosteFilter='',dTab='all',bYear=new Date().getFullYear().toString(),bMonth=new Date().getMonth()+1;
+let txFilt='all',dTab='all',bYear=new Date().getFullYear().toString(),bMonth=new Date().getMonth()+1;
 let charts={};
 let selCatVal='Dépenses variables';
 
@@ -684,7 +690,7 @@ function toggleHide(){
   hideAmounts=!hideAmounts;
   localStorage.setItem('fiinas-hide',hideAmounts?'1':'0');
   const btn=document.getElementById('hide-btn');
-  if(btn)btn.textContent=hideAmounts?'🙈':'👁';
+  if(btn)btn.innerHTML=hideAmounts?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
   renderCurrent();
 }
 function ymk(y,m){return `${y}-${String(m).padStart(2,'0')}`;}
@@ -749,8 +755,12 @@ function subscribe(){
   if(unsub1)unsub1();
   unsub1=onSnapshot(query(collection(db,dataPath()+'/transactions'),orderBy('ts','desc')),snap=>{
     const firstLoad=txs.length===0;
-    txs=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderCurrent();
+    const newTxs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    // Ne re-rendre que si les données ont changé
+    const newHash=newTxs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
+    const oldHash=txs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
+    txs=newTxs;
+    if(firstLoad||newHash!==oldHash)renderCurrent();
     if(firstLoad)checkRecurring();
   });
   if(unsub2)unsub2();
@@ -763,9 +773,10 @@ function subscribe(){
     } else {
       // Premier login — initialiser avec DEFAULT_CATS
       CATS=JSON.parse(JSON.stringify(DEFAULT_CATS));
-      saveSettings();
+      saveSettings(); // fire-and-forget on first login intentional
     }
     renderCurrent();renderCPUI();
+    if(document.getElementById('page-pro')?.classList.contains('active'))renderCharts();
   });
 }
 
@@ -798,6 +809,14 @@ function renderCurrent(){
 }
 
 function goP(p,btn){
+  // Confirmation si formulaire d'ajout en cours
+  if(p!=='add' && formDirty){
+    const amt=document.getElementById('f-amt')?.value;
+    if(amt && amt!=='0' && amt!==''){
+      if(!confirm('Tu as un montant saisi non enregistré. Quitter quand même ?'))return;
+    }
+  }
+  if(p!=='add') setFormDirty(false);
   document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(e=>e.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
@@ -852,20 +871,20 @@ async function renderDash(){
       <div class="hmi">Dépenses<span style="color:var(--red)">${fmt(dep)} F</span></div>
       <div class="hmi">Épargne<span style="color:var(--blue)">${fmt(ep)} F</span></div>
     </div>
-    ${prevSol!==0?`<div style="font-size:10px;color:rgba(165,180,252,.5);margin-top:4px">vs ${yml(prevYm)} ${diffTag(diffSol,false)}</div>`:''}
+    ${prevSol!==0?`<div style="font-size:10px;color:var(--text3);margin-top:4px">vs ${yml(prevYm)} ${diffTag(diffSol,false)}</div>`:''}
     <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,.1)">
       <div class="hlbl" style="margin-bottom:6px">PATRIMOINE NET · À AUJOURD'HUI</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
         <div style="text-align:center">
-          <div style="font-size:9px;color:rgba(255,255,255,.5);margin-bottom:2px">Épargne cumulée</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">Épargne cumulée</div>
           <div style="font-size:12px;font-weight:600;color:var(--green)">${fmt(epaCumul)} F</div>
         </div>
         <div style="text-align:center">
-          <div style="font-size:9px;color:rgba(255,255,255,.5);margin-bottom:2px">Solde net cumulé</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">Solde net cumulé</div>
           <div style="font-size:12px;font-weight:600;color:${solCumul>=0?'var(--green)':'var(--red)'}">${solCumul>=0?'+':''}${fmt(solCumul)} F</div>
         </div>
-        <div style="text-align:center;background:rgba(255,255,255,.08);border-radius:8px;padding:4px">
-          <div style="font-size:9px;color:rgba(255,255,255,.5);margin-bottom:2px">Patrimoine net</div>
+        <div style="text-align:center;background:var(--surf2);border-radius:8px;padding:4px">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">Patrimoine net</div>
           <div style="font-size:13px;font-weight:700;color:${patrimoine>=0?'var(--green)':'var(--red)'}">${patrimoine>=0?'+':''}${fmt(patrimoine)} F</div>
         </div>
       </div>
@@ -1003,10 +1022,13 @@ function renderDC(){
       const isPos=cat==='Revenu'||cat==='Epargne';
       const pc=b>0?Math.round(r/b*100):null;
       const cl=pc===null?(r>0?(isPos?'ok':'ov'):''):isPos?(pc>=100?'ok':pc>=80?'wa':'ov'):(pc>100?'ov':pc>80?'wa':'ok');
-      const bw=b>0?Math.min(100,Math.round(r/b*100)):r>0?100:0;
-      const bc=isPos?(b===0&&r>0?'#22c55e':bw>=100?'#22c55e':bw>=80?'#f59e0b':'#ef4444'):(b===0&&r>0?'#ef4444':bw>100?'#ef4444':bw>80?'#f59e0b':'#22c55e');
+      const rawPct=b>0?Math.round(r/b*100):(r>0?999:0);
+      const bw=Math.min(100,rawPct);
+      const bc=isPos
+        ?(b===0&&r>0?'var(--green)':rawPct>=100?'var(--green)':rawPct>=80?'var(--amber)':'var(--red)')
+        :(b===0&&r>0?'var(--red)':rawPct>100?'var(--red)':rawPct===100?'var(--amber)':'var(--green)');
       const pctTxt=pc!==null?(pc+'%'):(r>0?(isPos?'✓':'⚠'):'—');
-      rows+=`<tr><td style="cursor:pointer;color:var(--blue)" onclick="goPoste('${p}','${cat}')">${p} <span style="font-size:10px;opacity:.6">›</span></td><td class="${cl}">${fmt(r)}</td><td style="color:var(--text3)">${b>0?fmt(b):'—'}</td><td style="color:var(--text3)">${pctTxt}</td></tr><tr><td colspan="4" style="padding:0 5px 6px"><div class="pb"><div class="pbr" style="width:${bw}%;background:${bc};min-width:${r>0?'4px':'0'}"></div></div></td></tr>`;
+      rows+=`<tr><td>${p}</td><td class="${cl}">${fmt(r)}</td><td style="color:var(--text3)">${b>0?fmt(b):'—'}</td><td style="color:var(--text3)">${pctTxt}</td></tr><tr><td colspan="4" style="padding:0 5px 6px"><div class="pb"><div class="pbr" style="width:${bw}%;background:${bc};min-width:${r>0?'4px':'0'}"></div></div></td></tr>`;
     });
     if(!rows&&dTab!=='all')return;
     html+=`<div class="card">
@@ -1031,7 +1053,7 @@ function syncPostes(){
 }
 async function saveTx(){
   if(!isAdmin()){toast('Mode lecture — modification non autorisée');return;}
-  const amt=parseFloat(document.getElementById('f-amt').value);
+  const amt=parseFloat(document.getElementById('f-amt').value.replace(/\s/g,'').replace(/,/g,'.'));
   const date=document.getElementById('f-date').value;
   const poste=document.getElementById('f-poste').value;
   const cmt=document.getElementById('f-cmt').value.trim();
@@ -1039,28 +1061,30 @@ async function saveTx(){
   if(!amt||isNaN(amt)||!date||!poste){msg.textContent='Montant et date obligatoires.';return;}
   msg.textContent='';
   const btn=document.getElementById('bsave');
+  const inner=document.getElementById('bsave-inner');
   btn.disabled=true;
-  btn.style.opacity='0.7';
+  if(inner)inner.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" style="animation:sp .8s linear infinite" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Enregistrement…';
   const isRecur=document.getElementById('f-recur')?.checked||false;
   const recurDay=isRecur?parseInt(document.getElementById('f-recur-day')?.value||'1'):null;
   const{db,collection,addDoc}=window._fb;
   const data={amt,date,cat:selCatVal,poste,cmt,ts:new Date().toISOString(),createdBy:userName,createdById:uid};
   if(isRecur){data.recur=true;data.recurDay=recurDay;}
-  // Lancer sans await — Firebase gère le hors ligne en arrière-plan
-  addDoc(collection(db,dataPath()+'/transactions'),data).catch(e=>{
+  try{
+    await addDoc(collection(db,dataPath()+'/transactions'),data);
+  }catch(e){
     console.warn('Sync en attente:',e.message);
-  });
-  // Réinitialiser immédiatement sans attendre Firebase
+  }
   document.getElementById('f-amt').value='';
   document.getElementById('f-cmt').value='';
   document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
   const recurCb=document.getElementById('f-recur');
   if(recurCb&&recurCb.checked){recurCb.checked=false;toggleRecurOptions();}
   btn.disabled=false;
-  btn.style.opacity='1';
+  if(inner)inner.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg> Enregistrer';
   toast(navigator.onLine
     ?(isRecur?'Transaction récurrente enregistrée ✓':'Transaction enregistrée ✓')
     :'Enregistré hors ligne · sync au retour du réseau');
+  setFormDirty(false);
   goP('tx',document.querySelectorAll('.ni')[1]);
 }
 // Corbeille temporaire (session)
@@ -1085,16 +1109,31 @@ function saveTrash(items){
 const trashBin=loadTrash();
 
 async function delTx(id){
-  // Debug toast — role info
-  toast('Rôle: '+userRole+' | Space: '+(sharedSpaceId?sharedSpaceId.slice(0,8):'perso')+' | Admin: '+isAdmin());
   if(!isAdmin()){toast('Mode lecture — modification non autorisée');return;}
   const tx=txs.find(t=>t.id===id);
   if(!tx)return;
-  trashBin.unshift({...tx, deletedAt: new Date().toISOString()});
+  // Modale de confirmation
+  const confirmed=await new Promise(resolve=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;font-family:var(--font)';
+    ov.innerHTML=`<div style="background:var(--surf);border-radius:var(--r);padding:22px;max-width:320px;width:100%;border:0.5px solid var(--border2)">
+      <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Supprimer la transaction ?</div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:20px">${tx.poste||''} · ${tx.amt?parseInt(tx.amt).toLocaleString('fr-FR'):''} F · ${tx.date||''}</div>
+      <div style="display:flex;gap:10px">
+        <button id="dc-no" style="flex:1;padding:11px;border-radius:10px;border:0.5px solid var(--border);background:var(--surf2);color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer">Annuler</button>
+        <button id="dc-yes" style="flex:1;padding:11px;border-radius:10px;border:none;background:#ef4444;color:#fff;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">Supprimer</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.querySelector('#dc-yes').onclick=()=>{ov.remove();resolve(true);};
+    ov.querySelector('#dc-no').onclick=()=>{ov.remove();resolve(false);};
+    ov.onclick=e=>{if(e.target===ov){ov.remove();resolve(false);}};
+  });
+  if(!confirmed)return;
+  trashBin.unshift({...tx,deletedAt:new Date().toISOString()});
   if(trashBin.length>10)trashBin.pop();
   saveTrash(trashBin);
   const{db,doc,deleteDoc}=window._fb;
-  // Use dataPath to delete from correct location
   try{
     await deleteDoc(doc(db,dataPath()+'/transactions/'+id));
     showUndoToast(tx);
@@ -1141,42 +1180,17 @@ async function undoDelete(id){
 }
 
 // TX LIST
-function goPoste(poste,cat){
-  txPosteFilter=poste;
-  txFilt=cat;
-  goP('tx',document.querySelectorAll('.ni')[1]);
-}
-
-function clearPosteFilter(){
-  txPosteFilter='';
-  const banner=document.getElementById('poste-filter-banner');
-  if(banner)banner.style.display='none';
-  renderTX();
-}
-
 function setTF(el,f){
   document.querySelectorAll('#txf .tab').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');txFilt=f;txPosteFilter='';renderTX();
+  el.classList.add('active');txFilt=f;renderTX();
 }
 function renderTX(){
   const ym=curYM();let t=txYM(ym);
   if(txFilt!=='all')t=t.filter(x=>x.cat===txFilt);
-  if(txPosteFilter)t=t.filter(x=>x.poste===txPosteFilter);
   const q=(document.getElementById('tx-search')?.value||'').toLowerCase().trim();
   if(q)t=t.filter(x=>(x.poste||'').toLowerCase().includes(q)||(x.cmt||'').toLowerCase().includes(q)||String(x.amt).includes(q));
   const countEl=document.getElementById('tx-count');
   if(countEl)countEl.textContent=t.length?`${t.length} transaction${t.length>1?'s':''}`:'';
-  // Bannière filtre poste
-  const banner=document.getElementById('poste-filter-banner');
-  if(banner){
-    if(txPosteFilter){
-      banner.style.display='flex';
-      const lbl=document.getElementById('poste-filter-label');
-      if(lbl)lbl.textContent=txPosteFilter;
-    } else {
-      banner.style.display='none';
-    }
-  }
   const el=document.getElementById('txl');
   if(!t.length){
     el.innerHTML=`<div class="empty">${q?'Aucun résultat pour "'+q+'"':'Aucune transaction'}</div>`;
@@ -1188,7 +1202,7 @@ function renderTX(){
     const ac=isR?'g':isE?'p':'r';
     const hi=(s,q)=>{if(!q||!s)return s||"";const i=s.toLowerCase().indexOf(q.toLowerCase());if(i<0)return s;return s.slice(0,i)+'<mark style="background:rgba(99,102,241,.3);color:#a5b4fc;border-radius:3px;padding:0 2px">'+s.slice(i,i+q.length)+'</mark>'+s.slice(i+q.length);};
     return `<div class="txi">
-      <div class="txic ${cl}">${CICO[x.cat]||'💰'}</div>
+      <div class="txic ${cl}">${CICO[x.cat]||'●'}</div>
       <div class="txin">
         <div class="txp">${hi(x.poste||'',q)}</div>
         <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span>${x.auto?' <span style="font-size:9px;color:var(--text3)">🔄</span>':''}</div>
@@ -1196,7 +1210,7 @@ function renderTX(){
       </div>
       <div class="txr">
         <div class="txa ${ac}">${isR?'+':'−'}${fmt(x.amt)} F</div>
-        <button class="txd" onclick="openEditTx('${x.id}')">✏️</button>
+        <button class="txd" onclick="openEditTx('${x.id}')"><span style="display:flex;align-items:center;color:var(--text3)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span></button>
         <button class="txd" onclick="delTx('${x.id}')">✕</button>
       </div>
     </div>`;
@@ -1339,7 +1353,7 @@ function renderCharts(){
       {label:'Fixes',data:l6.map(m=>sumC(txYM(m),'Dépenses fixes')),backgroundColor:'#3b82f6',borderRadius:4},
       {label:'Variables',data:l6.map(m=>sumC(txYM(m),'Dépenses variables')),backgroundColor:'#ef4444',borderRadius:4}
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},
       scales:{x:{ticks:{color:'#555',font:{size:10}},grid:{display:false},border:{display:false}},
               y:{ticks:{color:'#555',font:{size:9},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}}}
   });
@@ -1353,7 +1367,7 @@ function renderCharts(){
   charts.p=new Chart(document.getElementById('cp'),{
     type:'doughnut',
     data:{labels:pe.map(([n])=>n),datasets:[{data:pe.map(([,v])=>v),backgroundColor:PC,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false}}}
+    options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'60%',plugins:{legend:{display:false}}}
   });
   const tot=pe.reduce((s,[,v])=>s+v,0);
   document.getElementById('cpleg').innerHTML=pe.map(([n,v],i)=>`<div class="pli"><div class="pld" style="background:${PC[i]}"></div>${n} <span style="color:var(--text3);margin-left:2px">${Math.round(v/tot*100)}%</span></div>`).join('');
@@ -1413,18 +1427,7 @@ async function removePoste(cat,p){
 }
 async function removeCP(cat,p){return removePoste(cat,p);}
 
-async function addCP(cat){
-  const id='ncp_'+cat.replace(/ /g,'_');
-  const v=document.getElementById(id).value.trim();if(!v)return;
-  if(!custom[cat])custom[cat]=[];
-  if(!custom[cat].includes(v))custom[cat].push(v);
-  document.getElementById(id).value='';
-  await saveSettings();syncPostes();renderCPUI();toast('Poste ajouté ✓');
-}
-async function removeCP(cat,p){
-  custom[cat]=(custom[cat]||[]).filter(x=>x!==p);
-  await saveSettings();syncPostes();renderCPUI();
-}
+
 
 
 // IMPORT
@@ -2069,7 +2072,7 @@ function showLockScreen(isSetup=false){
   overlay.innerHTML=`
     <div style="text-align:center;margin-bottom:32px">
       <div style="font-size:28px;font-weight:700;color:var(--text)">FII'NAS</div>
-      <div style="font-size:13px;color:var(--text3);margin-top:4px">${isSetup?'Créer un code PIN':'Entrer le code PIN'}</div>
+      <div id="pin-subtitle" style="font-size:13px;color:var(--text3);margin-top:4px">${isSetup?'Créer un code PIN':'Entrer le code PIN'}</div>
     </div>
     <div id="pin-dots" style="display:flex;gap:14px;margin-bottom:32px">
       ${[0,1,2,3,4,5].map(i=>`<div id="dot-${i}" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:.15s"></div>`).join('')}
@@ -2081,17 +2084,17 @@ function showLockScreen(isSetup=false){
           ${k}
         </button>`).join('')}
     </div>
-    ${!isSetup&&typeof PublicKeyCredential!=='undefined'?`
+    ${!isSetup&&localStorage.getItem('fiinas-passkey')==='1'?`
     <button onclick="tryBiometric()" style="margin-top:24px;padding:10px 24px;border-radius:var(--r);border:0.5px solid var(--border);background:var(--surf);color:var(--text2);font-size:13px;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:8px">
-      <span style="font-size:18px">🔐</span> Utiliser l'empreinte
+      <span style="display:flex;align-items:center;color:var(--text2)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 17.5A14.5 14.5 0 0 0 4.27 21"/><path d="M8.3 22a20.23 20.23 0 0 0 .43-3"/><path d="M12 2a10 10 0 0 1 8 4"/><path d="M12 6a6 6 0 0 0-6 6c0 1.99-.1 3.99-.26 5.98"/><path d="M6.08 21.51A14.51 14.51 0 0 0 6.5 19.5"/></svg></span> Utiliser l'empreinte
     </button>`:''}
     ${isSetup?'':''}
   `;
   document.body.appendChild(overlay);
   overlay._pin='';
   overlay._isSetup=isSetup;
-  if(!isSetup&&typeof PublicKeyCredential!=='undefined'){
-    setTimeout(()=>tryBiometric(),500);
+  if(!isSetup && localStorage.getItem('fiinas-passkey')==='1'){
+    setTimeout(()=>tryBiometric(), 400);
   }
 }
 
@@ -2121,7 +2124,7 @@ function pinKey(k){
           overlay._firstPin=pinInput;
           pinInput='';
           document.getElementById('pin-error').textContent='';
-          document.querySelector('[style*="Créer un code PIN"]').textContent='Confirmer le code PIN';
+          const sub=document.getElementById('pin-subtitle');if(sub)sub.textContent='Confirmer le code PIN';
           for(let i=0;i<6;i++){
             const dot=document.getElementById('dot-'+i);
             if(dot){dot.style.background='transparent';dot.style.borderColor='var(--border)';}
@@ -2132,7 +2135,19 @@ function pinKey(k){
             pinInput='';
             overlay.remove();
             toast('Code PIN créé ✓');
+            renderSecurityUI();
             resetLockTimer();
+            // Proposer l'enregistrement de l'empreinte
+            if(typeof PublicKeyCredential!=='undefined'){
+              PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(avail=>{
+                if(avail){
+                  setTimeout(async()=>{
+                    const ok = await registerPasskey();
+                    if(ok){ toast('Empreinte enregistrée ✓'); renderSecurityUI(); }
+                  }, 500);
+                }
+              }).catch(()=>{});
+            }
           } else {
             document.getElementById('pin-error').textContent='Les codes ne correspondent pas';
             pinInput='';
@@ -2162,30 +2177,65 @@ function pinKey(k){
   }
 }
 
-async function tryBiometric(){
-  if(typeof PublicKeyCredential==='undefined')return;
+async function registerPasskey(){
+  // Enregistre une passkey liée au PIN (appelé après création du PIN)
+  if(typeof PublicKeyCredential==='undefined') return false;
   try{
-    const result=await navigator.credentials.get({
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if(!available) return false;
+    const cred = await navigator.credentials.create({
       publicKey:{
-        challenge:new Uint8Array(32),
-        timeout:60000,
-        userVerification:'required',
-        rpId:window.location.hostname
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp:{ name:"FII'NAS", id: window.location.hostname },
+        user:{ id: new TextEncoder().encode(uid||'fiinas-user'), name:'fiinas', displayName:"FII'NAS" },
+        pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+        authenticatorSelection:{ authenticatorAttachment:'platform', userVerification:'required' },
+        timeout: 60000
       }
-    }).catch(async()=>{
-      // Fallback — try platform authenticator
-      return null;
+    });
+    if(cred){
+      // Stocker l'ID de la clé pour usage futur
+      const idB64 = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+      localStorage.setItem('fiinas-passkey','1');
+      localStorage.setItem('fiinas-passkey-id', idB64);
+      return true;
+    }
+  }catch(e){
+    // Utilisateur a refusé ou pas disponible — silencieux
+    console.log('Passkey registration skipped:', e.name);
+  }
+  return false;
+}
+
+async function tryBiometric(){
+  if(typeof PublicKeyCredential==='undefined') return;
+  const idB64 = localStorage.getItem('fiinas-passkey-id');
+  if(!idB64){ toast('Empreinte non configurée'); return; }
+  try{
+    const idBytes = Uint8Array.from(atob(idB64), c=>c.charCodeAt(0));
+    const result = await navigator.credentials.get({
+      publicKey:{
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        timeout: 60000,
+        userVerification: 'required',
+        rpId: window.location.hostname,
+        allowCredentials:[{ type:'public-key', id: idBytes }]
+      }
     });
     if(result){
       const overlay=document.getElementById('lock-overlay');
-      if(overlay){overlay.remove();isLocked=false;resetLockTimer();}
+      if(overlay){ overlay.remove(); isLocked=false; resetLockTimer(); }
     }
   }catch(e){
-    // Try simpler approach with conditional UI
-    try{
-      const available=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      if(!available)return;
-    }catch(e2){}
+    if(e.name==='NotAllowedError'){
+      // Utilisateur a annulé — ne rien faire
+    } else {
+      // Clé plus disponible (ex: empreintes réinitialisées)
+      localStorage.removeItem('fiinas-passkey');
+      localStorage.removeItem('fiinas-passkey-id');
+      toast('Empreinte non reconnue — réactivez dans Sécurité');
+      showLockScreen(false);
+    }
   }
 }
 
@@ -2231,21 +2281,22 @@ function renderSecurityUI(){
         `:`<button onclick="setupPin()" class="btn-p" style="font-size:11px">Activer</button>`}
       </div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:0.5px solid var(--border)">
       <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">Masquer les montants</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">Remplace les chiffres par ••••••</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">Empreinte digitale</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${localStorage.getItem('fiinas-passkey')==='1'?'\u25CF Activée':'Non configurée'}</div>
       </div>
-      <button onclick="toggleHide()" style="width:44px;height:26px;border-radius:13px;border:none;background:${hideAmounts?'var(--blue)':'var(--border)'};cursor:pointer;position:relative;transition:.2s">
-        <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;transition:.2s;${hideAmounts?'right:3px':'left:3px'}"></div>
+      <button onclick="registerPasskey().then(ok=>{if(ok){renderSecurityUI();toast('Empreinte enregistrée ✓');}else{toast('Annulé ou non disponible');}})" class="btn-o" style="font-size:11px;${!hasp?'opacity:.4':''}" ${!hasp?'disabled':''}>
+        ${localStorage.getItem('fiinas-passkey')==='1'?'Réenregistrer':'Activer'}
       </button>
     </div>
+
     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:0.5px solid var(--border)">
       <div>
         <div style="font-size:13px;font-weight:500;color:var(--text)">Verrouiller maintenant</div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px">Verrouillage automatique après 5 min</div>
       </div>
-      <button onclick="lockApp()" class="btn-o" style="font-size:11px" ${!hasp?'disabled style="opacity:.4"':''}>Verrouiller</button>
+      <button onclick="lockApp()" class="btn-o" style="font-size:11px;${!hasp?'opacity:.4':''};" ${!hasp?'disabled':''}>Verrouiller</button>
     </div>
   `;
 }
@@ -2377,7 +2428,7 @@ function getTxBadge(x){
   const name=x.createdBy||(isMyTx?userName:ownerName);
   if(!name)return '';
   const color=isMyTx?'var(--blue)':'var(--green)';
-  return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
+  return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+';display:inline-flex;align-items:center;gap:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> '+name+'</span>';
 }
 
 // TRANSACTIONS RÉCURRENTES
@@ -2502,12 +2553,22 @@ function fmtBudInput(el){
   setTimeout(()=>{el.selectionStart=el.selectionEnd=el.value.length;},0);
 }
 
+function fmtAmtInput(el){
+  // Remove all non-digit chars except dot/comma
+  let raw=el.value.replace(/[^0-9]/g,'');
+  if(!raw){el.value='';return;}
+  // Format with spaces as thousands separator
+  el.value=parseInt(raw,10).toLocaleString('fr-FR');
+}
+
+
 // EDIT TRANSACTION
 let editingId=null;
 function openEditTx(id){
   const tx=txs.find(t=>t.id===id);if(!tx)return;
   editingId=id;
-  document.getElementById('e-amt').value=tx.amt;
+  const fmtd=tx.amt?parseInt(tx.amt).toLocaleString('fr-FR'):'';
+  document.getElementById('e-amt').value=fmtd;
   document.getElementById('e-date').value=tx.date;
   document.getElementById('e-cmt').value=tx.cmt||'';
   const catSel=document.getElementById('e-cat');
@@ -2529,7 +2590,7 @@ function closeEditTx(){
 }
 async function saveEditTx(){
   if(!editingId)return;
-  const amt=parseFloat(document.getElementById('e-amt').value);
+  const amt=parseFloat(document.getElementById('e-amt').value.replace(/\s/g,'').replace(/,/g,'.'));
   const date=document.getElementById('e-date').value;
   const cat=document.getElementById('e-cat').value;
   const poste=document.getElementById('e-poste').value;
@@ -2544,23 +2605,25 @@ async function saveEditTx(){
 // THEME
 function toggleTheme(){
   const isLight=document.documentElement.classList.toggle('light');
-  document.getElementById('theme-btn').textContent=isLight?'🌙':'☀️';
+  document.getElementById('theme-btn').innerHTML=isLight?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
   document.getElementById('theme-color-meta').content=isLight?'#f5f5f7':'#111111';
   localStorage.setItem('fiinas-theme',isLight?'light':'dark');
 }
 function initTheme(){
   const saved=localStorage.getItem('fiinas-theme');
+  const btn=document.getElementById('theme-btn');
   if(saved==='light'){
     document.documentElement.classList.add('light');
-    const btn=document.getElementById('theme-btn');
-    if(btn)btn.textContent='🌙';
+    if(btn)btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  } else {
+    if(btn)btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
   }
 }
 initTheme();
 // Init hide button state
 window.addEventListener('DOMContentLoaded',()=>{
   const btn=document.getElementById('hide-btn');
-  if(btn)btn.textContent=hideAmounts?'🙈':'👁';
+  if(btn)btn.innerHTML=hideAmounts?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 });
 
 
@@ -2595,17 +2658,9 @@ async function exportPDF(){
   doc.setFillColor(...BLUE);
   doc.rect(0,0,W,42,'F');
 
-  // Icône
-  doc.setFillColor(29,52,97);
-  doc.roundedRect(M,8,22,22,3,3,'F');
-  doc.setFillColor(59,130,246);
-  doc.rect(M+4,20,3,7,'F');
-  doc.setFillColor(96,165,250);
-  doc.rect(M+9,17,3,10,'F');
-  doc.setFillColor(...GREEN);
-  doc.rect(M+14,13,3,14,'F');
-  doc.setFillColor(...GREEN);
-  doc.circle(M+19,11,1.5,'F');
+  // Icône — image PNG embarquée en base64
+  const ICON_B64 = 'data:image/png;base64,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';
+  doc.addImage(ICON_B64,'PNG',M,8,22,22);
 
   // Texte FII'NAS
   doc.setFont('helvetica','bold');
@@ -2662,7 +2717,7 @@ async function exportPDF(){
 
   // Ligne 4 — 3 colonnes en dessous
   const cw3=CW/3;
-  [{l:'Revenus',v:'+'+pf(rev)+' F',c:GREEN},{l:'Depenses',v:'-'+pf(dep)+' F',c:[220,38,38]},{l:'% consomme',v:(rev>0?Math.round(dep/rev*100):0)+'%',c:GRAY}]
+  [{l:'Revenus',v:'+'+pf(rev)+' F',c:GREEN},{l:'Dépenses',v:'-'+pf(dep)+' F',c:[220,38,38]},{l:'% consommé',v:(rev>0?Math.round(dep/rev*100):0)+'%',c:GRAY}]
   .forEach((item,i)=>{
     const cx=M+i*cw3;
     doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...GRAY);
@@ -2975,10 +3030,10 @@ function updateSpaceBtn(){
   const label=document.getElementById('space-label');
   if(!icon||!label)return;
   if(!sharedSpaceId){
-    icon.textContent='👤';label.textContent='Perso';
+    icon.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';label.textContent='Perso';
   } else {
     const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
-    icon.textContent='👥';
+    icon.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
     label.textContent=sp?.ownerName||'Partagé';
   }
 }
@@ -3010,14 +3065,14 @@ function renderSpaceMenu(){
   let html='<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding:4px 8px 8px">Changer d\'espace</div>';
   const isPerso=!sharedSpaceId;
   html+=`<div onclick="switchSpace(null)" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;background:${isPerso?'var(--surf2)':'transparent'};margin-bottom:4px">
-    <span style="font-size:16px">👤</span>
+    <span style="display:flex;align-items:center;color:var(--text2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
     <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Mon espace</div><div style="font-size:10px;color:var(--text3)">Mes données personnelles</div></div>
     ${isPerso?'<span style="font-size:10px;color:var(--green)">✓</span>':''}
   </div>`;
   mySpaces.forEach(sp=>{
     const isActive=sharedSpaceId===sp.ownerUid;
     html+=`<div onclick="switchSpace('${sp.ownerUid}')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;background:${isActive?'var(--surf2)':'transparent'};margin-bottom:4px">
-      <span style="font-size:16px">👥</span>
+      <span style="display:flex;align-items:center;color:var(--text2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
       <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">${sp.ownerName}</div><div style="font-size:10px;color:var(--text3)">${sp.role==='admin'?'Admin':'Lecteur'}</div></div>
       ${isActive?'<span style="font-size:10px;color:var(--green)">✓</span>':''}
     </div>`;
@@ -3375,2131 +3430,48 @@ async function leaveSharedAccess(ownerUid){
   toast('Espace quitté');
 }
 
-function copyInviteCode(code){
-  navigator.clipboard.writeText(code).then(()=>toast('Code copié ✓')).catch(()=>{
-    const el=document.createElement('textarea');
-    el.value=code;document.body.appendChild(el);el.select();
-    document.execCommand('copy');document.body.removeChild(el);
-    toast('Code copié ✓');
-  });
-}
-
-// toggleMemberRole moved to spaces section
-
-
-// ══════════════════════════════════════════
-// SNAPSHOTS — Patrimoine mensuel
-// ══════════════════════════════════════════
-
-async function computeSnapshot(ym){
-  // Reconstruit le snapshot d'un mois depuis les transactions Firebase
-  const{db,collection,query,where,getDocs}=window._fb;
-  try{
-    const txRef=collection(db,dataPath()+'/transactions');
-    const snap=await getDocs(query(txRef,where('ym','==',ym)));
-    const txList=snap.docs.map(d=>({...d.data(),id:d.id}));
-    const rev=txList.filter(t=>t.cat==='Revenu').reduce((s,t)=>s+t.amt,0);
-    const dep=txList.filter(t=>t.cat==='Dépenses fixes'||t.cat==='Dépenses variables').reduce((s,t)=>s+t.amt,0);
-    const epa=txList.filter(t=>t.cat==='Epargne').reduce((s,t)=>s+t.amt,0);
-    return{ym,rev,dep,epa,sol:rev-dep-epa};
-  }catch(e){return{ym,rev:0,dep:0,epa:0,sol:0};}
-}
-
-async function saveSnapshot(ym,data){
-  const{db,doc,setDoc}=window._fb;
-  await setDoc(doc(db,dataPath()+'/data/snapshots/'+ym),{
-    ...data,
-    savedAt:new Date().toISOString()
-  });
-}
-
-async function loadSnapshots(){
-  const{db,collection,getDocs}=window._fb;
-  try{
-    const snap=await getDocs(collection(db,dataPath()+'/data/snapshots'));
-    const result={};
-    snap.docs.forEach(d=>{result[d.id]=d.data();});
-    return result;
-  }catch(e){return{};}
-}
-
-async function buildMissingSnapshots(){
-  // Reconstruit tous les snapshots manquants depuis les transactions existantes
-  const{db,collection,getDocs}=window._fb;
-  try{
-    const txRef=collection(db,dataPath()+'/transactions');
-    const allTx=await getDocs(txRef);
-    const months=new Set();
-    allTx.docs.forEach(d=>{
-      const ym=d.data().ym||d.data().date?.slice(0,7);
-      if(ym)months.add(ym);
-    });
-    const existing=await loadSnapshots();
-    const today=new Date();
-    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
-    for(const ym of [...months].sort()){
-      if(ym>=curYm)continue; // Ne pas snapshoter le mois en cours
-      if(!existing[ym]){
-        const data=await computeSnapshot(ym);
-        await saveSnapshot(ym,data);
-        console.log('Snapshot built:',ym);
-      }
-    }
-  }catch(e){console.error('buildMissingSnapshots:',e);}
-}
-
-async function triggerSnapshotOnTx(txYm){
-  // Appelé à chaque nouvelle transaction
-  // Si c'est la première tx du mois en cours → snapshoter le mois précédent
-  const today=new Date();
-  const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
-  if(txYm!==curYm)return;
-  // Calculer le mois précédent
-  const d=new Date(today.getFullYear(),today.getMonth()-1,1);
-  const prevYm=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  // Vérifier si snapshot existe déjà
-  const{db,doc,getDoc}=window._fb;
-  try{
-    const snap=await getDoc(doc(db,dataPath()+'/data/snapshots/'+prevYm));
-    if(!snap.exists()){
-      const data=await computeSnapshot(prevYm);
-      await saveSnapshot(prevYm,data);
-      console.log('Auto snapshot:',prevYm);
-    }
-  }catch(e){}
-}
-
-async function recalculateSnapshot(ym){
-  const data=await computeSnapshot(ym);
-  await saveSnapshot(ym,data);
-  toast('Snapshot '+yml(ym)+' recalculé ✓');
-  renderPatrimoine();
-}
-
-async function computePatrimoineToday(){
-  // Calcule épargne cumulée, solde net cumulé, patrimoine net depuis toutes les transactions
-  const{db,collection,getDocs}=window._fb;
-  try{
-    const today=new Date();
-    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
-    const allTx=await getDocs(collection(db,dataPath()+'/transactions'));
-    let epaCumul=0,solCumul=0;
-    allTx.docs.forEach(d=>{
-      const t=d.data();
-      if(t.cat==='Epargne'){
-        epaCumul+=t.amt;   // épargne cumulée
-        solCumul-=t.amt;   // épargne = sortie du solde net
-      } else if(t.cat==='Revenu'){
-        solCumul+=t.amt;
-      } else {
-        solCumul-=t.amt;   // dépenses fixes + variables
-      }
-    });
-    return{epaCumul,solCumul,patrimoine:epaCumul+solCumul};
-  }catch(e){return{epaCumul:0,solCumul:0,patrimoine:0};}
-}
-
-async function renderPatrimoine(){
-  const el=document.getElementById('patrimoine-ui');
-  if(!el)return;
-  el.innerHTML='<div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Calcul en cours...</div>';
-  const snapshots=await loadSnapshots();
-  const{epaCumul,solCumul,patrimoine}=await computePatrimoineToday();
-  const sorted=Object.keys(snapshots).sort();
-  let html=`<div style="margin-bottom:16px">
-    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:12px">À aujourd'hui</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Épargne cumulée</div>
-        <div style="font-size:13px;font-weight:600;color:var(--green)">${fmt(epaCumul)} F</div>
-      </div>
-      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Solde net cumulé</div>
-        <div style="font-size:13px;font-weight:600;color:${solCumul>=0?'var(--green)':'var(--red)'}">${solCumul>=0?'+':''}${fmt(solCumul)} F</div>
-      </div>
-      <div style="background:${patrimoine>=0?'var(--gd)':'rgba(255,59,48,.1)'};border-radius:var(--rs);padding:10px;text-align:center;border:1px solid ${patrimoine>=0?'rgba(16,185,129,.3)':'rgba(255,59,48,.3)'}">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Patrimoine net</div>
-        <div style="font-size:13px;font-weight:700;color:${patrimoine>=0?'var(--green)':'var(--red)'}">${patrimoine>=0?'+':''}${fmt(patrimoine)} F</div>
-      </div>
-    </div>
-  </div>`;
-
-  if(sorted.length>0){
-    html+=`<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Historique mensuel</div>`;
-    let cumEpa=0,cumSol=0;
-    sorted.forEach(ym=>{
-      const s=snapshots[ym];
-      cumEpa+=s.epa||0;
-      cumSol+=s.sol||0;
-      const pat=cumEpa+cumSol;
-      const barW=Math.min(100,Math.abs(pat)/Math.max(...sorted.map(y=>{
-        let ce=0,cs=0;
-        sorted.filter(yy=>yy<=y).forEach(yy=>{ce+=snapshots[yy].epa||0;cs+=snapshots[yy].sol||0;});
-        return Math.abs(ce+cs);
-      }))*100)||0;
-      html+=`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)">
-        <div style="font-size:12px;color:var(--text2);width:70px;flex-shrink:0">${yml(ym)}</div>
-        <div style="flex:1;height:4px;background:var(--surf2);border-radius:2px;overflow:hidden">
-          <div style="width:${barW}%;height:100%;background:${pat>=0?'var(--green)':'var(--red)'};border-radius:2px"></div>
-        </div>
-        <div style="font-size:12px;font-weight:600;color:${pat>=0?'var(--green)':'var(--red)'};width:80px;text-align:right">${pat>=0?'+':''}${fmt(pat)} F</div>
-        <button onclick="recalculateSnapshot('${ym}')" style="font-size:10px;padding:2px 6px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">↺</button>
-      </div>`;
-    });
-  } else {
-    html+=`<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">Les snapshots se constituent automatiquement dès ta première transaction du mois.</div>`;
-  }
-
-  el.innerHTML=html;
-}
-
-
-// ══════════════════════════════════════════
-// VERROUILLAGE — PIN + Empreinte
-// ══════════════════════════════════════════
-const LOCK_KEY='fiinas-pin';
-const LOCK_TIMEOUT=5*60*1000; // 5 minutes
-let lockTimer=null;
-let isLocked=false;
-
-function getPin(){return localStorage.getItem(LOCK_KEY)||'';}
-function setPin(p){localStorage.setItem(LOCK_KEY,p);}
-function hasPin(){return getPin().length>=4;}
-
-function resetLockTimer(){
-  clearTimeout(lockTimer);
-  if(hasPin()){
-    lockTimer=setTimeout(()=>lockApp(),LOCK_TIMEOUT);
-  }
-}
-
-document.addEventListener('touchstart',resetLockTimer);
-document.addEventListener('click',resetLockTimer);
-document.addEventListener('keydown',resetLockTimer);
-
-function lockApp(){
-  isLocked=true;
-  showLockScreen();
-}
-
-function showLockScreen(isSetup=false){
-  const existing=document.getElementById('lock-overlay');
-  if(existing)existing.remove();
-  const overlay=document.createElement('div');
-  overlay.id='lock-overlay';
-  overlay.style.cssText='position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font)';
-  overlay.innerHTML=`
-    <div style="text-align:center;margin-bottom:32px">
-      <div style="font-size:28px;font-weight:700;color:var(--text)">FII'NAS</div>
-      <div style="font-size:13px;color:var(--text3);margin-top:4px">${isSetup?'Créer un code PIN':'Entrer le code PIN'}</div>
-    </div>
-    <div id="pin-dots" style="display:flex;gap:14px;margin-bottom:32px">
-      ${[0,1,2,3,4,5].map(i=>`<div id="dot-${i}" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:.15s"></div>`).join('')}
-    </div>
-    <div id="pin-error" style="font-size:12px;color:var(--red);height:16px;margin-bottom:16px"></div>
-    <div style="display:grid;grid-template-columns:repeat(3,72px);gap:12px">
-      ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k=>`
-        <button onclick="pinKey('${k}')" style="width:72px;height:72px;border-radius:50%;border:0.5px solid var(--border);background:var(--surf);font-size:${k==='⌫'?'20px':'22px'};font-weight:500;color:var(--text);cursor:pointer;font-family:var(--font);${k===''?'visibility:hidden':''}">
-          ${k}
-        </button>`).join('')}
-    </div>
-    ${!isSetup&&typeof PublicKeyCredential!=='undefined'?`
-    <button onclick="tryBiometric()" style="margin-top:24px;padding:10px 24px;border-radius:var(--r);border:0.5px solid var(--border);background:var(--surf);color:var(--text2);font-size:13px;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:8px">
-      <span style="font-size:18px">🔐</span> Utiliser l'empreinte
-    </button>`:''}
-    ${isSetup?'':''}
-  `;
-  document.body.appendChild(overlay);
-  overlay._pin='';
-  overlay._isSetup=isSetup;
-  if(!isSetup&&typeof PublicKeyCredential!=='undefined'){
-    setTimeout(()=>tryBiometric(),500);
-  }
-}
-
-let pinInput='';
-function pinKey(k){
-  const overlay=document.getElementById('lock-overlay');
-  if(!overlay)return;
-  if(k===''){return;}
-  if(k==='⌫'){
-    pinInput=pinInput.slice(0,-1);
-  } else {
-    if(pinInput.length>=6)return;
-    pinInput+=k;
-  }
-  // Update dots
-  for(let i=0;i<6;i++){
-    const dot=document.getElementById('dot-'+i);
-    if(dot){
-      dot.style.background=i<pinInput.length?'var(--blue)':'transparent';
-      dot.style.borderColor=i<pinInput.length?'var(--blue)':'var(--border)';
-    }
-  }
-  if(pinInput.length===6){
-    setTimeout(()=>{
-      if(overlay._isSetup){
-        if(!overlay._firstPin){
-          overlay._firstPin=pinInput;
-          pinInput='';
-          document.getElementById('pin-error').textContent='';
-          document.querySelector('[style*="Créer un code PIN"]').textContent='Confirmer le code PIN';
-          for(let i=0;i<6;i++){
-            const dot=document.getElementById('dot-'+i);
-            if(dot){dot.style.background='transparent';dot.style.borderColor='var(--border)';}
-          }
-        } else {
-          if(pinInput===overlay._firstPin){
-            setPin(pinInput);
-            pinInput='';
-            overlay.remove();
-            toast('Code PIN créé ✓');
-            resetLockTimer();
-          } else {
-            document.getElementById('pin-error').textContent='Les codes ne correspondent pas';
-            pinInput='';
-            overlay._firstPin=null;
-            for(let i=0;i<6;i++){
-              const dot=document.getElementById('dot-'+i);
-              if(dot){dot.style.background='transparent';dot.style.borderColor='var(--border)';}
-            }
-          }
-        }
-      } else {
-        if(pinInput===getPin()){
-          pinInput='';
-          overlay.remove();
-          isLocked=false;
-          resetLockTimer();
-        } else {
-          document.getElementById('pin-error').textContent='Code incorrect';
-          pinInput='';
-          for(let i=0;i<6;i++){
-            const dot=document.getElementById('dot-'+i);
-            if(dot){dot.style.background='transparent';dot.style.borderColor='var(--border)';}
-          }
-        }
-      }
-    },150);
-  }
-}
-
-async function tryBiometric(){
-  if(typeof PublicKeyCredential==='undefined')return;
-  try{
-    const result=await navigator.credentials.get({
-      publicKey:{
-        challenge:new Uint8Array(32),
-        timeout:60000,
-        userVerification:'required',
-        rpId:window.location.hostname
-      }
-    }).catch(async()=>{
-      // Fallback — try platform authenticator
-      return null;
-    });
-    if(result){
-      const overlay=document.getElementById('lock-overlay');
-      if(overlay){overlay.remove();isLocked=false;resetLockTimer();}
-    }
-  }catch(e){
-    // Try simpler approach with conditional UI
-    try{
-      const available=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      if(!available)return;
-    }catch(e2){}
-  }
-}
-
-function checkLockOnStart(){
-  if(hasPin()){
-    isLocked=true;
-    showLockScreen(false);
-  }
-  resetLockTimer();
-}
-
-function setupPin(){
-  pinInput='';
-  showLockScreen(true);
-}
-
-function changePin(){
-  pinInput='';
-  showLockScreen(true);
-}
-
-function removePin(){
-  if(!confirm('Supprimer le code PIN ?'))return;
-  localStorage.removeItem(LOCK_KEY);
-  toast('Code PIN supprimé');
-  renderSecurityUI();
-}
-
-function renderSecurityUI(){
-  const el=document.getElementById('security-ui');
-  if(!el)return;
-  const hasp=hasPin();
-  el.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">Code PIN</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${hasp?'Activé — 6 chiffres':'Désactivé'}</div>
-      </div>
-      <div style="display:flex;gap:6px">
-        ${hasp?`
-          <button onclick="changePin()" class="btn-o" style="font-size:11px">Modifier</button>
-          <button onclick="removePin()" class="btn-o" style="font-size:11px;color:var(--red);border-color:var(--red)">Supprimer</button>
-        `:`<button onclick="setupPin()" class="btn-p" style="font-size:11px">Activer</button>`}
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">Masquer les montants</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">Remplace les chiffres par ••••••</div>
-      </div>
-      <button onclick="toggleHide()" style="width:44px;height:26px;border-radius:13px;border:none;background:${hideAmounts?'var(--blue)':'var(--border)'};cursor:pointer;position:relative;transition:.2s">
-        <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;transition:.2s;${hideAmounts?'right:3px':'left:3px'}"></div>
-      </button>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:0.5px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">Verrouiller maintenant</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">Verrouillage automatique après 5 min</div>
-      </div>
-      <button onclick="lockApp()" class="btn-o" style="font-size:11px" ${!hasp?'disabled style="opacity:.4"':''}>Verrouiller</button>
-    </div>
-  `;
-}
-
-// ANALYSE DES HABITUDES
-
-
-function setAnalysePeriod(el,n){
-  document.querySelectorAll('#analyse-period .tab').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  analysePeriod=n;
-  renderAnalyse();
-}
-
-function renderAnalyse(){
-  const el=document.getElementById('analyse-content');
-  if(!el)return;
-
-  const now=new Date();
-  const months=[];
-  for(let i=1;i<=analysePeriod;i++){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    months.push(ymk(d.getFullYear(),d.getMonth()+1));
-  }
-
-  // Moyennes par poste
-  const posteMap={};
-  months.forEach(m=>{
-    txYM(m).filter(t=>t.cat!=='Revenu').forEach(t=>{
-      if(!posteMap[t.poste])posteMap[t.poste]={total:0,count:0};
-      posteMap[t.poste].total+=t.amt;
-      posteMap[t.poste].count++;
-    });
-  });
-
-  const avgByPoste=Object.entries(posteMap)
-    .map(([p,v])=>({p,avg:Math.round(v.total/analysePeriod)}))
-    .filter(x=>x.avg>0)
-    .sort((a,b)=>b.avg-a.avg);
-
-  // Mois courant pour comparaison
-  const curYm=ymk(now.getFullYear(),now.getMonth()+1);
-  const curTxs=txYM(curYm);
-  const curByPoste={};
-  curTxs.filter(t=>t.cat!=='Revenu').forEach(t=>{
-    curByPoste[t.poste]=(curByPoste[t.poste]||0)+t.amt;
-  });
-
-  // Résumé intelligent
-  const totalAvgDep=avgByPoste.reduce((s,x)=>s+x.avg,0);
-  const topPoste=avgByPoste[0];
-  const mostVariable=Object.entries(posteMap)
-    .map(([p,v])=>{
-      const vals=months.map(m=>txYM(m).filter(t=>t.poste===p).reduce((s,t)=>s+t.amt,0));
-      const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
-      const variance=vals.reduce((s,v)=>s+Math.abs(v-avg),0)/vals.length;
-      return{p,variance};
-    })
-    .sort((a,b)=>b.variance-a.variance)[0];
-
-  // Meilleur mois
-  const bestMonth=months.map(m=>{
-    const t=txYM(m);
-    const r=sumC(t,'Revenu');
-    const d=sumC(t,'Dépenses fixes')+sumC(t,'Dépenses variables')+sumC(t,'Epargne');
-    return{m,sol:r-d};
-  }).sort((a,b)=>b.sol-a.sol)[0];
-
-  let html='';
-
-  // Résumé
-  html+=`<div style="background:var(--surf2);border-radius:var(--rs);padding:14px;margin-bottom:14px">
-    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Résumé · ${analysePeriod} derniers mois</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${topPoste?`<div style="font-size:13px;color:var(--text)">💸 Poste principal : <span style="font-weight:500">${topPoste.p}</span> — moy. ${fmt(topPoste.avg)} F/mois</div>`:''}
-      ${mostVariable?`<div style="font-size:13px;color:var(--text)">📊 Plus variable : <span style="font-weight:500">${mostVariable.p}</span></div>`:''}
-      ${bestMonth&&bestMonth.sol>0?`<div style="font-size:13px;color:var(--text)">🏆 Meilleur mois : <span style="font-weight:500">${yml(bestMonth.m)}</span> (+${fmt(bestMonth.sol)} F)</div>`:''}
-      <div style="font-size:13px;color:var(--text)">📈 Dépenses moyennes : <span style="font-weight:500">${fmt(totalAvgDep)} F/mois</span></div>
-    </div>
-  </div>`;
-
-  // Tableau moyennes vs mois actuel
-  html+=`<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Moyenne vs mois actuel</div>`;
-  if(!avgByPoste.length){
-    html+='<div class="empty">Pas assez de données</div>';
-  } else {
-    html+=`<table class="rtbl"><thead><tr><th>Poste</th><th>Moyenne</th><th>Ce mois</th><th>Écart</th></tr></thead><tbody>`;
-    avgByPoste.slice(0,10).forEach(({p,avg})=>{
-      const cur=curByPoste[p]||0;
-      const diff=cur-avg;
-      const pct=avg>0?Math.round(diff/avg*100):0;
-      const cl=diff>0?'ov':diff<0?'ok':'';
-      const sign=diff>=0?'↑':'↓';
-      html+=`<tr>
-        <td>${p}</td>
-        <td style="color:var(--text2)">${fmt(avg)}</td>
-        <td style="color:var(--text2)">${cur>0?fmt(cur):'—'}</td>
-        <td class="${cl}">${cur>0?sign+Math.abs(pct)+'%':'—'}</td>
-      </tr>`;
-    });
-    html+=`</tbody></table>`;
-  }
-
-  el.innerHTML=html;
-}
-
-// MODE HORS LIGNE
-function updateOnlineStatus(){
-  const el=document.getElementById('sync-status');
-  if(!el)return;
-  if(navigator.onLine){
-    el.innerHTML='<span class="sdot"></span>Synchronisé';
-    el.style.color='';
-  } else {
-    el.innerHTML='<span style="width:5px;height:5px;border-radius:50%;background:var(--amber);display:inline-block;margin-right:4px"></span>Hors ligne · sync en attente';
-    el.style.color='var(--amber)';
-  }
-}
-window.addEventListener('online', updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-
-
-function getTxBadge(x){
-  // If no createdBy — attribute to owner of current space or to me
-  const isMyTx=x.createdById===uid||(!x.createdById&&!sharedSpaceId);
-  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
-  const ownerName=sp?.ownerName||'';
-  // Old tx without createdBy: if viewing someone's space → belongs to owner
-  const name=x.createdBy||(isMyTx?userName:ownerName);
-  if(!name)return '';
-  const color=isMyTx?'var(--blue)':'var(--green)';
-  return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
-}
-
-// TRANSACTIONS RÉCURRENTES
-function toggleRecurOptions(){
-  const cb=document.getElementById('f-recur');
-  const opts=document.getElementById('recur-options');
-  const knob=document.getElementById('recur-knob');
-  const toggle=document.getElementById('recur-toggle');
-  if(cb.checked){
-    opts.style.display='block';
-    toggle.style.background='rgba(10,132,255,.25)';
-    toggle.style.borderColor='rgba(10,132,255,.4)';
-    knob.style.background='var(--blue)';
-    knob.style.left='23px';
-  } else {
-    opts.style.display='none';
-    toggle.style.background='var(--surf2)';
-    toggle.style.borderColor='var(--border)';
-    knob.style.background='var(--text3)';
-    knob.style.left='3px';
-  }
-}
-
-async function checkRecurring(){
-  if(!uid)return;
-  const recurring=txs.filter(t=>t.recur===true);
-  if(!recurring.length)return;
-  const now=new Date();
-  const curYm=ymk(now.getFullYear(),now.getMonth()+1);
-  const{db,collection,addDoc}=window._fb;
-  let created=0;
-  for(const rt of recurring){
-    // Vérifier si cette récurrente existe déjà ce mois (par recurId + mois)
-    const alreadyExists=txs.some(t=>
-      t.recurId===rt.id &&
-      t.date&&t.date.startsWith(curYm)
-    );
-    if(!alreadyExists){
-      const[y,m]=curYm.split('-');
-      const day=rt.recurDay||1;
-      const maxDay=new Date(parseInt(y),parseInt(m),0).getDate();
-      const date=curYm+'-'+String(Math.min(day,maxDay)).padStart(2,'0');
-      await addDoc(collection(db,dataPath()+'/transactions'),{
-        amt:rt.amt,date,cat:rt.cat,poste:rt.poste,
-        cmt:(rt.cmt||'')+'',
-        ts:new Date().toISOString(),
-        recurId:rt.id,
-        auto:true
-      });
-      created++;
-    }
-  }
-  if(created>0)toast(created+' transaction'+(created>1?'s':'')+' récurrente'+(created>1?'s':'')+' ajoutée'+(created>1?'s':'')+' ✓');
-}
-
-
-
-function renderRecurList(){
-  const el=document.getElementById('recur-list');
-  if(!el)return;
-  const recurring=txs.filter(t=>t.recur===true);
-  if(!recurring.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Aucune transaction récurrente</div>';
-    return;
-  }
-  el.innerHTML=recurring.map(t=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">
-          ${new Intl.NumberFormat('fr-FR').format(t.amt)} F · le ${t.recurDay||1} de chaque mois
-          <span class="bdg ${CCLS[t.cat]||'v'}" style="margin-left:4px">${t.cat}</span>
-        </div>
-      </div>
-      <button onclick="deleteRecur('${t.id}')"
-        style="padding:5px 10px;font-size:11px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">
-        Supprimer
-      </button>
-    </div>`).join('');
-}
-
-async function deleteRecur(id){
-  const{db,doc,deleteDoc}=window._fb;
-  await deleteDoc(doc(db,dataPath()+'/transactions/'+id));
-  toast('Transaction récurrente supprimée');
-}
-
-
-function renderTrash(){
-  const el=document.getElementById('trash-list');
-  if(!el)return;
-  if(!trashBin.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Aucune transaction supprimée cette session</div>';
-    return;
-  }
-  el.innerHTML=trashBin.map(t=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.date} · ${new Intl.NumberFormat('fr-FR').format(t.amt)} F · ${(()=>{const left=Math.max(0,Math.round((TRASH_TTL-(Date.now()-new Date(t.deletedAt).getTime()))/60000));return left>0?'expire dans '+left+' min':'expire bientôt';})()}</div>
-      </div>
-      <button data-id="${t.id}" class="restore-btn"
-        style="padding:5px 10px;font-size:11px;border:0.5px solid var(--blue);border-radius:var(--rs);background:transparent;color:var(--blue);cursor:pointer;font-family:var(--font);white-space:nowrap">
-        Restaurer
-      </button>
-    </div>`).join('');
-  // Event delegation pour les boutons Restaurer
-  el.querySelectorAll('.restore-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>undoDelete(btn.dataset.id));
-  });
-}
-
-// FORMAT BUDGET INPUTS
-function fmtBudInput(el){
-  // Extract raw digits only
-  const raw=el.value.replace(/\s/g,'').replace(/[^0-9]/g,'');
-  const num=parseInt(raw)||0;
-  el.dataset.raw=num;
-  // Format with spaces as thousand separator
-  el.value=num>0?new Intl.NumberFormat('fr-FR').format(num):'';
-  // Keep cursor at end
-  setTimeout(()=>{el.selectionStart=el.selectionEnd=el.value.length;},0);
-}
-
-// EDIT TRANSACTION
-
-function openEditTx(id){
-  const tx=txs.find(t=>t.id===id);if(!tx)return;
-  editingId=id;
-  document.getElementById('e-amt').value=tx.amt;
-  document.getElementById('e-date').value=tx.date;
-  document.getElementById('e-cmt').value=tx.cmt||'';
-  const catSel=document.getElementById('e-cat');
-  catSel.innerHTML=Object.keys(CATS).map(c=>`<option ${c===tx.cat?'selected':''}>${c}</option>`).join('');
-  syncEditPostes(tx.poste);
-  const modal=document.getElementById('edit-modal');
-  modal.style.display='flex';
-  document.body.style.overflow='hidden';
-}
-function syncEditPostes(selected){
-  const cat=document.getElementById('e-cat').value;
-  const ps=getAllPostes(cat);
-  document.getElementById('e-poste').innerHTML=ps.map(p=>`<option ${p===selected?'selected':''}>${p}</option>`).join('');
-}
-function closeEditTx(){
-  document.getElementById('edit-modal').style.display='none';
-  document.body.style.overflow='';
-  editingId=null;
-}
-async function saveEditTx(){
-  if(!editingId)return;
-  const amt=parseFloat(document.getElementById('e-amt').value);
-  const date=document.getElementById('e-date').value;
-  const cat=document.getElementById('e-cat').value;
-  const poste=document.getElementById('e-poste').value;
-  const cmt=document.getElementById('e-cmt').value.trim();
-  if(!amt||!date){toast('Montant et date obligatoires');return;}
-  const{db,doc,setDoc}=window._fb;
-  await setDoc(doc(db,dataPath()+'/transactions/'+editingId),{amt,date,cat,poste,cmt,ts:new Date().toISOString()});
-  closeEditTx();
-  toast('Transaction modifiée ✓');
-}
-
-// THEME
-function toggleTheme(){
-  const isLight=document.documentElement.classList.toggle('light');
-  document.getElementById('theme-btn').textContent=isLight?'🌙':'☀️';
-  document.getElementById('theme-color-meta').content=isLight?'#f5f5f7':'#111111';
-  localStorage.setItem('fiinas-theme',isLight?'light':'dark');
-}
-function initTheme(){
-  const saved=localStorage.getItem('fiinas-theme');
-  if(saved==='light'){
-    document.documentElement.classList.add('light');
-    const btn=document.getElementById('theme-btn');
-    if(btn)btn.textContent='🌙';
-  }
-}
-initTheme();
-// Init hide button state
-window.addEventListener('DOMContentLoaded',()=>{
-  const btn=document.getElementById('hide-btn');
-  if(btn)btn.textContent=hideAmounts?'🙈':'👁';
-});
-
-
-// ══════════════════════════════════════════
-// EXPORT PDF — Relevé bancaire style
-// ══════════════════════════════════════════
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ══════════════════════════════════════
-// ESPACES — Multi-espace avec switcher
-// ══════════════════════════════════════
-
-function updateSpaceBtn(){
-  const icon=document.getElementById('space-icon');
-  const label=document.getElementById('space-label');
-  if(!icon||!label)return;
+async function leaveSharedSpace(){
   if(!sharedSpaceId){
-    icon.textContent='👤';label.textContent='Perso';
+    // Owner leaving their own space — delete it
+    if(!confirm('Supprimer définitivement cet espace partagé ?'))return;
+    const{db,doc,setDoc,getDoc}=window._fb;
+    const profileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
+    const profile=profileDoc.exists()?profileDoc.data():{};
+    const sharedWith=profile.sharedWith||[];
+    // Remove access for all members
+    for(const m of sharedWith){
+      try{
+        const mProfileDoc=await getDoc(doc(db,'users/'+m.uid+'/data/profile'));
+        const mProfile=mProfileDoc.exists()?mProfileDoc.data():{};
+        const accessList=(mProfile.accessList||[]).filter(e=>e.ownerUid!==uid);
+        await setDoc(doc(db,'users/'+m.uid+'/data/profile'),{accessList},{merge:true});
+      }catch(e){}
+    }
+    await setDoc(doc(db,'users/'+uid+'/data/profile'),{sharedWith:[],inviteCode:null},{merge:true});
+    await renderSpacesUI();
+    toast('Espace supprimé');
   } else {
-    const sp=mySpaces.find(s=>s.id===sharedSpaceId);
-    icon.textContent=sp?.isPersonal?'👥':'🏠';
-    label.textContent=sp?.name||'Partagé';
+    // Guest leaving shared space
+    await leaveSharedAccess(sharedSpaceId);
   }
 }
 
-function toggleSpaceMenu(){
-  const m=document.getElementById('space-menu');
-  if(!m)return;
-  if(m.style.display==='none'){
-    renderSpaceMenu();
-    m.style.display='block';
-    setTimeout(()=>document.addEventListener('click',closeSpaceMenuOutside),0);
-  } else {
-    m.style.display='none';
-  }
-}
-
-function closeSpaceMenuOutside(e){
-  const m=document.getElementById('space-menu');
-  const btn=document.getElementById('space-btn');
-  if(m&&!m.contains(e.target)&&!btn.contains(e.target)){
-    m.style.display='none';
-    document.removeEventListener('click',closeSpaceMenuOutside);
-  }
-}
-
-function renderSpaceMenu(){
-  const el=document.getElementById('space-menu-list');
-  if(!el)return;
-  let html='<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding:4px 8px 8px">Changer d\'espace</div>';
-  // Personal space
-  const isPerso=!sharedSpaceId;
-  html+=`<div onclick="switchSpace(null)" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;background:${isPerso?'var(--surf2)':'transparent'};margin-bottom:4px">
-    <span style="font-size:16px">👤</span>
-    <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">Espace personnel</div><div style="font-size:10px;color:var(--text3)">Mes données privées</div></div>
-    ${isPerso?'<span style="font-size:10px;color:var(--green)">✓</span>':''}
-  </div>`;
-  // Other spaces
-  mySpaces.forEach(sp=>{
-    const isActive=sharedSpaceId===sp.id;
-    const icon=sp.isPersonal?'👥':'🏠';
-    html+=`<div onclick="switchSpace('${sp.id}')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;background:${isActive?'var(--surf2)':'transparent'};margin-bottom:4px">
-      <span style="font-size:16px">${icon}</span>
-      <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">${sp.name}</div><div style="font-size:10px;color:var(--text3)">${sp.role==='admin'?'Admin':'Lecteur'} · ${sp.memberCount||1} membre${(sp.memberCount||1)>1?'s':''}</div></div>
-      ${isActive?'<span style="font-size:10px;color:var(--green)">✓</span>':''}
-    </div>`;
-  });
-  html+=`<div style="border-top:0.5px solid var(--border);margin-top:6px;padding-top:6px">
-    <div onclick="goP('pro',document.querySelectorAll('.ni')[4]);document.getElementById('space-menu').style.display='none';" style="font-size:12px;color:var(--blue);padding:6px 10px;cursor:pointer">+ Créer ou rejoindre un espace</div>
-  </div>`;
-  el.innerHTML=html;
-}
-
-async function switchSpace(spaceId){
-  document.getElementById('space-menu').style.display='none';
-  sharedSpaceId=spaceId;
-  if(spaceId){
-    const sp=mySpaces.find(s=>s.id===spaceId);
-    userRole=sp?.role||'reader';
-  } else {
-    userRole='admin';
-  }
-  updateSpaceBtn();
-  subscribe();
-  renderCurrent();
-  // Save last active space
-  try{
-    const{db,doc,setDoc}=window._fb;
-    await setDoc(doc(db,'users/'+uid+'/data/profile'),{activeSpaceId:spaceId||null},{merge:true});
-  }catch(e){}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-async function leaveSpace(spaceId){
-  if(!confirm('Quitter cet espace ? Tu pourras y revenir avec le code.'))return;
+async function toggleMemberRole(memberUid, currentRole){
   const{db,doc,getDoc,setDoc}=window._fb;
-  const sDoc=await getDoc(doc(db,'spaces/'+spaceId));
-  if(sDoc.exists()){
-    const members={...sDoc.data().members||{}};
-    delete members[uid];
-    await setDoc(doc(db,'spaces/'+spaceId),{members},{merge:true});
-  }
-  // Remove from user spaces list
+  const newRole=currentRole==='admin'?'lecteur':'admin';
   const profileDoc=await getDoc(doc(db,'users/'+uid+'/data/profile'));
   const profile=profileDoc.exists()?profileDoc.data():{};
-  const spaceIds=(profile.spaceIds||[]).filter(id=>id!==spaceId);
-  const activeSpaceId=profile.activeSpaceId===spaceId?null:profile.activeSpaceId;
-  await setDoc(doc(db,'users/'+uid+'/data/profile'),{spaceIds,activeSpaceId},{merge:true});
-  mySpaces=mySpaces.filter(s=>s.id!==spaceId);
-  if(sharedSpaceId===spaceId){sharedSpaceId=null;userRole='admin';subscribe();}
-  updateSpaceBtn();
+  const sharedWith=(profile.sharedWith||[]).map(m=>m.uid===memberUid?{...m,role:newRole}:m);
+  await setDoc(doc(db,'users/'+uid+'/data/profile'),{sharedWith},{merge:true});
   await renderSpacesUI();
-  toast('Espace quitté');
+  toast('Rôle modifié ✓');
 }
 
-async function toggleMemberRole(memberId,currentRole){
-  if(userRole!=='admin')return;
-  const newRole=currentRole==='admin'?'reader':'admin';
-  const{db,doc,setDoc}=window._fb;
-  // Update role in space document
-  await setDoc(doc(db,'spaces/'+sharedSpaceId),{members:{[memberId]:{role:newRole}}},{merge:true});
-  // Update member profile so they get the new role on next load
-  await setDoc(doc(db,'users/'+memberId+'/data/profile'),{role:newRole},{merge:true});
-  // Update local mySpaces if it's us
-  if(memberId===uid){userRole=newRole;}
-  await renderSpacesUI();
-  toast('Rôle mis à jour ✓');
+function switchToPersonal(){
+  switchSpace(null);
+  document.getElementById('space-menu').style.display='none';
 }
 
-function copyInviteCode(code){
-  navigator.clipboard.writeText(code).then(()=>toast('Code copié ✓')).catch(()=>{
-    const el=document.createElement('textarea');
-    el.value=code;document.body.appendChild(el);el.select();
-    document.execCommand('copy');document.body.removeChild(el);
-    toast('Code copié ✓');
-  });
-}
-
-
-// ══════════════════════════════════════════
-// SNAPSHOTS — Patrimoine mensuel
-// ══════════════════════════════════════════
-
-async function computeSnapshot(ym){
-  // Reconstruit le snapshot d'un mois depuis les transactions Firebase
-  const{db,collection,query,where,getDocs}=window._fb;
-  try{
-    const txRef=collection(db,dataPath()+'/transactions');
-    const snap=await getDocs(query(txRef,where('ym','==',ym)));
-    const txList=snap.docs.map(d=>({...d.data(),id:d.id}));
-    const rev=txList.filter(t=>t.cat==='Revenu').reduce((s,t)=>s+t.amt,0);
-    const dep=txList.filter(t=>t.cat==='Dépenses fixes'||t.cat==='Dépenses variables').reduce((s,t)=>s+t.amt,0);
-    const epa=txList.filter(t=>t.cat==='Epargne').reduce((s,t)=>s+t.amt,0);
-    return{ym,rev,dep,epa,sol:rev-dep-epa};
-  }catch(e){return{ym,rev:0,dep:0,epa:0,sol:0};}
-}
-
-async function saveSnapshot(ym,data){
-  const{db,doc,setDoc}=window._fb;
-  await setDoc(doc(db,dataPath()+'/data/snapshots/'+ym),{
-    ...data,
-    savedAt:new Date().toISOString()
-  });
-}
-
-async function loadSnapshots(){
-  const{db,collection,getDocs}=window._fb;
-  try{
-    const snap=await getDocs(collection(db,dataPath()+'/data/snapshots'));
-    const result={};
-    snap.docs.forEach(d=>{result[d.id]=d.data();});
-    return result;
-  }catch(e){return{};}
-}
-
-async function buildMissingSnapshots(){
-  // Reconstruit tous les snapshots manquants depuis les transactions existantes
-  const{db,collection,getDocs}=window._fb;
-  try{
-    const txRef=collection(db,dataPath()+'/transactions');
-    const allTx=await getDocs(txRef);
-    const months=new Set();
-    allTx.docs.forEach(d=>{
-      const ym=d.data().ym||d.data().date?.slice(0,7);
-      if(ym)months.add(ym);
-    });
-    const existing=await loadSnapshots();
-    const today=new Date();
-    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
-    for(const ym of [...months].sort()){
-      if(ym>=curYm)continue; // Ne pas snapshoter le mois en cours
-      if(!existing[ym]){
-        const data=await computeSnapshot(ym);
-        await saveSnapshot(ym,data);
-        console.log('Snapshot built:',ym);
-      }
-    }
-  }catch(e){console.error('buildMissingSnapshots:',e);}
-}
-
-async function triggerSnapshotOnTx(txYm){
-  // Appelé à chaque nouvelle transaction
-  // Si c'est la première tx du mois en cours → snapshoter le mois précédent
-  const today=new Date();
-  const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
-  if(txYm!==curYm)return;
-  // Calculer le mois précédent
-  const d=new Date(today.getFullYear(),today.getMonth()-1,1);
-  const prevYm=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  // Vérifier si snapshot existe déjà
-  const{db,doc,getDoc}=window._fb;
-  try{
-    const snap=await getDoc(doc(db,dataPath()+'/data/snapshots/'+prevYm));
-    if(!snap.exists()){
-      const data=await computeSnapshot(prevYm);
-      await saveSnapshot(prevYm,data);
-      console.log('Auto snapshot:',prevYm);
-    }
-  }catch(e){}
-}
-
-async function recalculateSnapshot(ym){
-  const data=await computeSnapshot(ym);
-  await saveSnapshot(ym,data);
-  toast('Snapshot '+yml(ym)+' recalculé ✓');
-  renderPatrimoine();
-}
-
-async function computePatrimoineToday(){
-  // Calcule épargne cumulée, solde net cumulé, patrimoine net depuis toutes les transactions
-  const{db,collection,getDocs}=window._fb;
-  try{
-    const today=new Date();
-    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
-    const allTx=await getDocs(collection(db,dataPath()+'/transactions'));
-    let epaCumul=0,solCumul=0;
-    allTx.docs.forEach(d=>{
-      const t=d.data();
-      if(t.cat==='Epargne'){
-        epaCumul+=t.amt;   // épargne cumulée
-        solCumul-=t.amt;   // épargne = sortie du solde net
-      } else if(t.cat==='Revenu'){
-        solCumul+=t.amt;
-      } else {
-        solCumul-=t.amt;   // dépenses fixes + variables
-      }
-    });
-    return{epaCumul,solCumul,patrimoine:epaCumul+solCumul};
-  }catch(e){return{epaCumul:0,solCumul:0,patrimoine:0};}
-}
-
-async function renderPatrimoine(){
-  const el=document.getElementById('patrimoine-ui');
-  if(!el)return;
-  el.innerHTML='<div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Calcul en cours...</div>';
-  const snapshots=await loadSnapshots();
-  const{epaCumul,solCumul,patrimoine}=await computePatrimoineToday();
-  const sorted=Object.keys(snapshots).sort();
-  let html=`<div style="margin-bottom:16px">
-    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:12px">À aujourd'hui</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Épargne cumulée</div>
-        <div style="font-size:13px;font-weight:600;color:var(--green)">${fmt(epaCumul)} F</div>
-      </div>
-      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Solde net cumulé</div>
-        <div style="font-size:13px;font-weight:600;color:${solCumul>=0?'var(--green)':'var(--red)'}">${solCumul>=0?'+':''}${fmt(solCumul)} F</div>
-      </div>
-      <div style="background:${patrimoine>=0?'var(--gd)':'rgba(255,59,48,.1)'};border-radius:var(--rs);padding:10px;text-align:center;border:1px solid ${patrimoine>=0?'rgba(16,185,129,.3)':'rgba(255,59,48,.3)'}">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Patrimoine net</div>
-        <div style="font-size:13px;font-weight:700;color:${patrimoine>=0?'var(--green)':'var(--red)'}">${patrimoine>=0?'+':''}${fmt(patrimoine)} F</div>
-      </div>
-    </div>
-  </div>`;
-
-  if(sorted.length>0){
-    html+=`<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Historique mensuel</div>`;
-    let cumEpa=0,cumSol=0;
-    sorted.forEach(ym=>{
-      const s=snapshots[ym];
-      cumEpa+=s.epa||0;
-      cumSol+=s.sol||0;
-      const pat=cumEpa+cumSol;
-      const barW=Math.min(100,Math.abs(pat)/Math.max(...sorted.map(y=>{
-        let ce=0,cs=0;
-        sorted.filter(yy=>yy<=y).forEach(yy=>{ce+=snapshots[yy].epa||0;cs+=snapshots[yy].sol||0;});
-        return Math.abs(ce+cs);
-      }))*100)||0;
-      html+=`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)">
-        <div style="font-size:12px;color:var(--text2);width:70px;flex-shrink:0">${yml(ym)}</div>
-        <div style="flex:1;height:4px;background:var(--surf2);border-radius:2px;overflow:hidden">
-          <div style="width:${barW}%;height:100%;background:${pat>=0?'var(--green)':'var(--red)'};border-radius:2px"></div>
-        </div>
-        <div style="font-size:12px;font-weight:600;color:${pat>=0?'var(--green)':'var(--red)'};width:80px;text-align:right">${pat>=0?'+':''}${fmt(pat)} F</div>
-        <button onclick="recalculateSnapshot('${ym}')" style="font-size:10px;padding:2px 6px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">↺</button>
-      </div>`;
-    });
-  } else {
-    html+=`<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">Les snapshots se constituent automatiquement dès ta première transaction du mois.</div>`;
-  }
-
-  el.innerHTML=html;
-}
-
-
-// ══════════════════════════════════════════
-// VERROUILLAGE — PIN + Empreinte
-// ══════════════════════════════════════════
-const LOCK_KEY='fiinas-pin';
-const LOCK_TIMEOUT=5*60*1000; // 5 minutes
-let lockTimer=null;
-let isLocked=false;
-
-function getPin(){return localStorage.getItem(LOCK_KEY)||'';}
-function setPin(p){localStorage.setItem(LOCK_KEY,p);}
-function hasPin(){return getPin().length>=4;}
-
-function resetLockTimer(){
-  clearTimeout(lockTimer);
-  if(hasPin()){
-    lockTimer=setTimeout(()=>lockApp(),LOCK_TIMEOUT);
-  }
-}
-
-document.addEventListener('touchstart',resetLockTimer);
-document.addEventListener('click',resetLockTimer);
-document.addEventListener('keydown',resetLockTimer);
-
-function lockApp(){
-  isLocked=true;
-  showLockScreen();
-}
-
-function showLockScreen(isSetup=false){
-  const existing=document.getElementById('lock-overlay');
-  if(existing)existing.remove();
-  const overlay=document.createElement('div');
-  overlay.id='lock-overlay';
-  overlay.style.cssText='position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font)';
-  overlay.innerHTML=`
-    <div style="text-align:center;margin-bottom:32px">
-      <div style="font-size:28px;font-weight:700;color:var(--text)">FII'NAS</div>
-      <div style="font-size:13px;color:var(--text3);margin-top:4px">${isSetup?'Créer un code PIN':'Entrer le code PIN'}</div>
-    </div>
-    <div id="pin-dots" style="display:flex;gap:14px;margin-bottom:32px">
-      ${[0,1,2,3,4,5].map(i=>`<div id="dot-${i}" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:.15s"></div>`).join('')}
-    </div>
-    <div id="pin-error" style="font-size:12px;color:var(--red);height:16px;margin-bottom:16px"></div>
-    <div style="display:grid;grid-template-columns:repeat(3,72px);gap:12px">
-      ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k=>`
-        <button onclick="pinKey('${k}')" style="width:72px;height:72px;border-radius:50%;border:0.5px solid var(--border);background:var(--surf);font-size:${k==='⌫'?'20px':'22px'};font-weight:500;color:var(--text);cursor:pointer;font-family:var(--font);${k===''?'visibility:hidden':''}">
-          ${k}
-        </button>`).join('')}
-    </div>
-    ${!isSetup&&typeof PublicKeyCredential!=='undefined'?`
-    <button onclick="tryBiometric()" style="margin-top:24px;padding:10px 24px;border-radius:var(--r);border:0.5px solid var(--border);background:var(--surf);color:var(--text2);font-size:13px;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:8px">
-      <span style="font-size:18px">🔐</span> Utiliser l'empreinte
-    </button>`:''}
-    ${isSetup?'':''}
-  `;
-  document.body.appendChild(overlay);
-  overlay._pin='';
-  overlay._isSetup=isSetup;
-  if(!isSetup&&typeof PublicKeyCredential!=='undefined'){
-    setTimeout(()=>tryBiometric(),500);
-  }
-}
-
-let pinInput='';
-function pinKey(k){
-  const overlay=document.getElementById('lock-overlay');
-  if(!overlay)return;
-  if(k===''){return;}
-  if(k==='⌫'){
-    pinInput=pinInput.slice(0,-1);
-  } else {
-    if(pinInput.length>=6)return;
-    pinInput+=k;
-  }
-  // Update dots
-  for(let i=0;i<6;i++){
-    const dot=document.getElementById('dot-'+i);
-    if(dot){
-      dot.style.background=i<pinInput.length?'var(--blue)':'transparent';
-      dot.style.borderColor=i<pinInput.length?'var(--blue)':'var(--border)';
-    }
-  }
-  if(pinInput.length===6){
-    setTimeout(()=>{
-      if(overlay._isSetup){
-        if(!overlay._firstPin){
-          overlay._firstPin=pinInput;
-          pinInput='';
-          document.getElementById('pin-error').textContent='';
-          document.querySelector('[style*="Créer un code PIN"]').textContent='Confirmer le code PIN';
-          for(let i=0;i<6;i++){
-            const dot=document.getElementById('dot-'+i);
-            if(dot){dot.style.background='transparent';dot.style.borderColor='var(--border)';}
-          }
-        } else {
-          if(pinInput===overlay._firstPin){
-            setPin(pinInput);
-            pinInput='';
-            overlay.remove();
-            toast('Code PIN créé ✓');
-            resetLockTimer();
-          } else {
-            document.getElementById('pin-error').textContent='Les codes ne correspondent pas';
-            pinInput='';
-            overlay._firstPin=null;
-            for(let i=0;i<6;i++){
-              const dot=document.getElementById('dot-'+i);
-              if(dot){dot.style.background='transparent';dot.style.borderColor='var(--border)';}
-            }
-          }
-        }
-      } else {
-        if(pinInput===getPin()){
-          pinInput='';
-          overlay.remove();
-          isLocked=false;
-          resetLockTimer();
-        } else {
-          document.getElementById('pin-error').textContent='Code incorrect';
-          pinInput='';
-          for(let i=0;i<6;i++){
-            const dot=document.getElementById('dot-'+i);
-            if(dot){dot.style.background='transparent';dot.style.borderColor='var(--border)';}
-          }
-        }
-      }
-    },150);
-  }
-}
-
-async function tryBiometric(){
-  if(typeof PublicKeyCredential==='undefined')return;
-  try{
-    const result=await navigator.credentials.get({
-      publicKey:{
-        challenge:new Uint8Array(32),
-        timeout:60000,
-        userVerification:'required',
-        rpId:window.location.hostname
-      }
-    }).catch(async()=>{
-      // Fallback — try platform authenticator
-      return null;
-    });
-    if(result){
-      const overlay=document.getElementById('lock-overlay');
-      if(overlay){overlay.remove();isLocked=false;resetLockTimer();}
-    }
-  }catch(e){
-    // Try simpler approach with conditional UI
-    try{
-      const available=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      if(!available)return;
-    }catch(e2){}
-  }
-}
-
-function checkLockOnStart(){
-  if(hasPin()){
-    isLocked=true;
-    showLockScreen(false);
-  }
-  resetLockTimer();
-}
-
-function setupPin(){
-  pinInput='';
-  showLockScreen(true);
-}
-
-function changePin(){
-  pinInput='';
-  showLockScreen(true);
-}
-
-function removePin(){
-  if(!confirm('Supprimer le code PIN ?'))return;
-  localStorage.removeItem(LOCK_KEY);
-  toast('Code PIN supprimé');
-  renderSecurityUI();
-}
-
-function renderSecurityUI(){
-  const el=document.getElementById('security-ui');
-  if(!el)return;
-  const hasp=hasPin();
-  el.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">Code PIN</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${hasp?'Activé — 6 chiffres':'Désactivé'}</div>
-      </div>
-      <div style="display:flex;gap:6px">
-        ${hasp?`
-          <button onclick="changePin()" class="btn-o" style="font-size:11px">Modifier</button>
-          <button onclick="removePin()" class="btn-o" style="font-size:11px;color:var(--red);border-color:var(--red)">Supprimer</button>
-        `:`<button onclick="setupPin()" class="btn-p" style="font-size:11px">Activer</button>`}
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">Masquer les montants</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">Remplace les chiffres par ••••••</div>
-      </div>
-      <button onclick="toggleHide()" style="width:44px;height:26px;border-radius:13px;border:none;background:${hideAmounts?'var(--blue)':'var(--border)'};cursor:pointer;position:relative;transition:.2s">
-        <div style="width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;transition:.2s;${hideAmounts?'right:3px':'left:3px'}"></div>
-      </button>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:0.5px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">Verrouiller maintenant</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">Verrouillage automatique après 5 min</div>
-      </div>
-      <button onclick="lockApp()" class="btn-o" style="font-size:11px" ${!hasp?'disabled style="opacity:.4"':''}>Verrouiller</button>
-    </div>
-  `;
-}
-
-// ANALYSE DES HABITUDES
-
-function setAnalysePeriod(el,n){
-  document.querySelectorAll('#analyse-period .tab').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  analysePeriod=n;
-  renderAnalyse();
-}
-
-function renderAnalyse(){
-  const el=document.getElementById('analyse-content');
-  if(!el)return;
-
-  const now=new Date();
-  const months=[];
-  for(let i=1;i<=analysePeriod;i++){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    months.push(ymk(d.getFullYear(),d.getMonth()+1));
-  }
-
-  // Moyennes par poste
-  const posteMap={};
-  months.forEach(m=>{
-    txYM(m).filter(t=>t.cat!=='Revenu').forEach(t=>{
-      if(!posteMap[t.poste])posteMap[t.poste]={total:0,count:0};
-      posteMap[t.poste].total+=t.amt;
-      posteMap[t.poste].count++;
-    });
-  });
-
-  const avgByPoste=Object.entries(posteMap)
-    .map(([p,v])=>({p,avg:Math.round(v.total/analysePeriod)}))
-    .filter(x=>x.avg>0)
-    .sort((a,b)=>b.avg-a.avg);
-
-  // Mois courant pour comparaison
-  const curYm=ymk(now.getFullYear(),now.getMonth()+1);
-  const curTxs=txYM(curYm);
-  const curByPoste={};
-  curTxs.filter(t=>t.cat!=='Revenu').forEach(t=>{
-    curByPoste[t.poste]=(curByPoste[t.poste]||0)+t.amt;
-  });
-
-  // Résumé intelligent
-  const totalAvgDep=avgByPoste.reduce((s,x)=>s+x.avg,0);
-  const topPoste=avgByPoste[0];
-  const mostVariable=Object.entries(posteMap)
-    .map(([p,v])=>{
-      const vals=months.map(m=>txYM(m).filter(t=>t.poste===p).reduce((s,t)=>s+t.amt,0));
-      const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
-      const variance=vals.reduce((s,v)=>s+Math.abs(v-avg),0)/vals.length;
-      return{p,variance};
-    })
-    .sort((a,b)=>b.variance-a.variance)[0];
-
-  // Meilleur mois
-  const bestMonth=months.map(m=>{
-    const t=txYM(m);
-    const r=sumC(t,'Revenu');
-    const d=sumC(t,'Dépenses fixes')+sumC(t,'Dépenses variables')+sumC(t,'Epargne');
-    return{m,sol:r-d};
-  }).sort((a,b)=>b.sol-a.sol)[0];
-
-  let html='';
-
-  // Résumé
-  html+=`<div style="background:var(--surf2);border-radius:var(--rs);padding:14px;margin-bottom:14px">
-    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Résumé · ${analysePeriod} derniers mois</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${topPoste?`<div style="font-size:13px;color:var(--text)">💸 Poste principal : <span style="font-weight:500">${topPoste.p}</span> — moy. ${fmt(topPoste.avg)} F/mois</div>`:''}
-      ${mostVariable?`<div style="font-size:13px;color:var(--text)">📊 Plus variable : <span style="font-weight:500">${mostVariable.p}</span></div>`:''}
-      ${bestMonth&&bestMonth.sol>0?`<div style="font-size:13px;color:var(--text)">🏆 Meilleur mois : <span style="font-weight:500">${yml(bestMonth.m)}</span> (+${fmt(bestMonth.sol)} F)</div>`:''}
-      <div style="font-size:13px;color:var(--text)">📈 Dépenses moyennes : <span style="font-weight:500">${fmt(totalAvgDep)} F/mois</span></div>
-    </div>
-  </div>`;
-
-  // Tableau moyennes vs mois actuel
-  html+=`<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Moyenne vs mois actuel</div>`;
-  if(!avgByPoste.length){
-    html+='<div class="empty">Pas assez de données</div>';
-  } else {
-    html+=`<table class="rtbl"><thead><tr><th>Poste</th><th>Moyenne</th><th>Ce mois</th><th>Écart</th></tr></thead><tbody>`;
-    avgByPoste.slice(0,10).forEach(({p,avg})=>{
-      const cur=curByPoste[p]||0;
-      const diff=cur-avg;
-      const pct=avg>0?Math.round(diff/avg*100):0;
-      const cl=diff>0?'ov':diff<0?'ok':'';
-      const sign=diff>=0?'↑':'↓';
-      html+=`<tr>
-        <td>${p}</td>
-        <td style="color:var(--text2)">${fmt(avg)}</td>
-        <td style="color:var(--text2)">${cur>0?fmt(cur):'—'}</td>
-        <td class="${cl}">${cur>0?sign+Math.abs(pct)+'%':'—'}</td>
-      </tr>`;
-    });
-    html+=`</tbody></table>`;
-  }
-
-  el.innerHTML=html;
-}
-
-// MODE HORS LIGNE
-function updateOnlineStatus(){
-  const el=document.getElementById('sync-status');
-  if(!el)return;
-  if(navigator.onLine){
-    el.innerHTML='<span class="sdot"></span>Synchronisé';
-    el.style.color='';
-  } else {
-    el.innerHTML='<span style="width:5px;height:5px;border-radius:50%;background:var(--amber);display:inline-block;margin-right:4px"></span>Hors ligne · sync en attente';
-    el.style.color='var(--amber)';
-  }
-}
-window.addEventListener('online', updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-
-
-function getTxBadge(x){
-  // If no createdBy — attribute to owner of current space or to me
-  const isMyTx=x.createdById===uid||(!x.createdById&&!sharedSpaceId);
-  const sp=mySpaces.find(s=>s.ownerUid===sharedSpaceId);
-  const ownerName=sp?.ownerName||'';
-  // Old tx without createdBy: if viewing someone's space → belongs to owner
-  const name=x.createdBy||(isMyTx?userName:ownerName);
-  if(!name)return '';
-  const color=isMyTx?'var(--blue)':'var(--green)';
-  return '<span style="padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.1);color:'+color+'">👤 '+name+'</span>';
-}
-
-// TRANSACTIONS RÉCURRENTES
-function toggleRecurOptions(){
-  const cb=document.getElementById('f-recur');
-  const opts=document.getElementById('recur-options');
-  const knob=document.getElementById('recur-knob');
-  const toggle=document.getElementById('recur-toggle');
-  if(cb.checked){
-    opts.style.display='block';
-    toggle.style.background='rgba(10,132,255,.25)';
-    toggle.style.borderColor='rgba(10,132,255,.4)';
-    knob.style.background='var(--blue)';
-    knob.style.left='23px';
-  } else {
-    opts.style.display='none';
-    toggle.style.background='var(--surf2)';
-    toggle.style.borderColor='var(--border)';
-    knob.style.background='var(--text3)';
-    knob.style.left='3px';
-  }
-}
-
-async function checkRecurring(){
-  if(!uid)return;
-  const recurring=txs.filter(t=>t.recur===true);
-  if(!recurring.length)return;
-  const now=new Date();
-  const curYm=ymk(now.getFullYear(),now.getMonth()+1);
-  const{db,collection,addDoc}=window._fb;
-  let created=0;
-  for(const rt of recurring){
-    // Vérifier si cette récurrente existe déjà ce mois (par recurId + mois)
-    const alreadyExists=txs.some(t=>
-      t.recurId===rt.id &&
-      t.date&&t.date.startsWith(curYm)
-    );
-    if(!alreadyExists){
-      const[y,m]=curYm.split('-');
-      const day=rt.recurDay||1;
-      const maxDay=new Date(parseInt(y),parseInt(m),0).getDate();
-      const date=curYm+'-'+String(Math.min(day,maxDay)).padStart(2,'0');
-      await addDoc(collection(db,dataPath()+'/transactions'),{
-        amt:rt.amt,date,cat:rt.cat,poste:rt.poste,
-        cmt:(rt.cmt||'')+'',
-        ts:new Date().toISOString(),
-        recurId:rt.id,
-        auto:true
-      });
-      created++;
-    }
-  }
-  if(created>0)toast(created+' transaction'+(created>1?'s':'')+' récurrente'+(created>1?'s':'')+' ajoutée'+(created>1?'s':'')+' ✓');
-}
-
-
-
-function renderRecurList(){
-  const el=document.getElementById('recur-list');
-  if(!el)return;
-  const recurring=txs.filter(t=>t.recur===true);
-  if(!recurring.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Aucune transaction récurrente</div>';
-    return;
-  }
-  el.innerHTML=recurring.map(t=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">
-          ${new Intl.NumberFormat('fr-FR').format(t.amt)} F · le ${t.recurDay||1} de chaque mois
-          <span class="bdg ${CCLS[t.cat]||'v'}" style="margin-left:4px">${t.cat}</span>
-        </div>
-      </div>
-      <button onclick="deleteRecur('${t.id}')"
-        style="padding:5px 10px;font-size:11px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">
-        Supprimer
-      </button>
-    </div>`).join('');
-}
-
-async function deleteRecur(id){
-  const{db,doc,deleteDoc}=window._fb;
-  await deleteDoc(doc(db,dataPath()+'/transactions/'+id));
-  toast('Transaction récurrente supprimée');
-}
-
-
-function renderTrash(){
-  const el=document.getElementById('trash-list');
-  if(!el)return;
-  if(!trashBin.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Aucune transaction supprimée cette session</div>';
-    return;
-  }
-  el.innerHTML=trashBin.map(t=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.date} · ${new Intl.NumberFormat('fr-FR').format(t.amt)} F · ${(()=>{const left=Math.max(0,Math.round((TRASH_TTL-(Date.now()-new Date(t.deletedAt).getTime()))/60000));return left>0?'expire dans '+left+' min':'expire bientôt';})()}</div>
-      </div>
-      <button data-id="${t.id}" class="restore-btn"
-        style="padding:5px 10px;font-size:11px;border:0.5px solid var(--blue);border-radius:var(--rs);background:transparent;color:var(--blue);cursor:pointer;font-family:var(--font);white-space:nowrap">
-        Restaurer
-      </button>
-    </div>`).join('');
-  // Event delegation pour les boutons Restaurer
-  el.querySelectorAll('.restore-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>undoDelete(btn.dataset.id));
-  });
-}
-
-// FORMAT BUDGET INPUTS
-function fmtBudInput(el){
-  // Extract raw digits only
-  const raw=el.value.replace(/\s/g,'').replace(/[^0-9]/g,'');
-  const num=parseInt(raw)||0;
-  el.dataset.raw=num;
-  // Format with spaces as thousand separator
-  el.value=num>0?new Intl.NumberFormat('fr-FR').format(num):'';
-  // Keep cursor at end
-  setTimeout(()=>{el.selectionStart=el.selectionEnd=el.value.length;},0);
-}
-
-// EDIT TRANSACTION
-
-function openEditTx(id){
-  const tx=txs.find(t=>t.id===id);if(!tx)return;
-  editingId=id;
-  document.getElementById('e-amt').value=tx.amt;
-  document.getElementById('e-date').value=tx.date;
-  document.getElementById('e-cmt').value=tx.cmt||'';
-  const catSel=document.getElementById('e-cat');
-  catSel.innerHTML=Object.keys(CATS).map(c=>`<option ${c===tx.cat?'selected':''}>${c}</option>`).join('');
-  syncEditPostes(tx.poste);
-  const modal=document.getElementById('edit-modal');
-  modal.style.display='flex';
-  document.body.style.overflow='hidden';
-}
-function syncEditPostes(selected){
-  const cat=document.getElementById('e-cat').value;
-  const ps=getAllPostes(cat);
-  document.getElementById('e-poste').innerHTML=ps.map(p=>`<option ${p===selected?'selected':''}>${p}</option>`).join('');
-}
-function closeEditTx(){
-  document.getElementById('edit-modal').style.display='none';
-  document.body.style.overflow='';
-  editingId=null;
-}
-async function saveEditTx(){
-  if(!editingId)return;
-  const amt=parseFloat(document.getElementById('e-amt').value);
-  const date=document.getElementById('e-date').value;
-  const cat=document.getElementById('e-cat').value;
-  const poste=document.getElementById('e-poste').value;
-  const cmt=document.getElementById('e-cmt').value.trim();
-  if(!amt||!date){toast('Montant et date obligatoires');return;}
-  const{db,doc,setDoc}=window._fb;
-  await setDoc(doc(db,dataPath()+'/transactions/'+editingId),{amt,date,cat,poste,cmt,ts:new Date().toISOString()});
-  closeEditTx();
-  toast('Transaction modifiée ✓');
-}
-
-// THEME
-function toggleTheme(){
-  const isLight=document.documentElement.classList.toggle('light');
-  document.getElementById('theme-btn').textContent=isLight?'🌙':'☀️';
-  document.getElementById('theme-color-meta').content=isLight?'#f5f5f7':'#111111';
-  localStorage.setItem('fiinas-theme',isLight?'light':'dark');
-}
-function initTheme(){
-  const saved=localStorage.getItem('fiinas-theme');
-  if(saved==='light'){
-    document.documentElement.classList.add('light');
-    const btn=document.getElementById('theme-btn');
-    if(btn)btn.textContent='🌙';
-  }
-}
-initTheme();
-// Init hide button state
-window.addEventListener('DOMContentLoaded',()=>{
-  const btn=document.getElementById('hide-btn');
-  if(btn)btn.textContent=hideAmounts?'🙈':'👁';
-});
 
 // TOAST
 let tt;
@@ -5524,4 +3496,3 @@ if('serviceWorker' in navigator){
 }
 </script>
 </body>
-</html>
