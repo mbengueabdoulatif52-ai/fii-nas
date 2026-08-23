@@ -702,7 +702,13 @@ function subscribe(){
     const newHash=newTxs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
     const oldHash=txs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
     txs=newTxs;
-    if(firstLoad||newHash!==oldHash)renderCurrent();
+    if(firstLoad||newHash!==oldHash){
+      renderCurrent();
+    } else {
+      // Même si le hash n'a pas changé, forcer le rendu de l'historique si visible
+      const activePage=document.querySelector('.page.active')?.id;
+      if(activePage==='page-tx')renderTX();
+    }
     
   });
   if(unsub2)unsub2();
@@ -725,7 +731,9 @@ function subscribe(){
       CATS=JSON.parse(JSON.stringify(DEFAULT_CATS));
       saveSettings();
     }
-    renderCurrent();renderCPUI();
+    // Ne re-rendre que si les transactions sont déjà chargées
+    if(txs.length>0)renderCurrent();
+    renderCPUI();
   });
 }
 
