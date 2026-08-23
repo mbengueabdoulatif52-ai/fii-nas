@@ -354,7 +354,17 @@ select option{background:#2c2c2e;color:#f5f5f7}
     <div class="ytabs" id="ytabs"></div>
     <div class="mtabs" id="mtabs"></div>
     <div id="bud-solde"></div>
-
+    <!-- Copier budget -->
+    <div class="card" style="padding:12px 16px;margin-bottom:10px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Copier un budget existant</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="fsel" id="copy-src" style="flex:1;padding:9px 12px;font-size:13px"></select>
+        <button onclick="copyBudget()" style="padding:9px 14px;background:var(--surf2);border:0.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:.15s">
+          Copier
+        </button>
+      </div>
+      <div id="copy-msg" style="font-size:11px;color:var(--green);margin-top:6px;min-height:14px"></div>
+    </div>
     <div id="bform"></div>
     <button class="btn-p" onclick="saveBudget()" style="margin-top:4px;margin-bottom:2px">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
@@ -613,7 +623,7 @@ const PC=['#3b82f6','#ef4444','#f59e0b','#a855f7','#22c55e','#ec4899','#06b6d4',
 const MFR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const MS=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
-let uid=null,txs=[],budget={},custom={},unsub1=null,unsub2=null,isSavingSettings=false,lastSettingsHash='';
+let uid=null,txs=[],budget={},custom={},unsub1=null,unsub2=null,pendingSaves=0,lastSettingsHash='';
 let formDirty=false;
 function setFormDirty(v){formDirty=v;}
 let sharedSpaceId=null; // ID de l'espace partagé (null = espace perso)
@@ -709,27 +719,21 @@ function subscribe(){
   unsub2=onSnapshot(doc(db,dataPath()+'/data/settings'),snap=>{
     if(snap.exists()){
       const d=snap.data();
-      // Calculer un hash pour détecter si c'est un vrai changement externe
+      // Si on a des sauvegardes en cours, ignorer cette notification
+      if(pendingSaves>0){
+        pendingSaves=Math.max(0,pendingSaves-1);
+        return;
+      }
       const newHash=JSON.stringify(d.budget||{})+JSON.stringify(d.custom||{})+(d.cats?JSON.stringify(d.cats):'');
-      if(isSavingSettings){
-        // C'est nous qui venons de sauvegarder — mettre à jour le hash mais pas budget
-        lastSettingsHash=newHash;
-        isSavingSettings=false;
-        return;
-      }
-      if(newHash===lastSettingsHash){
-        // Aucun changement réel — ignorer
-        return;
-      }
+      if(newHash===lastSettingsHash) return; // rien de nouveau
       lastSettingsHash=newHash;
-      // Changement venant d'un autre appareil — mettre à jour
+      // Changement externe (autre appareil) — mettre à jour
       budget=d.budget||{};
       custom=d.custom||{};
       loadCatsFromSettings(d);
     } else {
-      // Premier login — initialiser avec DEFAULT_CATS
       CATS=JSON.parse(JSON.stringify(DEFAULT_CATS));
-      saveSettings(); // fire-and-forget on first login intentional
+      saveSettings();
     }
     renderCurrent();renderCPUI();
   });
@@ -737,7 +741,9 @@ function subscribe(){
 
 async function saveSettings(){
   const{db,doc,setDoc}=window._fb;
-  isSavingSettings=true;
+  // Mettre à jour le hash AVANT de sauvegarder pour le comparer lors du retour onSnapshot
+  lastSettingsHash=JSON.stringify(budget)+JSON.stringify(custom)+(CATS?JSON.stringify(CATS):'');
+  pendingSaves+=2; // Firebase envoie souvent 2 notifications (locale + serveur)
   await setDoc(doc(db,dataPath()+'/data/settings'),{budget,custom,cats:CATS},{merge:true});
 }
 
@@ -1176,17 +1182,48 @@ function renderBudPage(){
   document.getElementById('ytabs').innerHTML=years.map(y=>`<button class="ytab ${y.toString()===bYear?'active':''}" onclick="setBY(this,'${y}')">${y}</button>`).join('');
   document.getElementById('mtabs').innerHTML=MFR.map((m,i)=>`<button class="mtab ${(i+1)===bMonth?'active':''}" onclick="setBM(this,${i+1})">${MS[i]}</button>`).join('');
   renderBForm();
+  populateCopySrc();
 }
 
+function populateCopySrc(){
+  const sel=document.getElementById('copy-src');
+  if(!sel)return;
+  // Les 3 mois précédents du mois SÉLECTIONNÉ dans le budget (bYear, bMonth)
+  const prev=[];
+  for(let i=1;i<=3;i++){
+    const d=new Date(parseInt(bYear),parseInt(bMonth)-1-i,1);
+    prev.push(ymk(d.getFullYear(),d.getMonth()+1));
+  }
+  sel.innerHTML=prev.map(ym=>`<option value="${ym}">${yml(ym)}${budget[ym]&&Object.keys(budget[ym]).length?' ✓':''}</option>`).join('');
+}
+
+async function copyBudget(){
+  const sel=document.getElementById('copy-src');
+  const srcYm=sel?.value;
+  if(!srcYm||!budget[srcYm]){
+    document.getElementById('copy-msg').style.color='var(--red)';
+    document.getElementById('copy-msg').textContent='Aucun budget trouvé pour ce mois.';
+    return;
+  }
+  const destYm=ymk(bYear,bMonth);
+  // Deep copy
+  budget[destYm]={...budget[srcYm]};
+  await saveSettings();
+  renderBForm();
+  const msg=document.getElementById('copy-msg');
+  msg.style.color='var(--green)';
+  msg.textContent='Budget de '+yml(srcYm)+' copié avec succès ✓';
+  setTimeout(()=>{if(msg)msg.textContent='';},3000);
+}
 function setBY(el,y){
   autoSaveBudget();
   document.querySelectorAll('.ytab').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');bYear=y;renderBForm();
+  el.classList.add('active');bYear=y;renderBForm();populateCopySrc();
 }
 function setBM(el,m){
   autoSaveBudget();
   document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');bMonth=m;renderBForm();
+  el.classList.add('active');bMonth=m;renderBForm();populateCopySrc();
 }
 function calcBudSolde(ym){
   // Lire les valeurs en direct depuis les inputs si disponibles, sinon depuis budget sauvegardé
