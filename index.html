@@ -696,20 +696,8 @@ function subscribe(){
   const{db,collection,query,orderBy,onSnapshot,doc}=window._fb;
   if(unsub1)unsub1();
   unsub1=onSnapshot(query(collection(db,dataPath()+'/transactions'),orderBy('ts','desc')),snap=>{
-    const firstLoad=txs.length===0;
-    const newTxs=snap.docs.map(d=>({id:d.id,...d.data()}));
-    // Ne re-rendre que si les données ont changé
-    const newHash=newTxs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
-    const oldHash=txs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
-    txs=newTxs;
-    if(firstLoad||newHash!==oldHash){
-      renderCurrent();
-    } else {
-      // Même si le hash n'a pas changé, forcer le rendu de l'historique si visible
-      const activePage=document.querySelector('.page.active')?.id;
-      if(activePage==='page-tx')renderTX();
-    }
-    
+    txs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderCurrent();
   });
   if(unsub2)unsub2();
   unsub2=onSnapshot(doc(db,dataPath()+'/data/settings'),snap=>{
@@ -731,9 +719,7 @@ function subscribe(){
       CATS=JSON.parse(JSON.stringify(DEFAULT_CATS));
       saveSettings();
     }
-    // Ne re-rendre que si les transactions sont déjà chargées
-    if(txs.length>0)renderCurrent();
-    renderCPUI();
+    renderCurrent();renderCPUI();
   });
 }
 
