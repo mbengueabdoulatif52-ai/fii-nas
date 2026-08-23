@@ -1219,8 +1219,16 @@ async function copyBudget(){
   msg.textContent='Budget de '+yml(srcYm)+' copié avec succès ✓';
   setTimeout(()=>{if(msg)msg.textContent='';},3000);
 }
-function setBY(el,y){document.querySelectorAll('.ytab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bYear=y;renderBForm();populateCopySrc();}
-function setBM(el,m){document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bMonth=m;renderBForm();populateCopySrc();}
+function setBY(el,y){
+  autoSaveBudget();
+  document.querySelectorAll('.ytab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');bYear=y;renderBForm();populateCopySrc();
+}
+function setBM(el,m){
+  autoSaveBudget();
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');bMonth=m;renderBForm();populateCopySrc();
+}
 function calcBudSolde(ym){
   // Lire les valeurs en direct depuis les inputs si disponibles, sinon depuis budget sauvegardé
   const bud=budget[ym]||{};
@@ -1289,6 +1297,27 @@ function renderBForm(){
   document.getElementById('bform').innerHTML=html;
   renderBudSolde();
 }
+function autoSaveBudget(){
+  // Sauvegarde silencieuse du mois courant avant de naviguer
+  const ym=ymk(bYear,bMonth);
+  const bud={};
+  const all=Object.keys(CATS).flatMap(c=>CATS[c]||[]);
+  all.forEach(p=>{
+    const el=document.getElementById('bi_'+btoa(encodeURIComponent(p)));
+    if(el){
+      const raw=parseFloat((el.dataset.raw||'').replace(/\s/g,''))||0;
+      if(raw>0)bud[p]=raw;
+    }
+  });
+  // Ne sauvegarder que si des valeurs ont changé
+  const current=JSON.stringify(budget[ym]||{});
+  const next=JSON.stringify(bud);
+  if(current!==next){
+    budget[ym]=bud;
+    saveSettings(); // fire-and-forget
+  }
+}
+
 async function saveBudget(){
   const ym=ymk(bYear,bMonth);const bud={};
   const all=Object.keys(CATS).flatMap(c=>CATS[c]||[]);
