@@ -891,61 +891,60 @@ function renderDashAnnual(){
   const t=txYear(y);
   const rev=sumC(t,'Revenu');const fix=sumC(t,'Dépenses fixes');
   const vr=sumC(t,'Dépenses variables');const ep=sumC(t,'Epargne');
-  const dep=fix+vr+ep;const sol=rev-dep;const taux=rev>0?Math.round(sol/rev*100):0;
-  // Best/worst month
-  const soldes=Array.from({length:12},(_,i)=>{
-    const ym=ymk(y,i+1);const mt=txYM(ym);
-    const r=sumC(mt,'Revenu');const d=sumC(mt,'Dépenses fixes')+sumC(mt,'Dépenses variables')+sumC(mt,'Epargne');
-    return{m:MFR[i],sol:r-d};
-  }).filter(x=>x.sol!==0);
-  const best=soldes.length?soldes.reduce((a,b)=>b.sol>a.sol?b:a):null;
-  const worst=soldes.length?soldes.reduce((a,b)=>b.sol<a.sol?b:a):null;
-  document.getElementById('hero').innerHTML=`
-    <div class="hlbl">Récap annuel · ${y}</div>
-    <div class="hamt ${sol>=0?'pos':'neg'}">${fmtS(sol)} <span style="font-size:15px;opacity:.55">FCFA</span></div>
-    <div class="hmeta">
-      <div class="hmi">Revenus totaux<span style="color:var(--green)">${fmt(rev)} F</span></div>
-      <div class="hmi">Dépenses totales<span style="color:var(--red)">${fmt(dep)} F</span></div>
-      <div class="hmi">Taux d'épargne<span style="${taux>=15?'color:var(--green)':taux>=5?'color:var(--amber)':'color:var(--red)'}">${taux}%</span></div>
-    </div>`;
-  document.getElementById('dm').innerHTML=
-    mc('Fixes',fix,0)+mc('Variables',vr,0)+mc('Épargne',ep,0)+mc('Transactions',t.length,0,true);
-  document.getElementById('dtabs').style.display='none';
-  // Annual breakdown by month
-  const monthRows=Array.from({length:12},(_,i)=>{
-    const ym=ymk(y,i+1);const mt=txYM(ym);
-    if(!mt.length)return'';
-    const r=sumC(mt,'Revenu');const d=sumC(mt,'Dépenses fixes')+sumC(mt,'Dépenses variables')+sumC(mt,'Epargne');
-    const s=r-d;const cl=s>=0?'ok':'ov';
-    return`<tr><td>${MFR[i]}</td><td style="color:var(--green)">${fmt(r)}</td><td style="color:var(--red)">${fmt(d)}</td><td class="${cl}">${s>=0?'+':'−'}${fmt(s)}</td></tr>`;
-  }).join('');
-  // Top postes
-  const posteMap={};t.filter(x=>x.cat!=='Revenu').forEach(x=>{posteMap[x.poste]=(posteMap[x.poste]||0)+x.amt;});
-  const topPostes=Object.entries(posteMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const topRows=topPostes.map(([p,v])=>`<tr><td>${p}</td><td colspan="2" style="color:var(--red)">${fmt(v)} F</td><td style="color:var(--text3)">${dep>0?Math.round(v/dep*100)+'%':'—'}</td></tr>`).join('');
-  document.getElementById('dc').innerHTML=`
-    <div class="card">
-      <div class="ct">Bilan mensuel ${y}</div>
-      <table class="rtbl"><thead><tr><th>Mois</th><th>Revenus</th><th>Dépenses</th><th>Solde</th></tr></thead>
-      <tbody>${monthRows||'<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text3)">Aucune donnée</td></tr>'}</tbody></table>
-      ${best&&worst?`<div style="display:flex;gap:12px;margin-top:12px">
-        <div style="flex:1;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.05em">Meilleur mois</div>
-          <div style="font-size:14px;font-weight:600;margin-top:4px">${best.m}</div>
-          <div style="font-size:13px;color:var(--green);font-family:var(--mono)">+${fmt(best.sol)} F</div>
-        </div>
-        <div style="flex:1;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.05em">Mois difficile</div>
-          <div style="font-size:14px;font-weight:600;margin-top:4px">${worst.m}</div>
-          <div style="font-size:13px;color:var(--red);font-family:var(--mono)">${worst.sol>=0?'+':'−'}${fmt(worst.sol)} F</div>
-        </div>
-      </div>`:''}
+  const dep=fix+vr+ep;const sol=rev-dep;
+
+  const el=document.getElementById('hero');
+  el.innerHTML=`
+    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Bilan annuel ${y}</div>
+    <div style="font-size:32px;font-weight:700;font-family:var(--mono);color:${sol>=0?'var(--green)':'var(--red)'}">
+      ${sol>=0?'+':''}${fmt(sol)} <span style="font-size:14px;font-weight:400">FCFA</span>
     </div>
-    <div class="card">
-      <div class="ct">Top dépenses ${y}</div>
-      <table class="rtbl"><thead><tr><th>Poste</th><th colspan="2">Total</th><th>% dép.</th></tr></thead>
-      <tbody>${topRows||'<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text3)">Aucune donnée</td></tr>'}</tbody></table>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px">
+      <div><div style="font-size:10px;color:var(--text3)">Revenus</div><div style="font-size:14px;font-weight:500;color:var(--green);font-family:var(--mono)">${fmt(rev)} F</div></div>
+      <div><div style="font-size:10px;color:var(--text3)">Dépenses</div><div style="font-size:14px;font-weight:500;color:var(--red);font-family:var(--mono)">${fmt(dep)} F</div></div>
+      <div><div style="font-size:10px;color:var(--text3)">Épargne</div><div style="font-size:14px;font-weight:500;color:var(--blue);font-family:var(--mono)">${fmt(ep)} F</div></div>
     </div>`;
+
+  // Tableau récapitulatif par poste
+  const dc=document.getElementById('dc');
+  let html='';
+  ['Revenu','Dépenses fixes','Dépenses variables','Epargne'].forEach(cat=>{
+    const ps=getAllPostes(cat);
+    const act={};
+    t.filter(x=>x.cat===cat).forEach(x=>{act[x.poste]=(act[x.poste]||0)+x.amt;});
+    const total=Object.values(act).reduce((s,v)=>s+v,0);
+    if(!total&&!ps.some(p=>act[p]))return;
+    // Budget annuel = somme des 12 mois
+    const budAnnuel={};
+    ps.forEach(p=>{
+      let bTot=0;
+      for(let m=1;m<=12;m++) bTot+=gBud(ymk(y,m),p);
+      if(bTot>0)budAnnuel[p]=bTot;
+    });
+    const isRev=cat==='Revenu';
+    html+=`<div class="card">
+      <div class="ct">${CICO[cat]} ${cat}
+        <span style="float:right;color:${isRev?'var(--green)':'var(--red)'};font-family:var(--mono)">${fmt(total)} F</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <tr style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.05em">
+          <td style="padding:4px 0">Poste</td>
+          <td style="text-align:right;padding:4px 0">Réel</td>
+          <td style="text-align:right;padding:4px 0">Budget</td>
+        </tr>
+        ${ps.filter(p=>act[p]||budAnnuel[p]).map(p=>{
+          const r=act[p]||0;const b=budAnnuel[p]||0;
+          const over=b>0&&r>b;
+          return `<tr style="border-top:0.5px solid var(--border)">
+            <td style="padding:7px 0;color:var(--text2);cursor:pointer" onclick="goPoste('${p}','${cat}')">${p} <span style="font-size:10px;color:var(--blue)">›</span></td>
+            <td style="text-align:right;font-family:var(--mono);color:${over?'var(--red)':isRev?'var(--green)':'var(--text)'};padding:7px 0">${fmt(r)} F</td>
+            <td style="text-align:right;font-family:var(--mono);color:var(--text3);padding:7px 0">${b?fmt(b)+' F':'—'}</td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>`;
+  });
+  dc.innerHTML=html||'<div style="text-align:center;padding:30px;color:var(--text3)">Aucune transaction en '+y+'</div>';
 }
 
 function mc(lbl,val,bud,cnt=false){
@@ -1134,10 +1133,15 @@ function setTF(el,f){
   el.classList.add('active');txFilt=f;renderTX();
 }
 function renderTX(){
-  const ym=curYM();let t=txYM(ym);
+  const ym=curYM();
+  // Mode annuel : prendre toutes les transactions de l'année
+  let t=isAnnual()?txYear(annualYear()):txYM(ym);
   if(txFilt!=='all')t=t.filter(x=>x.cat===txFilt);
+  if(txPosteFilter)t=t.filter(x=>x.poste===txPosteFilter);
   const q=(document.getElementById('tx-search')?.value||'').toLowerCase().trim();
   if(q)t=t.filter(x=>(x.poste||'').toLowerCase().includes(q)||(x.cmt||'').toLowerCase().includes(q)||String(x.amt).includes(q));
+  // Trier par date décroissante
+  t.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const countEl=document.getElementById('tx-count');
   if(countEl)countEl.textContent=t.length?`${t.length} transaction${t.length>1?'s':''}`:'';
   const el=document.getElementById('txl');
