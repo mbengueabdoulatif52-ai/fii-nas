@@ -1089,6 +1089,87 @@ async function delTx(id){
   }catch(e){toast('Erreur suppr: '+e.message.slice(0,50));}
 }
 
+let editingId=null;
+
+function openEditTx(id){
+  const tx=txs.find(t=>t.id===id);
+  if(!tx)return;
+  editingId=id;
+  const cats=['Revenu','Dépenses fixes','Dépenses variables','Epargne'];
+  const catOpts=cats.map(c=>`<option value="${c}" ${tx.cat===c?'selected':''}>${c}</option>`).join('');
+  const allPostes=cats.flatMap(c=>getAllPostes(c));
+  const posteOpts=allPostes.map(p=>`<option value="${p}" ${tx.poste===p?'selected':''}>${p}</option>`).join('');
+  const bg=document.createElement('div');
+  bg.id='edit-tx-modal';
+  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:flex-end;justify-content:center';
+  bg.innerHTML=`<div style="background:var(--surf);border-radius:var(--r) var(--r) 0 0;padding:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:600;color:var(--text)">Modifier la transaction</div>
+      <button onclick="closeEditTx()" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:22px;line-height:1">×</button>
+    </div>
+    <div class="fgrp"><div class="flbl">Montant (FCFA)</div>
+      <input class="finp" id="e-amt" type="text" value="${tx.amt?parseInt(tx.amt).toLocaleString('fr-FR'):''}" inputmode="numeric" oninput="fmtAmtInput(this)">
+    </div>
+    <div class="fgrp"><div class="flbl">Catégorie</div>
+      <select class="finp" id="e-cat">${catOpts}</select>
+    </div>
+    <div class="fgrp"><div class="flbl">Poste</div>
+      <select class="finp" id="e-poste">${posteOpts}</select>
+    </div>
+    <div class="fgrp"><div class="flbl">Date</div>
+      <input class="finp" type="date" id="e-date" value="${tx.date||''}">
+    </div>
+    <div class="fgrp"><div class="flbl">Commentaire (facultatif)</div>
+      <input class="finp" type="text" id="e-cmt" value="${tx.cmt||''}" placeholder="Facultatif">
+    </div>
+    <div class="fmsg" id="e-msg"></div>
+    <button class="btn-p" id="e-save-btn" onclick="saveEditTx()">
+      <span id="e-save-inner" style="display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+        Enregistrer les modifications
+      </span>
+    </button>
+  </div>`;
+  bg.addEventListener('click',e=>{if(e.target===bg)closeEditTx();});
+  document.body.appendChild(bg);
+}
+
+function closeEditTx(){
+  const m=document.getElementById('edit-tx-modal');
+  if(m)m.remove();
+  editingId=null;
+}
+
+async function saveEditTx(){
+  if(!editingId)return;
+  const btn=document.getElementById('e-save-btn');
+  const inner=document.getElementById('e-save-inner');
+  const msg=document.getElementById('e-msg');
+  const amt=parseFloat(document.getElementById('e-amt').value.replace(/\s/g,'').replace(/,/g,'.'))||0;
+  const date=document.getElementById('e-date')?.value;
+  const poste=document.getElementById('e-poste')?.value;
+  if(!amt||!date||!poste){msg.textContent='Montant, date et poste obligatoires';return;}
+  btn.disabled=true;
+  if(inner)inner.innerHTML='<div class="spin" style="width:14px;height:14px;border-width:2px"></div> Enregistrement…';
+  try{
+    const{db,doc,setDoc}=window._fb;
+    await setDoc(doc(db,dataPath()+'/transactions/'+editingId),{
+      amt,date,
+      cat:document.getElementById('e-cat')?.value||'',
+      poste,
+      cmt:document.getElementById('e-cmt')?.value.trim()||'',
+      ts:new Date().toISOString()
+    });
+    closeEditTx();
+    toast('Transaction modifiée ✓');
+  }catch(e){
+    msg.textContent='Erreur: '+e.message.slice(0,50);
+    btn.disabled=false;
+    if(inner)inner.innerHTML='Enregistrer les modifications';
+  }
+}
+
+
 let lastDeleted=null;
 
 function showUndoToast(tx){
