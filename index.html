@@ -696,8 +696,20 @@ function subscribe(){
   const{db,collection,query,orderBy,onSnapshot,doc}=window._fb;
   if(unsub1)unsub1();
   unsub1=onSnapshot(query(collection(db,dataPath()+'/transactions'),orderBy('ts','desc')),snap=>{
-    txs=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderCurrent();
+    const firstLoad=txs.length===0;
+    const newTxs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    // Ne re-rendre que si les données ont changé
+    const newHash=newTxs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
+    const oldHash=txs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
+    txs=newTxs;
+    if(firstLoad||newHash!==oldHash){
+      renderCurrent();
+    } else {
+      // Même si le hash n'a pas changé, forcer le rendu de l'historique si visible
+      const activePage=document.querySelector('.page.active')?.id;
+      if(activePage==='page-tx')renderTX();
+    }
+    
   });
   if(unsub2)unsub2();
   unsub2=onSnapshot(doc(db,dataPath()+'/data/settings'),snap=>{
@@ -719,7 +731,9 @@ function subscribe(){
       CATS=JSON.parse(JSON.stringify(DEFAULT_CATS));
       saveSettings();
     }
-    renderCurrent();renderCPUI();
+    // Ne re-rendre que si les transactions sont déjà chargées
+    if(txs.length>0)renderCurrent();
+    renderCPUI();
   });
 }
 
@@ -2459,6 +2473,251 @@ function switchToPersonal(){
 
 
 // TOAST
+function fmtAmtInput(el){
+  const raw=el.value.replace(/[^0-9]/g,'');
+  if(!raw){el.value='';return;}
+  el.value=parseInt(raw,10).toLocaleString('fr-FR');
+}
+function goPoste(poste,cat){
+  txPosteFilter=poste;
+  txFilt=cat||'all';
+  goP('tx',document.querySelectorAll('.ni')[1]);
+}
+function clearPosteFilter(){
+  txPosteFilter='';
+  const b=document.getElementById('poste-filter-banner');
+  if(b)b.style.display='none';
+  renderTX();
+}
+
+async function exportPDF(){
+  if(typeof window.jspdf==='undefined'){
+    toast('Chargement en cours...');
+    await new Promise(r=>setTimeout(r,1500));
+  }
+  const{jsPDF}=window.jspdf;
+  const ym=curYM();
+  const t=txYM(ym);
+  const rev=sumC(t,'Revenu');
+  const dep=sumC(t,'Dépenses fixes')+sumC(t,'Dépenses variables')+sumC(t,'Epargne');
+  const sol=rev-dep;
+  const moisLabel=yml(ym);
+  const uName=document.getElementById('pname')?.textContent||'';
+  const uEmail=document.getElementById('pemail')?.textContent||'';
+  const today=new Date().toLocaleDateString('fr-FR');
+
+  // Format sans espace insécable
+  const pf=v=>new Intl.NumberFormat('fr-FR').format(Math.round(Math.abs(v)))
+    .replace(/\u202f/g,' ').replace(/\u00a0/g,' ');
+
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,M=15,CW=W-2*M;
+  const BLUE=[29,52,97],GREEN=[16,185,129],GRAY=[110,110,115],BLACK=[29,29,31];
+
+  // ── EN-TÊTE
+  doc.setFillColor(...BLUE);
+  doc.rect(0,0,W,42,'F');
+
+  // Icône
+  doc.setFillColor(29,52,97);
+  doc.roundedRect(M,8,22,22,3,3,'F');
+  doc.setFillColor(59,130,246);
+  doc.rect(M+4,20,3,7,'F');
+  doc.setFillColor(96,165,250);
+  doc.rect(M+9,17,3,10,'F');
+  doc.setFillColor(...GREEN);
+  doc.rect(M+14,13,3,14,'F');
+  doc.setFillColor(...GREEN);
+  doc.circle(M+19,11,1.5,'F');
+
+  // Texte FII'NAS
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(20);
+  doc.setTextColor(59,130,246);
+  doc.text('FII',M+27,21);
+  const fw=doc.getTextWidth('FII');
+  doc.setTextColor(255,255,255);
+  doc.text("'",M+27+fw,21);
+  const aw=doc.getTextWidth("'");
+  doc.setTextColor(...GREEN);
+  doc.text('NAS',M+27+fw+aw,21);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.setTextColor(180,180,190);
+  doc.text('SUIVI FINANCIER PERSONNEL',M+28,27);
+
+  // Infos droite
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(255,255,255);
+  doc.text(uName,W-M,16,'right');
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(180,180,190);
+  doc.text(uEmail,W-M,22,'right');
+  doc.text('Releve du mois de '+moisLabel,W-M,28,'right');
+  doc.text('Genere le '+today,W-M,34,'right');
+
+  let y=50;
+
+  // ── RÉSUMÉ
+  // Boîte résumé plus haute pour éviter superposition
+  doc.setFillColor(245,245,247);
+  doc.roundedRect(M,y,CW,42,3,3,'F');
+  doc.setFillColor(...(sol>=0?GREEN:[220,38,38]));
+  doc.rect(M,y,2,42,'F');
+
+  // Ligne 1 — label
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...GRAY);
+  doc.text('SOLDE NET DU MOIS',M+6,y+7);
+
+  // Ligne 2 — solde
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(18);
+  doc.setTextColor(...(sol>=0?GREEN:[220,38,38]));
+  doc.text((sol>=0?'+':'-')+pf(sol)+' FCFA',M+6,y+20);
+
+  // Ligne 3 — séparateur
+  doc.setDrawColor(220,220,225);
+  doc.line(M+4,y+24,M+CW-4,y+24);
+
+  // Ligne 4 — 3 colonnes en dessous
+  const cw3=CW/3;
+  [{l:'Revenus',v:'+'+pf(rev)+' F',c:GREEN},{l:'Depenses',v:'-'+pf(dep)+' F',c:[220,38,38]},{l:'% consomme',v:(rev>0?Math.round(dep/rev*100):0)+'%',c:GRAY}]
+  .forEach((item,i)=>{
+    const cx=M+i*cw3;
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...GRAY);
+    doc.text(item.l,cx+cw3/2,y+30,'center');
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...item.c);
+    doc.text(item.v,cx+cw3/2,y+38,'center');
+  });
+
+  y+=50;
+
+  // ── TABLEAU DES OPÉRATIONS
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...BLACK);
+  doc.text('Detail des operations - '+moisLabel,M,y);
+  y+=4;
+
+  const sorted=[...t].sort((a,b)=>a.date.localeCompare(b.date));
+  let running=0;
+  const rows=sorted.map(tx=>{
+    const isR=tx.cat==='Revenu';
+    running+=isR?tx.amt:-tx.amt;
+    const date=tx.date.split('-').reverse().join('/');
+    // Truncate libelle to avoid overflow
+    const raw=(tx.poste+(tx.cmt?' - '+tx.cmt:'')).substring(0,45);
+    return[
+      date,
+      raw,
+      isR?'':pf(tx.amt)+' F',
+      isR?pf(tx.amt)+' F':'',
+      (running>=0?'+':'-')+pf(running)+' F'
+    ];
+  });
+
+  doc.autoTable({
+    startY:y,
+    head:[['Date','Libelle','Debit','Credit','Solde']],
+    body:rows,
+    margin:{left:M,right:M},
+    tableWidth:CW,
+    styles:{
+      font:'helvetica',fontSize:7,cellPadding:1.8,
+      textColor:BLACK,lineColor:[220,220,225],lineWidth:0.15,
+      overflow:'linebreak'
+    },
+    headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',fontSize:7.5},
+    columnStyles:{
+      0:{cellWidth:20,halign:'center'},
+      1:{cellWidth:CW-20-22-22-26},
+      2:{cellWidth:22,halign:'right',textColor:[200,30,30]},
+      3:{cellWidth:22,halign:'right',textColor:[16,150,100]},
+      4:{cellWidth:26,halign:'right',fontStyle:'bold'}
+    },
+    alternateRowStyles:{fillColor:[250,250,252]},
+    didParseCell(data){
+      if(data.section==='body'&&data.column.index===4){
+        const v=parseFloat(data.cell.raw.replace(/[^0-9.-]/g,''));
+        data.cell.styles.textColor=data.cell.raw.startsWith('+')?[16,150,100]:[200,30,30];
+      }
+    }
+  });
+
+  // ── RÉCAP CATÉGORIES
+  const fy=doc.lastAutoTable.finalY+6;
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...BLACK);
+  doc.text('Recapitulatif par categorie',M,fy);
+
+  const catRows=Object.keys(CATS).map(cat=>{
+    const total=t.filter(x=>x.cat===cat).reduce((s,x)=>s+x.amt,0);
+    if(!total)return null;
+    return[cat,cat==='Revenu'?'+'+pf(total)+' F':'-'+pf(total)+' F'];
+  }).filter(Boolean);
+
+  doc.autoTable({
+    startY:fy+4,
+    head:[['Categorie','Montant']],
+    body:catRows,
+    margin:{left:M,right:M},
+    tableWidth:CW,
+    styles:{font:'helvetica',fontSize:8,cellPadding:2,textColor:BLACK},
+    headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold'},
+    columnStyles:{0:{cellWidth:CW*0.7},1:{cellWidth:CW*0.3,halign:'right',fontStyle:'bold'}}
+  });
+
+  // ── PIED DE PAGE
+  const pc=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pc;i++){
+    doc.setPage(i);
+    doc.setDrawColor(220,220,225);doc.line(M,285,W-M,285);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...GRAY);
+    doc.text("FII'NAS - Releve "+moisLabel+" - Document non contractuel",M,290);
+    doc.text('Page '+i+'/'+pc,W-M,290,'right');
+  }
+
+  doc.save('releve_fiinas_'+ym+'.pdf');
+  toast('Releve PDF genere');
+}
+
+function renderTrash(){
+  const el=document.getElementById('trash-list');
+  if(!el)return;
+  if(!trashBin.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Aucune transaction supprimée cette session</div>';
+    return;
+  }
+  el.innerHTML=trashBin.map(t=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.date} · ${new Intl.NumberFormat('fr-FR').format(t.amt)} F · ${(()=>{const left=Math.max(0,Math.round((TRASH_TTL-(Date.now()-new Date(t.deletedAt).getTime()))/60000));return left>0?'expire dans '+left+' min':'expire bientôt';})()}</div>
+      </div>
+      <button data-id="${t.id}" class="restore-btn"
+        style="padding:5px 10px;font-size:11px;border:0.5px solid var(--blue);border-radius:var(--rs);background:transparent;color:var(--blue);cursor:pointer;font-family:var(--font);white-space:nowrap">
+        Restaurer
+      </button>
+    </div>`).join('');
+  // Event delegation pour les boutons Restaurer
+  el.querySelectorAll('.restore-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>undoDelete(btn.dataset.id));
+  });
+}
+
+function syncEditPostes(selected){
+  const cat=document.getElementById('e-cat').value;
+  const ps=getAllPostes(cat);
+  document.getElementById('e-poste').innerHTML=ps.map(p=>`<option ${p===selected?'selected':''}>${p}</option>`).join('');
+}
+
+function toggleTheme(){
+  const isLight=document.documentElement.classList.toggle('light');
+  document.getElementById('theme-btn').textContent=isLight?'🌙':'☀️';
+  document.getElementById('theme-color-meta').content=isLight?'#f5f5f7':'#111111';
+  localStorage.setItem('fiinas-theme',isLight?'light':'dark');
+}
 let tt;
 function toast(msg){
   const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');
