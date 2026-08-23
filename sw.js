@@ -1,4 +1,4 @@
-const CACHE = 'fiinas-v4';
+const CACHE = 'fiinas-v5';
 const ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -18,7 +18,6 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
 
-  // Ne pas intercepter les requêtes vers Firebase, Anthropic API, etc.
   const url = new URL(e.request.url);
   const bypass = [
     'firebaseio.com',
@@ -37,7 +36,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => cached); // Si réseau échoue, retourner le cache
+      }).catch(() => cached);
 
       return cached || network;
     })
