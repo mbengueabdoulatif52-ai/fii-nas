@@ -623,7 +623,7 @@ const PC=['#3b82f6','#ef4444','#f59e0b','#a855f7','#22c55e','#ec4899','#06b6d4',
 const MFR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const MS=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
-let uid=null,txs=[],budget={},custom={},unsub1=null,unsub2=null;
+let uid=null,txs=[],budget={},custom={},unsub1=null,unsub2=null,isSavingSettings=false,lastSettingsHash='';
 let formDirty=false;
 function setFormDirty(v){formDirty=v;}
 let sharedSpaceId=null; // ID de l'espace partagé (null = espace perso)
@@ -719,6 +719,20 @@ function subscribe(){
   unsub2=onSnapshot(doc(db,dataPath()+'/data/settings'),snap=>{
     if(snap.exists()){
       const d=snap.data();
+      // Calculer un hash pour détecter si c'est un vrai changement externe
+      const newHash=JSON.stringify(d.budget||{})+JSON.stringify(d.custom||{})+(d.cats?JSON.stringify(d.cats):'');
+      if(isSavingSettings){
+        // C'est nous qui venons de sauvegarder — mettre à jour le hash mais pas budget
+        lastSettingsHash=newHash;
+        isSavingSettings=false;
+        return;
+      }
+      if(newHash===lastSettingsHash){
+        // Aucun changement réel — ignorer
+        return;
+      }
+      lastSettingsHash=newHash;
+      // Changement venant d'un autre appareil — mettre à jour
       budget=d.budget||{};
       custom=d.custom||{};
       loadCatsFromSettings(d);
@@ -733,6 +747,7 @@ function subscribe(){
 
 async function saveSettings(){
   const{db,doc,setDoc}=window._fb;
+  isSavingSettings=true;
   await setDoc(doc(db,dataPath()+'/data/settings'),{budget,custom,cats:CATS},{merge:true});
 }
 
