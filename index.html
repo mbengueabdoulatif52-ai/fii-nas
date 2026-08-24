@@ -107,6 +107,12 @@ body{font-family:var(--font);color:var(--text);max-width:480px;width:100%;margin
 .page.active{display:block}
 
 /* CARDS */
+
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.sk{background:linear-gradient(90deg,var(--surf2) 25%,var(--surf) 50%,var(--surf2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+.sk-line{height:12px;margin:6px 0;border-radius:6px}
+.sk-h{height:28px;margin:8px 0;border-radius:6px}
+.sk-card{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px}
 .card{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:10px}
 .ct{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
 
@@ -664,6 +670,7 @@ waitFB(()=>{
       document.getElementById('auth').style.display='none';
       document.getElementById('app').style.display='block';
       setUserUI(user);
+      renderSkeleton();
       buildMonthSel();
       loadUserSpaces();
   
@@ -758,6 +765,56 @@ function annualYear(){return parseInt(curYM().split('-')[1]);}
 function txYear(y){return txs.filter(t=>t.date&&t.date.startsWith(String(y)));}
 
 function onMChange(){renderCurrent();}
+
+function renderSkeleton(){
+  // Dashboard skeleton
+  const hero=document.getElementById('hero');
+  if(hero){
+    hero.innerHTML=`
+      <div class="sk sk-h" style="width:40%;margin-bottom:12px"></div>
+      <div class="sk sk-line" style="width:25%"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px">
+        <div class="sk" style="height:44px;border-radius:10px"></div>
+        <div class="sk" style="height:44px;border-radius:10px"></div>
+        <div class="sk" style="height:44px;border-radius:10px"></div>
+      </div>`;
+  }
+  const dc=document.getElementById('dc');
+  if(dc){
+    dc.innerHTML=`
+      <div class="sk-card">
+        <div class="sk sk-line" style="width:35%;height:10px;margin-bottom:14px"></div>
+        ${[1,2,3,4].map(()=>`
+          <div style="display:flex;justify-content:space-between;margin:10px 0">
+            <div class="sk sk-line" style="width:45%;height:10px;margin:0"></div>
+            <div class="sk sk-line" style="width:20%;height:10px;margin:0"></div>
+          </div>`).join('')}
+      </div>
+      <div class="sk-card">
+        <div class="sk sk-line" style="width:40%;height:10px;margin-bottom:14px"></div>
+        ${[1,2,3].map(()=>`
+          <div style="display:flex;justify-content:space-between;margin:10px 0">
+            <div class="sk sk-line" style="width:50%;height:10px;margin:0"></div>
+            <div class="sk sk-line" style="width:22%;height:10px;margin:0"></div>
+          </div>`).join('')}
+      </div>`;
+  }
+  // Historique skeleton
+  const txl=document.getElementById('txl');
+  if(txl){
+    txl.innerHTML=`<div class="card" style="padding:4px 15px">
+      ${[1,2,3,4,5,6,7].map((i)=>`
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--border)">
+          <div class="sk" style="width:36px;height:36px;border-radius:50%;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div class="sk sk-line" style="width:${40+i*7}%;height:11px;margin-bottom:6px"></div>
+            <div class="sk sk-line" style="width:${20+i*4}%;height:9px"></div>
+          </div>
+          <div class="sk sk-line" style="width:18%;height:11px;margin:0"></div>
+        </div>`).join('')}
+    </div>`;
+  }
+}
 
 function renderCurrent(){
   const id=document.querySelector('.page.active')?.id;
