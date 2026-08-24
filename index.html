@@ -2228,8 +2228,8 @@ async function exportPDF(){
   if(isAnnual()){toast('Export PDF disponible en vue mensuelle uniquement');return;}
   const t=txYM(ym);
   const rev=sumC(t,'Revenu');
-  const fix=sumC(t,'Depenses fixes');
-  const vr=sumC(t,'Depenses variables');
+  const fix=sumC(t,'Dépenses fixes');
+  const vr=sumC(t,'Dépenses variables');
   const ep=sumC(t,'Epargne');
   const dep=fix+vr+ep;
   const sol=rev-dep;
@@ -2296,8 +2296,8 @@ async function exportPDF(){
   // ── SECTIONS
   const catDef=[
     {cat:'Revenu',label:'REVENUS',color:cGREEN},
-    {cat:'Depenses fixes',label:'DEPENSES FIXES',color:cRED},
-    {cat:'Depenses variables',label:'DEPENSES VARIABLES',color:cRED},
+    {cat:'Dépenses fixes',label:'DEPENSES FIXES',color:cRED},
+    {cat:'Dépenses variables',label:'DEPENSES VARIABLES',color:cRED},
     {cat:'Epargne',label:'EPARGNE',color:cBLUE},
   ];
 
@@ -2405,9 +2405,9 @@ async function exportPDF(){
   if(y>255){doc.addPage();y=14;}
   y+=2;
   doc.setFillColor(...cDARK);
-  doc.rect(M,y,W-2*M,34,'F');
+  doc.rect(M,y,W-2*M,32,'F');
   doc.setFillColor(...cGREEN);
-  doc.rect(M,y,3,34,'F');
+  doc.rect(M,y,3,32,'F');
   doc.setFont('helvetica','bold');
   doc.setFontSize(7.5);
   doc.setTextColor(...cTEXT2);
@@ -2429,7 +2429,7 @@ async function exportPDF(){
     doc.setTextColor(...cTEXT2);
     doc.text(item.label,M+7,ry+3);
     doc.setTextColor(...item.color);
-    doc.text(item.val,W-M-7,ry+3,{align:'right'});
+    doc.text(item.val,W-M-4,ry+3,{align:'right'});
     ry+=6.5;
   });
 
