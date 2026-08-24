@@ -342,6 +342,15 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       <input id="tx-search" class="finp" type="text" placeholder="Rechercher poste, commentaire, montant..." style="padding-left:36px;font-size:13px" oninput="renderTX()">
     </div>
+    <div id="poste-banner" style="display:none;align-items:center;justify-content:space-between;background:rgba(77,159,255,.1);border:0.5px solid rgba(77,159,255,.3);border-radius:var(--rs);padding:8px 12px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--blue)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Poste : <strong id="poste-banner-label"></strong>
+      </div>
+      <button onclick="clearPosteFilter()" style="background:transparent;border:none;color:var(--blue);cursor:pointer;font-size:16px;line-height:1;padding:0 2px">×</button>
+    </div>
+    <div style="display:none">
+    </div>
     <div class="tabs" id="txf">
       <button class="tab active" onclick="setTF(this,'all')">Toutes</button>
       <button class="tab" onclick="setTF(this,'Revenu')">Revenus</button>
@@ -623,7 +632,7 @@ function setFormDirty(v){formDirty=v;}
 let sharedSpaceId=null; // ID de l'espace partagé (null = espace perso)
 let userRole='admin';   // 'admin' ou 'reader'
 let userName='';        // Nom affiché sur les transactions
-let txFilt='all',dTab='all',bYear=new Date().getFullYear().toString(),bMonth=new Date().getMonth()+1;
+let txFilt='all',txPosteFilter='',dTab='all',bYear=new Date().getFullYear().toString(),bMonth=new Date().getMonth()+1;
 let selCatVal='Dépenses variables';
 
 const _fmt=v=>new Intl.NumberFormat('fr-FR').format(Math.round(Math.abs(v)));
@@ -1015,7 +1024,7 @@ function renderDC(){
         ?(b===0&&r>0?'var(--green)':rawPct>=100?'var(--green)':rawPct>=80?'var(--amber)':'var(--red)')
         :(b===0&&r>0?'var(--red)':rawPct>100?'var(--red)':rawPct===100?'var(--amber)':'var(--green)');
       const pctTxt=pc!==null?(pc+'%'):(r>0?(isPos?'✓':'⚠'):'—');
-      rows+=`<tr><td>${p}</td><td class="${cl}">${fmt(r)}</td><td style="color:var(--text3)">${b>0?fmt(b):'—'}</td><td style="color:var(--text3)">${pctTxt}</td></tr><tr><td colspan="4" style="padding:0 5px 6px"><div class="pb"><div class="pbr" style="width:${bw}%;background:${bc};min-width:${r>0?'4px':'0'}"></div></div></td></tr>`;
+      rows+=`<tr><td style="cursor:pointer" onclick="goPoste('${p}','${cat}')">${p} <span style="font-size:10px;color:var(--blue);opacity:.7">›</span></td><td class="${cl}">${fmt(r)}</td><td style="color:var(--text3)">${b>0?fmt(b):'—'}</td><td style="color:var(--text3)">${pctTxt}</td></tr><tr><td colspan="4" style="padding:0 5px 6px"><div class="pb"><div class="pbr" style="width:${bw}%;background:${bc};min-width:${r>0?'4px':'0'}"></div></div></td></tr>`;
     });
     if(!rows&&dTab!=='all')return;
     html+=`<div class="card">
@@ -1160,13 +1169,52 @@ async function undoDelete(id){
 }
 
 // TX LIST
+function goPoste(poste,cat){
+  txPosteFilter=poste;
+  // Mapper cat vers txFilt
+  const catMap={'Revenu':'rev','Dépenses fixes':'fix','Dépenses variables':'var','Epargne':'epa'};
+  txFilt=catMap[cat]||'all';
+  // Activer le bon onglet dans l'historique
+  document.querySelectorAll('#txf .tab').forEach(b=>b.classList.remove('active'));
+  const tabMap={'rev':1,'fix':2,'var':3,'epa':4};
+  const tabIdx=tabMap[txFilt];
+  if(tabIdx){const tabs=document.querySelectorAll('#txf .tab');if(tabs[tabIdx])tabs[tabIdx].classList.add('active');}
+  else{const tabs=document.querySelectorAll('#txf .tab');if(tabs[0])tabs[0].classList.add('active');}
+  // Naviguer vers historique
+  const btn=document.querySelectorAll('.ni')[1];
+  goP('tx',btn);
+}
+
+function clearPosteFilter(){
+  txPosteFilter='';
+  const b=document.getElementById('poste-banner');
+  if(b)b.style.display='none';
+  renderTX();
+}
+
 function setTF(el,f){
   document.querySelectorAll('#txf .tab').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');txFilt=f;renderTX();
+  el.classList.add('active');txFilt=f;txPosteFilter='';renderTX();
 }
 function renderTX(){
   let t=isAnnual()?txYear(annualYear()):txYM(curYM());
-  if(txFilt!=='all')t=t.filter(x=>x.cat===txFilt);
+  // Filtre catégorie
+  const catFromFilt={'rev':'Revenu','fix':'Dépenses fixes','var':'Dépenses variables','epa':'Epargne'};
+  if(txFilt!=='all'&&catFromFilt[txFilt])t=t.filter(x=>x.cat===catFromFilt[txFilt]);
+  else if(txFilt!=='all')t=t.filter(x=>x.cat===txFilt);
+  // Filtre poste
+  if(txPosteFilter)t=t.filter(x=>x.poste===txPosteFilter);
+  // Bannière
+  const banner=document.getElementById('poste-banner');
+  const bannerLabel=document.getElementById('poste-banner-label');
+  if(banner){
+    if(txPosteFilter){
+      banner.style.display='flex';
+      if(bannerLabel)bannerLabel.textContent=txPosteFilter;
+    } else {
+      banner.style.display='none';
+    }
+  }
   const q=(document.getElementById('tx-search')?.value||'').toLowerCase().trim();
   if(q)t=t.filter(x=>(x.poste||'').toLowerCase().includes(q)||(x.cmt||'').toLowerCase().includes(q)||String(x.amt).includes(q));
   const countEl=document.getElementById('tx-count');
