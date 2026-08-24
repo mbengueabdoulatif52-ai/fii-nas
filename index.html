@@ -2222,14 +2222,14 @@ window.addEventListener('DOMContentLoaded',()=>{
 // EXPORT PDF — Relevé bancaire style
 // ══════════════════════════════════════════
 async function exportPDF(){
-  if(typeof window.jspdf==='undefined'){toast('jsPDF non chargé');return;}
+  if(typeof window.jspdf==='undefined'){toast('jsPDF non charge');return;}
   const{jsPDF}=window.jspdf;
   const ym=curYM();
   if(isAnnual()){toast('Export PDF disponible en vue mensuelle uniquement');return;}
   const t=txYM(ym);
   const rev=sumC(t,'Revenu');
-  const fix=sumC(t,'Dépenses fixes');
-  const vr=sumC(t,'Dépenses variables');
+  const fix=sumC(t,'Depenses fixes');
+  const vr=sumC(t,'Depenses variables');
   const ep=sumC(t,'Epargne');
   const dep=fix+vr+ep;
   const sol=rev-dep;
@@ -2237,46 +2237,41 @@ async function exportPDF(){
 
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W=210,M=14;
-  // Couleurs en RGB
   const cDARK=[10,22,40],cGREEN=[0,200,130],cRED=[220,60,80],cBLUE=[60,140,220];
   const cTEXT=[30,45,70],cTEXT2=[100,120,150],cSURF=[245,247,252],cBORDER=[210,218,230];
+  const cLIGHT=[248,250,253],cHD=[232,237,245];
 
-  // Formatage des montants sans espace insécable (jsPDF-safe)
-  const fmtPDF=n=>Math.round(n||0).toLocaleString('fr-FR').replace(/\u202f/g,' ').replace(/\u00a0/g,' ');
+  const fmtPDF=n=>Math.round(Math.abs(n||0)).toLocaleString('fr-FR').replace(/\u202f/g,' ').replace(/\u00a0/g,' ');
+  const fmtDate=d=>{if(!d)return'';const p=d.split('-');return p.length===3?p[2]+'/'+p[1]:d;};
 
-  // ── EN-TÊTE
+  // ── EN-TETE
   doc.setFillColor(...cDARK);
-  doc.rect(0,0,W,40,'F');
+  doc.rect(0,0,W,38,'F');
   doc.setFillColor(...cGREEN);
-  doc.rect(0,37,W,3,'F');
-
+  doc.rect(0,35,W,3,'F');
   doc.setFont('helvetica','bold');
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.setTextColor(...cGREEN);
-  doc.text("FII'NAS",M,16);
-
+  doc.text("FII'NAS",M,15);
   doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(180,200,220);
-  doc.text('Releve financier personnel',M,24);
-  doc.text(yml(ym).toUpperCase(),M,31);
-  doc.setFontSize(8);
-  doc.text('Genere le '+new Date().toLocaleDateString('fr-FR'),W-M,31,{align:'right'});
+  doc.text('Releve financier personnel',M,22);
+  doc.text(yml(ym).toUpperCase(),M,29);
+  doc.setFontSize(7.5);
+  doc.text('Genere le '+new Date().toLocaleDateString('fr-FR'),W-M,29,{align:'right'});
 
-  // ── RÉSUMÉ
-  let y=48;
+  // ── RESUME
+  let y=46;
   doc.setFont('helvetica','bold');
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(...cTEXT2);
   doc.text('SOLDE NET DU MOIS',M,y);
-
-  y+=6;
-  doc.setFontSize(20);
+  y+=5;
+  doc.setFontSize(18);
   if(sol>=0)doc.setTextColor(...cGREEN);else doc.setTextColor(...cRED);
   doc.text((sol>=0?'+':'-')+fmtPDF(sol)+' FCFA',M,y);
-
-  // 3 colonnes
-  y+=8;
+  y+=7;
   const cw=(W-2*M)/3;
   const cols=[
     {label:'Revenus',val:fmtPDF(rev)+' F',color:cGREEN},
@@ -2286,152 +2281,156 @@ async function exportPDF(){
   cols.forEach((c,i)=>{
     const x=M+i*cw;
     doc.setFillColor(...cSURF);
-    doc.roundedRect(x,y,cw-2,13,2,2,'F');
+    doc.roundedRect(x,y,cw-2,12,2,2,'F');
     doc.setFont('helvetica','normal');
-    doc.setFontSize(7.5);
+    doc.setFontSize(7);
     doc.setTextColor(...cTEXT2);
-    doc.text(c.label,x+3,y+5);
+    doc.text(c.label,x+3,y+4.5);
     doc.setFont('helvetica','bold');
-    doc.setFontSize(9.5);
+    doc.setFontSize(9);
     doc.setTextColor(...c.color);
     doc.text(c.val,x+3,y+10);
   });
+  y+=18;
 
-  // ── SECTIONS PAR CATÉGORIE
-  y+=20;
+  // ── SECTIONS
   const catDef=[
     {cat:'Revenu',label:'REVENUS',color:cGREEN},
     {cat:'Depenses fixes',label:'DEPENSES FIXES',color:cRED},
     {cat:'Depenses variables',label:'DEPENSES VARIABLES',color:cRED},
     {cat:'Epargne',label:'EPARGNE',color:cBLUE},
   ];
-  // Map cat label to actual cat names
-  const catMap={'Revenu':'Revenu','Depenses fixes':'Dépenses fixes','Depenses variables':'Dépenses variables','Epargne':'Epargne'};
 
   catDef.forEach(({cat,label,color})=>{
-    const realCat=catMap[cat];
-    const postes=getAllPostes(realCat);
-    // Regrouper les transactions par poste avec commentaires
-    const posteData={};
-    t.filter(x=>x.cat===realCat).forEach(x=>{
-      if(!posteData[x.poste])posteData[x.poste]={total:0,cmts:[]};
-      posteData[x.poste].total+=x.amt;
-      if(x.cmt)posteData[x.poste].cmts.push(x.cmt);
+    const postes=getAllPostes(cat);
+    // Regrouper par poste avec détail des transactions
+    const posteMap={};
+    t.filter(x=>x.cat===cat).forEach(x=>{
+      if(!posteMap[x.poste])posteMap[x.poste]={total:0,txs:[]};
+      posteMap[x.poste].total+=x.amt;
+      posteMap[x.poste].txs.push({amt:x.amt,date:x.date,cmt:x.cmt||''});
     });
     // Budget par poste
     const budMap={};
     postes.forEach(p=>{const b=gBud(ym,p);if(b>0)budMap[p]=b;});
-    const rows=postes.filter(p=>posteData[p]||budMap[p]).map(p=>({
-      p,reel:posteData[p]?.total||0,bud:budMap[p]||0,
-      cmts:[...new Set(posteData[p]?.cmts||[])].slice(0,2)
+    const rows=postes.filter(p=>posteMap[p]||budMap[p]).map(p=>({
+      p,total:posteMap[p]?.total||0,bud:budMap[p]||0,
+      txs:(posteMap[p]?.txs||[]).sort((a,b)=>(a.date||'').localeCompare(b.date||''))
     }));
     if(!rows.length)return;
-    const total=rows.reduce((s,r)=>s+r.reel,0);
+    const total=rows.reduce((s,r)=>s+r.total,0);
 
-    // Estimer hauteur nécessaire
-    const hNeeded=10+6+rows.reduce((s,r)=>s+6+(r.cmts.length?3.5:0),0)+4;
-    if(y+hNeeded>285){doc.addPage();y=14;}
+    // Estimer hauteur
+    const hNeeded=10+6+rows.reduce((s,r)=>s+7+r.txs.length*5.5,0)+5;
+    if(y+Math.min(hNeeded,40)>285){doc.addPage();y=14;}
 
-    // En-tête section
+    // En-tete section
     doc.setFillColor(...cDARK);
-    doc.rect(M,y,W-2*M,7.5,'F');
+    doc.rect(M,y,W-2*M,7,'F');
     doc.setFont('helvetica','bold');
     doc.setFontSize(8);
     doc.setTextColor(...color);
-    doc.text(label,M+3,y+5.2);
+    doc.text(label,M+3,y+5);
     doc.setTextColor(180,200,220);
-    doc.text(fmtPDF(total)+' F',W-M-3,y+5.2,{align:'right'});
-    y+=9;
+    doc.text(fmtPDF(total)+' F',W-M-3,y+5,{align:'right'});
+    y+=8.5;
 
-    // En-tête colonnes
-    doc.setFillColor(...cBORDER);
-    doc.rect(M,y-1,W-2*M,5.5,'F');
+    // En-tete colonnes
+    doc.setFillColor(...cHD);
+    doc.rect(M,y-1,W-2*M,5,'F');
     doc.setFont('helvetica','bold');
     doc.setFontSize(7);
     doc.setTextColor(...cTEXT2);
-    doc.text('Poste',M+2,y+3);
-    doc.text('Reel',W-M-42,y+3,{align:'right'});
-    doc.text('Budget',W-M-22,y+3,{align:'right'});
-    doc.text('Ecart',W-M-2,y+3,{align:'right'});
-    y+=6.5;
+    doc.text('Poste / Date / Detail',M+2,y+2.8);
+    doc.text('Montant',W-M-42,y+2.8,{align:'right'});
+    doc.text('Budget',W-M-22,y+2.8,{align:'right'});
+    doc.text('Ecart',W-M-2,y+2.8,{align:'right'});
+    y+=6;
 
-    // Lignes
-    rows.forEach((r,i)=>{
-      if(y>285){doc.addPage();y=14;}
-      if(i%2===0){doc.setFillColor(248,250,253);doc.rect(M,y-1,W-2*M,5.5+(r.cmts.length?3.5:0),'F');}
-      const over=r.bud>0&&r.reel>r.bud;
-      const ecart=r.bud>0?r.reel-r.bud:null;
-      const isRev=realCat==='Revenu';
-
-      doc.setFont('helvetica','normal');
+    // Lignes postes + sous-détails
+    rows.forEach((r,ri)=>{
+      if(y>280){doc.addPage();y=14;}
+      // Ligne poste (total)
+      if(ri%2===0){doc.setFillColor(...cLIGHT);}else{doc.setFillColor(255,255,255);}
+      doc.rect(M,y-1,W-2*M,6,'F');
+      const over=r.bud>0&&r.total>r.bud;
+      const ecart=r.bud>0?r.total-r.bud:null;
+      const isRev=cat==='Revenu';
+      doc.setFont('helvetica','bold');
       doc.setFontSize(8);
       doc.setTextColor(...cTEXT);
-      doc.text(r.p.slice(0,32),M+2,y+3);
-
-      // Réel
+      doc.text(r.p.slice(0,34),M+2,y+3.5);
       if(isRev)doc.setTextColor(...cGREEN);
       else if(over)doc.setTextColor(...cRED);
       else doc.setTextColor(...cTEXT);
-      doc.text(fmtPDF(r.reel)+' F',W-M-42,y+3,{align:'right'});
-
-      // Budget
+      doc.text(fmtPDF(r.total)+' F',W-M-42,y+3.5,{align:'right'});
       doc.setTextColor(...cTEXT2);
-      doc.text(r.bud?fmtPDF(r.bud)+' F':'--',W-M-22,y+3,{align:'right'});
-
-      // Écart
+      doc.text(r.bud?fmtPDF(r.bud)+' F':'--',W-M-22,y+3.5,{align:'right'});
       if(ecart===null)doc.setTextColor(...cTEXT2);
       else if(ecart>0)doc.setTextColor(...cRED);
       else doc.setTextColor(...cGREEN);
-      doc.text(ecart===null?'--':(ecart>0?'+':'')+fmtPDF(ecart)+' F',W-M-2,y+3,{align:'right'});
+      doc.text(ecart===null?'--':(ecart>0?'+':'')+fmtPDF(ecart)+' F',W-M-2,y+3.5,{align:'right'});
+      y+=6.5;
 
-      y+=5.5;
-
-      // Commentaires
-      if(r.cmts.length){
-        doc.setFont('helvetica','italic');
-        doc.setFontSize(6.5);
+      // Sous-détails: chaque transaction
+      r.txs.forEach(tx=>{
+        if(y>280){doc.addPage();y=14;}
+        doc.setFillColor(250,252,254);
+        doc.rect(M,y-0.5,W-2*M,5,'F');
+        // Tiret visuel
+        doc.setDrawColor(...cBORDER);
+        doc.setLineWidth(0.2);
+        doc.line(M+4,y+2,M+6,y+2);
+        // Date
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(7);
         doc.setTextColor(...cTEXT2);
-        doc.text(r.cmts.join(' · ').slice(0,60),M+4,y+2);
-        y+=3.5;
-      }
+        doc.text(fmtDate(tx.date),M+8,y+3);
+        // Commentaire
+        if(tx.cmt){
+          doc.setTextColor(120,140,160);
+          doc.text(tx.cmt.slice(0,38),M+22,y+3);
+        }
+        // Montant individuel
+        doc.setTextColor(...cTEXT2);
+        doc.text(fmtPDF(tx.amt)+' F',W-M-42,y+3,{align:'right'});
+        y+=5;
+      });
+      y+=1.5;
     });
-    y+=5;
+    y+=4;
   });
 
-  // ── RÉCAPITULATIF
+  // ── RECAPITULATIF
   if(y>255){doc.addPage();y=14;}
   y+=2;
   doc.setFillColor(...cDARK);
-  doc.rect(M,y,W-2*M,36,'F');
+  doc.rect(M,y,W-2*M,34,'F');
   doc.setFillColor(...cGREEN);
-  doc.rect(M,y,3,36,'F');
-
+  doc.rect(M,y,3,34,'F');
   doc.setFont('helvetica','bold');
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(...cTEXT2);
   doc.text('RECAPITULATIF',M+7,y+7);
-
   const recap=[
     {label:'Revenus totaux',val:fmtPDF(rev)+' F',color:cGREEN,bold:false},
     {label:'- Depenses totales',val:fmtPDF(dep)+' F',color:cRED,bold:false},
-    {label:'Solde net',val:(sol>=0?'+':'')+fmtPDF(sol)+' F',color:sol>=0?cGREEN:cRED,bold:true},
-    {label:"Taux d'epargne",val:taux+'%',color:taux>=15?cGREEN:taux>=5?[220,160,50]:cRED,bold:false},
+    {label:'Solde net',val:(sol>=0?'+':'-')+fmtPDF(sol)+' F',color:sol>=0?cGREEN:cRED,bold:true},
+    {label:"Taux d'epargne",val:taux+'%',color:taux>=15?cGREEN:taux>=5?[200,150,40]:cRED,bold:false},
   ];
-
   let ry=y+13;
   recap.forEach((item,i)=>{
     if(i===2){
-      doc.setDrawColor(...cGREEN);
-      doc.setLineWidth(0.3);
+      doc.setDrawColor(...cGREEN);doc.setLineWidth(0.3);
       doc.line(M+7,ry-1,W-M-7,ry-1);
     }
     doc.setFont('helvetica',item.bold?'bold':'normal');
-    doc.setFontSize(item.bold?9.5:8.5);
+    doc.setFontSize(item.bold?9:8);
     doc.setTextColor(...cTEXT2);
     doc.text(item.label,M+7,ry+3);
     doc.setTextColor(...item.color);
     doc.text(item.val,W-M-7,ry+3,{align:'right'});
-    ry+=7;
+    ry+=6.5;
   });
 
   // Pied de page
