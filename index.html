@@ -1057,7 +1057,6 @@ function subscribe(){
     const oldHash=txs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
     txs=newTxs;
     if(firstLoad||newHash!==oldHash)renderCurrent();
-    if(firstLoad)
   });
   if(unsub2)unsub2();
   unsub2=onSnapshot(doc(db,dataPath()+'/data/settings'),snap=>{
