@@ -2401,37 +2401,43 @@ async function exportPDF(){
     y+=4;
   });
 
-  // ── RECAPITULATIF
+  // ── RECAPITULATIF option B — lignes épurées
   if(y>255){doc.addPage();y=14;}
-  y+=2;
-  doc.setFillColor(...cDARK);
-  doc.rect(M,y,W-2*M,32,'F');
-  doc.setFillColor(...cGREEN);
-  doc.rect(M,y,3,32,'F');
+  y+=4;
   doc.setFont('helvetica','bold');
   doc.setFontSize(7.5);
   doc.setTextColor(...cTEXT2);
-  doc.text('RECAPITULATIF',M+7,y+7);
+  doc.text('RECAPITULATIF',M,y);
+  y+=5;
+  // Ligne séparatrice haut
+  doc.setDrawColor(...cBORDER);
+  doc.setLineWidth(0.4);
+  doc.line(M,y,W-M,y);
+  y+=5;
   const recap=[
-    {label:'Revenus totaux',val:fmtPDF(rev)+' F',color:cGREEN,bold:false},
-    {label:'- Depenses totales',val:fmtPDF(dep)+' F',color:cRED,bold:false},
-    {label:'Solde net',val:(sol>=0?'+':'-')+fmtPDF(sol)+' F',color:sol>=0?cGREEN:cRED,bold:true},
-    {label:"Taux d'epargne",val:taux+'%',color:taux>=15?cGREEN:taux>=5?[200,150,40]:cRED,bold:false},
+    {label:'Revenus totaux',val:fmtPDF(rev)+' F',color:cGREEN,bold:false,line:false},
+    {label:'- Depenses totales',val:fmtPDF(dep)+' F',color:cRED,bold:false,line:false},
+    {label:'Solde net',val:(sol>=0?'+':'-')+fmtPDF(Math.abs(sol))+' F',color:sol>=0?cGREEN:cRED,bold:true,line:true},
+    {label:"Taux d'epargne",val:taux+'%',color:taux>=15?cGREEN:taux>=5?[200,150,40]:cRED,bold:false,line:false},
   ];
-  let ry=y+13;
-  recap.forEach((item,i)=>{
-    if(i===2){
-      doc.setDrawColor(...cGREEN);doc.setLineWidth(0.3);
-      doc.line(M+7,ry-1,W-M-7,ry-1);
+  recap.forEach(item=>{
+    if(item.line){
+      doc.setDrawColor(...cBORDER);
+      doc.setLineWidth(0.3);
+      doc.line(M,y-1,W-M,y-1);
     }
     doc.setFont('helvetica',item.bold?'bold':'normal');
-    doc.setFontSize(item.bold?9:8);
+    doc.setFontSize(item.bold?10:8.5);
     doc.setTextColor(...cTEXT2);
-    doc.text(item.label,M+7,ry+3);
+    doc.text(item.label,M,y+3.5);
     doc.setTextColor(...item.color);
-    doc.text(item.val,W-M-4,ry+3,{align:'right'});
-    ry+=6.5;
+    doc.text(item.val,W-M,y+3.5,{align:'right'});
+    y+=7;
   });
+  // Ligne séparatrice bas
+  doc.setDrawColor(...cBORDER);
+  doc.setLineWidth(0.4);
+  doc.line(M,y,W-M,y);
 
   // Pied de page
   const pages=doc.getNumberOfPages();
