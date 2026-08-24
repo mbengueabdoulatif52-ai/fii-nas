@@ -937,30 +937,51 @@ function renderDashAnnual(){
   const posteMap={};t.filter(x=>x.cat!=='Revenu').forEach(x=>{posteMap[x.poste]=(posteMap[x.poste]||0)+x.amt;});
   const topPostes=Object.entries(posteMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
   const topRows=topPostes.map(([p,v])=>`<tr><td>${p}</td><td colspan="2" style="color:var(--red)">${fmt(v)} F</td><td style="color:var(--text3)">${dep>0?Math.round(v/dep*100)+'%':'—'}</td></tr>`).join('');
-  document.getElementById('dc').innerHTML=`
-    <div class="card">
-      <div class="ct">Bilan mensuel ${y}</div>
-      <table class="rtbl"><thead><tr><th>Mois</th><th>Revenus</th><th>Dépenses</th><th>Solde</th></tr></thead>
-      <tbody>${monthRows||'<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text3)">Aucune donnée</td></tr>'}</tbody></table>
-      ${best&&worst?`<div style="display:flex;gap:12px;margin-top:12px">
-        <div style="flex:1;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.05em">Meilleur mois</div>
-          <div style="font-size:14px;font-weight:600;margin-top:4px">${best.m}</div>
-          <div style="font-size:13px;color:var(--green);font-family:var(--mono)">+${fmt(best.sol)} F</div>
-        </div>
-        <div style="flex:1;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.05em">Mois difficile</div>
-          <div style="font-size:14px;font-weight:600;margin-top:4px">${worst.m}</div>
-          <div style="font-size:13px;color:var(--red);font-family:var(--mono)">${worst.sol>=0?'+':'−'}${fmt(worst.sol)} F</div>
-        </div>
-      </div>`:''}
-    </div>
-    <div class="card">
-      <div class="ct">Top dépenses ${y}</div>
-      <table class="rtbl"><thead><tr><th>Poste</th><th colspan="2">Total</th><th>% dép.</th></tr></thead>
-      <tbody>${topRows||'<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text3)">Aucune donnée</td></tr>'}</tbody></table>
+  // Tableau par poste : réel annuel vs budget annuel
+  const cats=['Revenu','Dépenses fixes','Dépenses variables','Epargne'];
+  const catColors={'Revenu':'var(--green)','Dépenses fixes':'var(--red)','Dépenses variables':'var(--red)','Epargne':'var(--blue)'};
+  let dcHtml='';
+  cats.forEach(cat=>{
+    const postes=getAllPostes(cat);
+    const actMap={};
+    t.filter(x=>x.cat===cat).forEach(x=>{actMap[x.poste]=(actMap[x.poste]||0)+x.amt;});
+    const totalReel=Object.values(actMap).reduce((s,v)=>s+v,0);
+    if(!totalReel&&!postes.some(p=>gBud(ymk(y,1),p)>0))return;
+    // Budget annuel = somme des 12 mois
+    const budMap={};
+    postes.forEach(p=>{
+      let b=0;for(let m=1;m<=12;m++)b+=gBud(ymk(y,m),p);
+      if(b>0)budMap[p]=b;
+    });
+    const totalBud=Object.values(budMap).reduce((s,v)=>s+v,0);
+    const rows=postes.filter(p=>actMap[p]||budMap[p]).map(p=>{
+      const r=actMap[p]||0;const b=budMap[p]||0;
+      const over=b>0&&r>b;
+      const isRev=cat==='Revenu';
+      return`<tr>
+        <td style="padding:7px 4px;color:var(--text2)">${p}</td>
+        <td style="text-align:right;font-family:var(--mono);padding:7px 4px;color:${over?'var(--red)':isRev?'var(--green)':'var(--text)'}">${fmt(r)} F</td>
+        <td style="text-align:right;font-family:var(--mono);padding:7px 4px;color:var(--text3)">${b?fmt(b)+' F':'—'}</td>
+        <td style="text-align:right;padding:7px 4px;font-size:10px;color:${over?'var(--red)':'var(--text3)'}">${b?Math.round(r/b*100)+'%':'—'}</td>
+      </tr>`;
+    }).join('');
+    if(!rows)return;
+    dcHtml+=`<div class="card">
+      <div class="ct">${cat}<span style="float:right;font-family:var(--mono);color:${catColors[cat]}">${fmt(totalReel)} F${totalBud?` / ${fmt(totalBud)} F`:''}</span></div>
+      <table class="rtbl" style="width:100%">
+        <thead><tr>
+          <th style="text-align:left">Poste</th>
+          <th style="text-align:right">Réel</th>
+          <th style="text-align:right">Budget</th>
+          <th style="text-align:right">%</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
     </div>`;
+  });
+  document.getElementById('dc').innerHTML=dcHtml||`<div style="text-align:center;padding:30px;color:var(--text3)">Aucune transaction en ${y}</div>`;
 }
+
 
 function mc(lbl,val,bud,cnt=false){
   const p=bud>0?Math.round(val/bud*100):null;
