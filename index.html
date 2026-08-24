@@ -2270,7 +2270,7 @@ async function exportPDF(){
 
   y+=7;
   doc.setFontSize(24);
-  doc.setTextColor(sol>=0?GREEN:RED);
+  if(sol>=0)doc.setTextColor(...GREEN);else doc.setTextColor(...RED);
   doc.text((sol>=0?'+':'')+fmt(sol)+' FCFA',M,y);
 
   // 3 colonnes résumé
@@ -2352,11 +2352,15 @@ async function exportPDF(){
       doc.setFontSize(8);
       doc.setTextColor(40,60,90);
       doc.text(r.p.slice(0,30),M+2,y+3.5);
-      doc.setTextColor(...(isRev?GREEN:over?RED:[40,60,90]));
+      if(isRev)doc.setTextColor(...GREEN);
+      else if(over)doc.setTextColor(...RED);
+      else doc.setTextColor(40,60,90);
       doc.text(fmt(r.reel)+' F',W-M-42,y+3.5,{align:'right'});
       doc.setTextColor(120,140,160);
       doc.text(r.bud?fmt(r.bud)+' F':'—',W-M-22,y+3.5,{align:'right'});
-      doc.setTextColor(ecart===null?[120,140,160]:ecart>0?RED:GREEN);
+      if(ecart===null)doc.setTextColor(120,140,160);
+      else if(ecart>0)doc.setTextColor(...RED);
+      else doc.setTextColor(...GREEN);
       doc.text(ecart===null?'—':(ecart>0?'+':'')+fmt(ecart)+' F',W-M-2,y+3.5,{align:'right'});
       y+=6.5;
     });
