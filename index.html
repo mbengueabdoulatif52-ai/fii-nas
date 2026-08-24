@@ -326,23 +326,6 @@ select option{background:#2c2c2e;color:#f5f5f7}
         <div class="flbl">Commentaire (facultatif)</div>
         <input class="finp" type="text" id="f-cmt" placeholder="Wave, Yango, MAB Ibrahima...">
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;margin-bottom:4px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
-        <div>
-          <div style="font-size:13px;font-weight:500;color:var(--text)">Transaction récurrente</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Se répète automatiquement chaque mois</div>
-        </div>
-        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
-          <input type="checkbox" id="f-recur" style="opacity:0;width:0;height:0" onchange="toggleRecurOptions()">
-          <span id="recur-toggle" style="position:absolute;inset:0;background:var(--surf2);border-radius:12px;transition:.2s;border:1px solid var(--border)"></span>
-          <span id="recur-knob" style="position:absolute;left:3px;top:3px;width:16px;height:16px;background:var(--text3);border-radius:50%;transition:.2s"></span>
-        </label>
-      </div>
-      <div id="recur-options" style="display:none;margin-bottom:8px">
-        <div class="flbl" style="margin-bottom:6px">Jour du mois</div>
-        <select class="fsel" id="f-recur-day">
-          <option value='1'>1</option><option value='2'>2</option><option value='3'>3</option><option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option><option value='8'>8</option><option value='9'>9</option><option value='10'>10</option><option value='11'>11</option><option value='12'>12</option><option value='13'>13</option><option value='14'>14</option><option value='15'>15</option><option value='16'>16</option><option value='17'>17</option><option value='18'>18</option><option value='19'>19</option><option value='20'>20</option><option value='21'>21</option><option value='22'>22</option><option value='23'>23</option><option value='24'>24</option><option value='25'>25</option><option value='26'>26</option><option value='27'>27</option><option value='28'>28</option>
-        </select>
-      </div>
       <button class="btn-p" id="bsave" onclick="saveTx()">
         <span id="bsave-inner" style="display:flex;align-items:center;justify-content:center;gap:8px">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
@@ -375,17 +358,6 @@ select option{background:#2c2c2e;color:#f5f5f7}
     <div class="ytabs" id="ytabs"></div>
     <div class="mtabs" id="mtabs"></div>
     <div id="bud-solde"></div>
-    <!-- Copier budget -->
-    <div class="card" style="padding:12px 16px;margin-bottom:10px">
-      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Copier un budget existant</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <select class="fsel" id="copy-src" style="flex:1;padding:9px 12px;font-size:13px"></select>
-        <button onclick="copyBudget()" style="padding:9px 14px;background:var(--surf2);border:0.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:.15s">
-          Copier
-        </button>
-      </div>
-      <div id="copy-msg" style="font-size:11px;color:var(--green);margin-top:6px;min-height:14px"></div>
-    </div>
     <div id="bform"></div>
     <button class="btn-p" onclick="saveBudget()" style="margin-top:4px;margin-bottom:2px">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
@@ -455,38 +427,11 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <div id="cpui"></div>
     </div>
     <div class="card">
-      <div class="ct">Transactions récurrentes</div>
-      <div id="recur-list"></div>
-    </div>
-    <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="ct" style="margin-bottom:0">Corbeille récente</div>
         <button onclick="renderTrash()" style="font-size:11px;color:var(--text3);background:transparent;border:none;cursor:pointer;font-family:var(--font)">Actualiser</button>
       </div>
       <div id="trash-list"></div>
-    </div>
-    <div class="card">
-      <div class="ct">Évolution patrimoniale</div>
-      <div id="patrimoine-ui"><div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Chargement...</div></div>
-    </div>
-    <div class="card">
-      <div class="ct">Évolution 6 mois</div>
-      <div class="chwrap"><canvas id="cm" role="img" aria-label="Évolution mensuelle revenus et dépenses"></canvas></div>
-      <div class="pleg" id="cmleg"></div>
-    </div>
-    <div class="card">
-      <div class="ct">Répartition dépenses — mois sélectionné</div>
-      <div class="chwrap" style="height:180px"><canvas id="cp" role="img" aria-label="Répartition des dépenses"></canvas></div>
-      <div class="pleg" id="cpleg"></div>
-    </div>
-    <div class="card">
-      <div class="ct">Analyse des habitudes</div>
-      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="analyse-period">
-        <button class="tab active" onclick="setAnalysePeriod(this,3)">3 mois</button>
-        <button class="tab" onclick="setAnalysePeriod(this,6)">6 mois</button>
-        <button class="tab" onclick="setAnalysePeriod(this,12)">12 mois</button>
-      </div>
-      <div id="analyse-content"></div>
     </div>
   </div>
 
@@ -671,6 +616,7 @@ const PC=['#3b82f6','#ef4444','#f59e0b','#a855f7','#22c55e','#ec4899','#06b6d4',
 const MFR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const MS=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
+let pendingSaves=0,lastSettingsHash='';
 let uid=null,txs=[],budget={},custom={},unsub1=null,unsub2=null;
 let formDirty=false;
 function setFormDirty(v){formDirty=v;}
@@ -678,7 +624,6 @@ let sharedSpaceId=null; // ID de l'espace partagé (null = espace perso)
 let userRole='admin';   // 'admin' ou 'reader'
 let userName='';        // Nom affiché sur les transactions
 let txFilt='all',dTab='all',bYear=new Date().getFullYear().toString(),bMonth=new Date().getMonth()+1;
-let charts={};
 let selCatVal='Dépenses variables';
 
 const _fmt=v=>new Intl.NumberFormat('fr-FR').format(Math.round(Math.abs(v)));
@@ -712,7 +657,7 @@ waitFB(()=>{
       setUserUI(user);
       buildMonthSel();
       loadUserSpaces();
-  buildMissingSnapshots().catch(()=>{});
+  
   checkLockOnStart();
       document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
       syncPostes();
@@ -761,27 +706,31 @@ function subscribe(){
     const oldHash=txs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
     txs=newTxs;
     if(firstLoad||newHash!==oldHash)renderCurrent();
-    if(firstLoad)checkRecurring();
+    
   });
   if(unsub2)unsub2();
   unsub2=onSnapshot(doc(db,dataPath()+'/data/settings'),snap=>{
+    if(pendingSaves>0){pendingSaves--;return;}
     if(snap.exists()){
       const d=snap.data();
-      budget=d.budget||{};
-      custom=d.custom||{};
-      loadCatsFromSettings(d);
+      const newHash=JSON.stringify(d.budget||{});
+      if(newHash!==lastSettingsHash){
+        budget=d.budget||{};
+        custom=d.custom||{};
+        loadCatsFromSettings(d);
+      }
     } else {
-      // Premier login — initialiser avec DEFAULT_CATS
       CATS=JSON.parse(JSON.stringify(DEFAULT_CATS));
-      saveSettings(); // fire-and-forget on first login intentional
+      saveSettings();
     }
     renderCurrent();renderCPUI();
-    if(document.getElementById('page-pro')?.classList.contains('active'))renderCharts();
   });
 }
 
 async function saveSettings(){
   const{db,doc,setDoc}=window._fb;
+  lastSettingsHash=JSON.stringify(budget);
+  pendingSaves+=2;
   await setDoc(doc(db,dataPath()+'/data/settings'),{budget,custom,cats:CATS},{merge:true});
 }
 
@@ -805,7 +754,7 @@ function renderCurrent(){
   const id=document.querySelector('.page.active')?.id;
   if(id==='page-dash')renderDash();
   else if(id==='page-tx')renderTX();
-  else if(id==='page-pro'){renderCharts();renderCPUI();}
+  else if(id==='page-pro'){renderCPUI();}
 }
 
 function goP(p,btn){
@@ -824,7 +773,7 @@ function goP(p,btn){
   if(p==='dash')renderDash();
   else if(p==='tx')renderTX();
   else if(p==='bud')renderBudPage();
-  else if(p==='pro'){renderCharts();renderCPUI();renderRecurList();renderTrash();renderSecurityUI();renderPatrimoine();renderAnalyse();renderSpacesUI();}
+  else if(p==='pro'){renderCPUI();renderTrash();renderSecurityUI();renderSpacesUI();}
   else if(p==='add'){syncPostes();document.getElementById('fmsg').textContent='';}
   else if(p==='imp'){document.getElementById('imp-log').style.display='none';document.getElementById('imp-pb').style.width='0%';document.getElementById('imp-pt').textContent='En attente';}
 }
@@ -1064,11 +1013,8 @@ async function saveTx(){
   const inner=document.getElementById('bsave-inner');
   btn.disabled=true;
   if(inner)inner.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" style="animation:sp .8s linear infinite" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Enregistrement…';
-  const isRecur=document.getElementById('f-recur')?.checked||false;
-  const recurDay=isRecur?parseInt(document.getElementById('f-recur-day')?.value||'1'):null;
   const{db,collection,addDoc}=window._fb;
   const data={amt,date,cat:selCatVal,poste,cmt,ts:new Date().toISOString(),createdBy:userName,createdById:uid};
-  if(isRecur){data.recur=true;data.recurDay=recurDay;}
   try{
     await addDoc(collection(db,dataPath()+'/transactions'),data);
   }catch(e){
@@ -1077,12 +1023,10 @@ async function saveTx(){
   document.getElementById('f-amt').value='';
   document.getElementById('f-cmt').value='';
   document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
-  const recurCb=document.getElementById('f-recur');
-  if(recurCb&&recurCb.checked){recurCb.checked=false;toggleRecurOptions();}
   btn.disabled=false;
   if(inner)inner.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg> Enregistrer';
   toast(navigator.onLine
-    ?(isRecur?'Transaction récurrente enregistrée ✓':'Transaction enregistrée ✓')
+    ?'Transaction enregistrée ✓'
     :'Enregistré hors ligne · sync au retour du réseau');
   setFormDirty(false);
   goP('tx',document.querySelectorAll('.ni')[1]);
@@ -1164,8 +1108,6 @@ async function undoDelete(id){
   if(!tx)return;
   const{db,collection,addDoc}=window._fb;
   const data={amt:tx.amt,date:tx.date,cat:tx.cat,poste:tx.poste,cmt:tx.cmt||'',ts:tx.ts||new Date().toISOString()};
-  if(tx.recur)data.recur=tx.recur;
-  if(tx.recurDay)data.recurDay=tx.recurDay;
   addDoc(collection(db,dataPath()+'/transactions'),data);
   const idx=trashBin.findIndex(t=>t.id===id);
   if(idx>-1)trashBin.splice(idx,1);
@@ -1185,7 +1127,7 @@ function setTF(el,f){
   el.classList.add('active');txFilt=f;renderTX();
 }
 function renderTX(){
-  const ym=curYM();let t=txYM(ym);
+  let t=isAnnual()?txYear(annualYear()):txYM(curYM());
   if(txFilt!=='all')t=t.filter(x=>x.cat===txFilt);
   const q=(document.getElementById('tx-search')?.value||'').toLowerCase().trim();
   if(q)t=t.filter(x=>(x.poste||'').toLowerCase().includes(q)||(x.cmt||'').toLowerCase().includes(q)||String(x.amt).includes(q));
@@ -1205,7 +1147,7 @@ function renderTX(){
       <div class="txic ${cl}">${CICO[x.cat]||'●'}</div>
       <div class="txin">
         <div class="txp">${hi(x.poste||'',q)}</div>
-        <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span>${x.auto?' <span style="font-size:9px;color:var(--text3)">🔄</span>':''}</div>
+        <div class="txm">${x.date}${x.cmt?' · '+hi(x.cmt,q):''} <span class="bdg ${cl}">${x.cat}</span></div>
         ${getTxBadge(x)?'<div style="font-size:10px;margin-top:2px">'+getTxBadge(x)+'</div>':''}
       </div>
       <div class="txr">
@@ -1223,41 +1165,16 @@ function renderBudPage(){
   document.getElementById('ytabs').innerHTML=years.map(y=>`<button class="ytab ${y.toString()===bYear?'active':''}" onclick="setBY(this,'${y}')">${y}</button>`).join('');
   document.getElementById('mtabs').innerHTML=MFR.map((m,i)=>`<button class="mtab ${(i+1)===bMonth?'active':''}" onclick="setBM(this,${i+1})">${MS[i]}</button>`).join('');
   renderBForm();
-  populateCopySrc();
+  
 }
 
-function populateCopySrc(){
-  const sel=document.getElementById('copy-src');
-  if(!sel)return;
-  // Les 3 mois précédents du mois SÉLECTIONNÉ dans le budget (bYear, bMonth)
-  const prev=[];
-  for(let i=1;i<=3;i++){
-    const d=new Date(parseInt(bYear),parseInt(bMonth)-1-i,1);
-    prev.push(ymk(d.getFullYear(),d.getMonth()+1));
-  }
-  sel.innerHTML=prev.map(ym=>`<option value="${ym}">${yml(ym)}${budget[ym]&&Object.keys(budget[ym]).length?' ✓':''}</option>`).join('');
-}
-
-async function copyBudget(){
-  const sel=document.getElementById('copy-src');
-  const srcYm=sel?.value;
-  if(!srcYm||!budget[srcYm]){
-    document.getElementById('copy-msg').style.color='var(--red)';
-    document.getElementById('copy-msg').textContent='Aucun budget trouvé pour ce mois.';
-    return;
-  }
-  const destYm=ymk(bYear,bMonth);
-  // Deep copy
-  budget[destYm]={...budget[srcYm]};
-  await saveSettings();
+function setBY(el,y){
+  document.querySelectorAll('.ytab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  bYear=y;
   renderBForm();
-  const msg=document.getElementById('copy-msg');
-  msg.style.color='var(--green)';
-  msg.textContent='Budget de '+yml(srcYm)+' copié avec succès ✓';
-  setTimeout(()=>{if(msg)msg.textContent='';},3000);
 }
-function setBY(el,y){document.querySelectorAll('.ytab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bYear=y;renderBForm();populateCopySrc();}
-function setBM(el,m){document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bMonth=m;renderBForm();populateCopySrc();}
+function setBM(el,m){document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bMonth=m;renderBForm();}
 function calcBudSolde(ym){
   // Lire les valeurs en direct depuis les inputs si disponibles, sinon depuis budget sauvegardé
   const bud=budget[ym]||{};
@@ -1342,36 +1259,6 @@ async function saveBudget(){
 }
 
 // CHARTS
-function renderCharts(){
-  const now=new Date();
-  const l6=[];for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);l6.push(ymk(d.getFullYear(),d.getMonth()+1));}
-  if(charts.m)charts.m.destroy();
-  charts.m=new Chart(document.getElementById('cm'),{
-    type:'bar',
-    data:{labels:l6.map(m=>MS[parseInt(m.split('-')[1])-1]),datasets:[
-      {label:'Revenus',data:l6.map(m=>sumC(txYM(m),'Revenu')),backgroundColor:'#22c55e',borderRadius:4},
-      {label:'Fixes',data:l6.map(m=>sumC(txYM(m),'Dépenses fixes')),backgroundColor:'#3b82f6',borderRadius:4},
-      {label:'Variables',data:l6.map(m=>sumC(txYM(m),'Dépenses variables')),backgroundColor:'#ef4444',borderRadius:4}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},
-      scales:{x:{ticks:{color:'#555',font:{size:10}},grid:{display:false},border:{display:false}},
-              y:{ticks:{color:'#555',font:{size:9},callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}}}
-  });
-  document.getElementById('cmleg').innerHTML=[['#22c55e','Revenus'],['#3b82f6','Fixes'],['#ef4444','Variables']].map(([c,n])=>`<div class="pli"><div class="pld" style="background:${c}"></div>${n}</div>`).join('');
-
-  const ym=curYM();const pm={};
-  txYM(ym).filter(t=>t.cat!=='Revenu').forEach(t=>{pm[t.poste]=(pm[t.poste]||0)+t.amt;});
-  const pe=Object.entries(pm).sort((a,b)=>b[1]-a[1]).slice(0,9);
-  if(!pe.length)return;
-  if(charts.p)charts.p.destroy();
-  charts.p=new Chart(document.getElementById('cp'),{
-    type:'doughnut',
-    data:{labels:pe.map(([n])=>n),datasets:[{data:pe.map(([,v])=>v),backgroundColor:PC,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,animation:false,cutout:'60%',plugins:{legend:{display:false}}}
-  });
-  const tot=pe.reduce((s,[,v])=>s+v,0);
-  document.getElementById('cpleg').innerHTML=pe.map(([n,v],i)=>`<div class="pli"><div class="pld" style="background:${PC[i]}"></div>${n} <span style="color:var(--text3);margin-left:2px">${Math.round(v/tot*100)}%</span></div>`).join('');
-}
 
 // CUSTOM POSTES
 function renderCPUI(){
@@ -1872,167 +1759,13 @@ async function loadUserSpace_old(){
 // SNAPSHOTS — Patrimoine mensuel
 // ══════════════════════════════════════════
 
-async function computeSnapshot(ym){
-  // Reconstruit le snapshot d'un mois depuis les transactions Firebase
-  const{db,collection,query,where,getDocs}=window._fb;
-  try{
-    const txRef=collection(db,dataPath()+'/transactions');
-    const snap=await getDocs(query(txRef,where('ym','==',ym)));
-    const txList=snap.docs.map(d=>({...d.data(),id:d.id}));
-    const rev=txList.filter(t=>t.cat==='Revenu').reduce((s,t)=>s+t.amt,0);
-    const dep=txList.filter(t=>t.cat==='Dépenses fixes'||t.cat==='Dépenses variables').reduce((s,t)=>s+t.amt,0);
-    const epa=txList.filter(t=>t.cat==='Epargne').reduce((s,t)=>s+t.amt,0);
-    return{ym,rev,dep,epa,sol:rev-dep-epa};
-  }catch(e){return{ym,rev:0,dep:0,epa:0,sol:0};}
-}
 
-async function saveSnapshot(ym,data){
-  const{db,doc,setDoc}=window._fb;
-  await setDoc(doc(db,dataPath()+'/data/snapshots/'+ym),{
-    ...data,
-    savedAt:new Date().toISOString()
-  });
-}
 
-async function loadSnapshots(){
-  const{db,collection,getDocs}=window._fb;
-  try{
-    const snap=await getDocs(collection(db,dataPath()+'/data/snapshots'));
-    const result={};
-    snap.docs.forEach(d=>{result[d.id]=d.data();});
-    return result;
-  }catch(e){return{};}
-}
 
-async function buildMissingSnapshots(){
-  // Reconstruit tous les snapshots manquants depuis les transactions existantes
-  const{db,collection,getDocs}=window._fb;
-  try{
-    const txRef=collection(db,dataPath()+'/transactions');
-    const allTx=await getDocs(txRef);
-    const months=new Set();
-    allTx.docs.forEach(d=>{
-      const ym=d.data().ym||d.data().date?.slice(0,7);
-      if(ym)months.add(ym);
-    });
-    const existing=await loadSnapshots();
-    const today=new Date();
-    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
-    for(const ym of [...months].sort()){
-      if(ym>=curYm)continue; // Ne pas snapshoter le mois en cours
-      if(!existing[ym]){
-        const data=await computeSnapshot(ym);
-        await saveSnapshot(ym,data);
-        console.log('Snapshot built:',ym);
-      }
-    }
-  }catch(e){console.error('buildMissingSnapshots:',e);}
-}
 
-async function triggerSnapshotOnTx(txYm){
-  // Appelé à chaque nouvelle transaction
-  // Si c'est la première tx du mois en cours → snapshoter le mois précédent
-  const today=new Date();
-  const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
-  if(txYm!==curYm)return;
-  // Calculer le mois précédent
-  const d=new Date(today.getFullYear(),today.getMonth()-1,1);
-  const prevYm=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  // Vérifier si snapshot existe déjà
-  const{db,doc,getDoc}=window._fb;
-  try{
-    const snap=await getDoc(doc(db,dataPath()+'/data/snapshots/'+prevYm));
-    if(!snap.exists()){
-      const data=await computeSnapshot(prevYm);
-      await saveSnapshot(prevYm,data);
-      console.log('Auto snapshot:',prevYm);
-    }
-  }catch(e){}
-}
 
-async function recalculateSnapshot(ym){
-  const data=await computeSnapshot(ym);
-  await saveSnapshot(ym,data);
-  toast('Snapshot '+yml(ym)+' recalculé ✓');
-  renderPatrimoine();
-}
 
-async function computePatrimoineToday(){
-  // Calcule épargne cumulée, solde net cumulé, patrimoine net depuis toutes les transactions
-  const{db,collection,getDocs}=window._fb;
-  try{
-    const today=new Date();
-    const curYm=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
-    const allTx=await getDocs(collection(db,dataPath()+'/transactions'));
-    let epaCumul=0,solCumul=0;
-    allTx.docs.forEach(d=>{
-      const t=d.data();
-      if(t.cat==='Epargne'){
-        epaCumul+=t.amt;   // épargne cumulée
-        solCumul-=t.amt;   // épargne = sortie du solde net
-      } else if(t.cat==='Revenu'){
-        solCumul+=t.amt;
-      } else {
-        solCumul-=t.amt;   // dépenses fixes + variables
-      }
-    });
-    return{epaCumul,solCumul,patrimoine:epaCumul+solCumul};
-  }catch(e){return{epaCumul:0,solCumul:0,patrimoine:0};}
-}
 
-async function renderPatrimoine(){
-  const el=document.getElementById('patrimoine-ui');
-  if(!el)return;
-  el.innerHTML='<div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Calcul en cours...</div>';
-  const snapshots=await loadSnapshots();
-  const{epaCumul,solCumul,patrimoine}=await computePatrimoineToday();
-  const sorted=Object.keys(snapshots).sort();
-  let html=`<div style="margin-bottom:16px">
-    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:12px">À aujourd'hui</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Épargne cumulée</div>
-        <div style="font-size:13px;font-weight:600;color:var(--green)">${fmt(epaCumul)} F</div>
-      </div>
-      <div style="background:var(--surf2);border-radius:var(--rs);padding:10px;text-align:center">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Solde net cumulé</div>
-        <div style="font-size:13px;font-weight:600;color:${solCumul>=0?'var(--green)':'var(--red)'}">${solCumul>=0?'+':''}${fmt(solCumul)} F</div>
-      </div>
-      <div style="background:${patrimoine>=0?'var(--gd)':'rgba(255,59,48,.1)'};border-radius:var(--rs);padding:10px;text-align:center;border:1px solid ${patrimoine>=0?'rgba(16,185,129,.3)':'rgba(255,59,48,.3)'}">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Patrimoine net</div>
-        <div style="font-size:13px;font-weight:700;color:${patrimoine>=0?'var(--green)':'var(--red)'}">${patrimoine>=0?'+':''}${fmt(patrimoine)} F</div>
-      </div>
-    </div>
-  </div>`;
-
-  if(sorted.length>0){
-    html+=`<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Historique mensuel</div>`;
-    let cumEpa=0,cumSol=0;
-    sorted.forEach(ym=>{
-      const s=snapshots[ym];
-      cumEpa+=s.epa||0;
-      cumSol+=s.sol||0;
-      const pat=cumEpa+cumSol;
-      const barW=Math.min(100,Math.abs(pat)/Math.max(...sorted.map(y=>{
-        let ce=0,cs=0;
-        sorted.filter(yy=>yy<=y).forEach(yy=>{ce+=snapshots[yy].epa||0;cs+=snapshots[yy].sol||0;});
-        return Math.abs(ce+cs);
-      }))*100)||0;
-      html+=`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)">
-        <div style="font-size:12px;color:var(--text2);width:70px;flex-shrink:0">${yml(ym)}</div>
-        <div style="flex:1;height:4px;background:var(--surf2);border-radius:2px;overflow:hidden">
-          <div style="width:${barW}%;height:100%;background:${pat>=0?'var(--green)':'var(--red)'};border-radius:2px"></div>
-        </div>
-        <div style="font-size:12px;font-weight:600;color:${pat>=0?'var(--green)':'var(--red)'};width:80px;text-align:right">${pat>=0?'+':''}${fmt(pat)} F</div>
-        <button onclick="recalculateSnapshot('${ym}')" style="font-size:10px;padding:2px 6px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">↺</button>
-      </div>`;
-    });
-  } else {
-    html+=`<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">Les snapshots se constituent automatiquement dès ta première transaction du mois.</div>`;
-  }
-
-  el.innerHTML=html;
-}
 
 
 // ══════════════════════════════════════════
@@ -2302,106 +2035,8 @@ function renderSecurityUI(){
 }
 
 // ANALYSE DES HABITUDES
-let analysePeriod=3;
 
-function setAnalysePeriod(el,n){
-  document.querySelectorAll('#analyse-period .tab').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  analysePeriod=n;
-  renderAnalyse();
-}
 
-function renderAnalyse(){
-  const el=document.getElementById('analyse-content');
-  if(!el)return;
-
-  const now=new Date();
-  const months=[];
-  for(let i=1;i<=analysePeriod;i++){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    months.push(ymk(d.getFullYear(),d.getMonth()+1));
-  }
-
-  // Moyennes par poste
-  const posteMap={};
-  months.forEach(m=>{
-    txYM(m).filter(t=>t.cat!=='Revenu').forEach(t=>{
-      if(!posteMap[t.poste])posteMap[t.poste]={total:0,count:0};
-      posteMap[t.poste].total+=t.amt;
-      posteMap[t.poste].count++;
-    });
-  });
-
-  const avgByPoste=Object.entries(posteMap)
-    .map(([p,v])=>({p,avg:Math.round(v.total/analysePeriod)}))
-    .filter(x=>x.avg>0)
-    .sort((a,b)=>b.avg-a.avg);
-
-  // Mois courant pour comparaison
-  const curYm=ymk(now.getFullYear(),now.getMonth()+1);
-  const curTxs=txYM(curYm);
-  const curByPoste={};
-  curTxs.filter(t=>t.cat!=='Revenu').forEach(t=>{
-    curByPoste[t.poste]=(curByPoste[t.poste]||0)+t.amt;
-  });
-
-  // Résumé intelligent
-  const totalAvgDep=avgByPoste.reduce((s,x)=>s+x.avg,0);
-  const topPoste=avgByPoste[0];
-  const mostVariable=Object.entries(posteMap)
-    .map(([p,v])=>{
-      const vals=months.map(m=>txYM(m).filter(t=>t.poste===p).reduce((s,t)=>s+t.amt,0));
-      const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
-      const variance=vals.reduce((s,v)=>s+Math.abs(v-avg),0)/vals.length;
-      return{p,variance};
-    })
-    .sort((a,b)=>b.variance-a.variance)[0];
-
-  // Meilleur mois
-  const bestMonth=months.map(m=>{
-    const t=txYM(m);
-    const r=sumC(t,'Revenu');
-    const d=sumC(t,'Dépenses fixes')+sumC(t,'Dépenses variables')+sumC(t,'Epargne');
-    return{m,sol:r-d};
-  }).sort((a,b)=>b.sol-a.sol)[0];
-
-  let html='';
-
-  // Résumé
-  html+=`<div style="background:var(--surf2);border-radius:var(--rs);padding:14px;margin-bottom:14px">
-    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Résumé · ${analysePeriod} derniers mois</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${topPoste?`<div style="font-size:13px;color:var(--text)">💸 Poste principal : <span style="font-weight:500">${topPoste.p}</span> — moy. ${fmt(topPoste.avg)} F/mois</div>`:''}
-      ${mostVariable?`<div style="font-size:13px;color:var(--text)">📊 Plus variable : <span style="font-weight:500">${mostVariable.p}</span></div>`:''}
-      ${bestMonth&&bestMonth.sol>0?`<div style="font-size:13px;color:var(--text)">🏆 Meilleur mois : <span style="font-weight:500">${yml(bestMonth.m)}</span> (+${fmt(bestMonth.sol)} F)</div>`:''}
-      <div style="font-size:13px;color:var(--text)">📈 Dépenses moyennes : <span style="font-weight:500">${fmt(totalAvgDep)} F/mois</span></div>
-    </div>
-  </div>`;
-
-  // Tableau moyennes vs mois actuel
-  html+=`<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Moyenne vs mois actuel</div>`;
-  if(!avgByPoste.length){
-    html+='<div class="empty">Pas assez de données</div>';
-  } else {
-    html+=`<table class="rtbl"><thead><tr><th>Poste</th><th>Moyenne</th><th>Ce mois</th><th>Écart</th></tr></thead><tbody>`;
-    avgByPoste.slice(0,10).forEach(({p,avg})=>{
-      const cur=curByPoste[p]||0;
-      const diff=cur-avg;
-      const pct=avg>0?Math.round(diff/avg*100):0;
-      const cl=diff>0?'ov':diff<0?'ok':'';
-      const sign=diff>=0?'↑':'↓';
-      html+=`<tr>
-        <td>${p}</td>
-        <td style="color:var(--text2)">${fmt(avg)}</td>
-        <td style="color:var(--text2)">${cur>0?fmt(cur):'—'}</td>
-        <td class="${cl}">${cur>0?sign+Math.abs(pct)+'%':'—'}</td>
-      </tr>`;
-    });
-    html+=`</tbody></table>`;
-  }
-
-  el.innerHTML=html;
-}
 
 // MODE HORS LIGNE
 function updateOnlineStatus(){
@@ -2432,89 +2067,7 @@ function getTxBadge(x){
 }
 
 // TRANSACTIONS RÉCURRENTES
-function toggleRecurOptions(){
-  const cb=document.getElementById('f-recur');
-  const opts=document.getElementById('recur-options');
-  const knob=document.getElementById('recur-knob');
-  const toggle=document.getElementById('recur-toggle');
-  if(cb.checked){
-    opts.style.display='block';
-    toggle.style.background='rgba(10,132,255,.25)';
-    toggle.style.borderColor='rgba(10,132,255,.4)';
-    knob.style.background='var(--blue)';
-    knob.style.left='23px';
-  } else {
-    opts.style.display='none';
-    toggle.style.background='var(--surf2)';
-    toggle.style.borderColor='var(--border)';
-    knob.style.background='var(--text3)';
-    knob.style.left='3px';
-  }
-}
 
-async function checkRecurring(){
-  if(!uid)return;
-  const recurring=txs.filter(t=>t.recur===true);
-  if(!recurring.length)return;
-  const now=new Date();
-  const curYm=ymk(now.getFullYear(),now.getMonth()+1);
-  const{db,collection,addDoc}=window._fb;
-  let created=0;
-  for(const rt of recurring){
-    // Vérifier si cette récurrente existe déjà ce mois (par recurId + mois)
-    const alreadyExists=txs.some(t=>
-      t.recurId===rt.id &&
-      t.date&&t.date.startsWith(curYm)
-    );
-    if(!alreadyExists){
-      const[y,m]=curYm.split('-');
-      const day=rt.recurDay||1;
-      const maxDay=new Date(parseInt(y),parseInt(m),0).getDate();
-      const date=curYm+'-'+String(Math.min(day,maxDay)).padStart(2,'0');
-      await addDoc(collection(db,dataPath()+'/transactions'),{
-        amt:rt.amt,date,cat:rt.cat,poste:rt.poste,
-        cmt:(rt.cmt||'')+'',
-        ts:new Date().toISOString(),
-        recurId:rt.id,
-        auto:true
-      });
-      created++;
-    }
-  }
-  if(created>0)toast(created+' transaction'+(created>1?'s':'')+' récurrente'+(created>1?'s':'')+' ajoutée'+(created>1?'s':'')+' ✓');
-}
-
-
-
-function renderRecurList(){
-  const el=document.getElementById('recur-list');
-  if(!el)return;
-  const recurring=txs.filter(t=>t.recur===true);
-  if(!recurring.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Aucune transaction récurrente</div>';
-    return;
-  }
-  el.innerHTML=recurring.map(t=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">
-          ${new Intl.NumberFormat('fr-FR').format(t.amt)} F · le ${t.recurDay||1} de chaque mois
-          <span class="bdg ${CCLS[t.cat]||'v'}" style="margin-left:4px">${t.cat}</span>
-        </div>
-      </div>
-      <button onclick="deleteRecur('${t.id}')"
-        style="padding:5px 10px;font-size:11px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">
-        Supprimer
-      </button>
-    </div>`).join('');
-}
-
-async function deleteRecur(id){
-  const{db,doc,deleteDoc}=window._fb;
-  await deleteDoc(doc(db,dataPath()+'/transactions/'+id));
-  toast('Transaction récurrente supprimée');
-}
 
 
 function renderTrash(){
