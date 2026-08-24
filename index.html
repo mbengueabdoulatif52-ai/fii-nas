@@ -1008,7 +1008,8 @@ waitFB(()=>{
       setUserUI(user);
       buildMonthSel();
       loadUserSpaces();
-  buildMissingSnapshots().catch(()=>{});
+  // buildMissingSnapshots désactivé — chemin Firestore invalide
+  // buildMissingSnapshots().catch(()=>{});
   checkLockOnStart();
       document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
       syncPostes();
