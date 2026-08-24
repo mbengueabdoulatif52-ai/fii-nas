@@ -788,6 +788,23 @@ function setDTab(el,k){
   el.classList.add('active');dTab=k;renderDC();
 }
 
+function computePatrimoineToday(){
+  let epaCumul=0;
+  let solCumul=0;
+  txs.forEach(t=>{
+    if(t.cat==='Epargne'){
+      epaCumul+=t.amt;
+      solCumul-=t.amt;
+    } else if(t.cat==='Revenu'){
+      solCumul+=t.amt;
+    } else {
+      solCumul-=t.amt;
+    }
+  });
+  return{epaCumul,solCumul,patrimoine:epaCumul+solCumul};
+}
+
+
 async function renderDash(){
   if(isAnnual()){renderDashAnnual();return;}
   const ym=curYM();const t=txYM(ym);
@@ -810,7 +827,7 @@ async function renderDash(){
   };
 
   // Patrimoine temps réel
-  const{epaCumul,solCumul,patrimoine}=await computePatrimoineToday();
+  const{epaCumul,solCumul,patrimoine}=computePatrimoineToday();
 
   document.getElementById('hero').innerHTML=`
     <div class="hlbl">SOLDE NET · ${yml(ym).toUpperCase()}</div>
