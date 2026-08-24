@@ -326,21 +326,303 @@ select option{background:#2c2c2e;color:#f5f5f7}
         <div class="flbl">Commentaire (facultatif)</div>
         <input class="finp" type="text" id="f-cmt" placeholder="Wave, Yango, MAB Ibrahima...">
       </div>
-      TYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FII'NAS">
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#1d3461">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f0f0f" id="theme-color-meta">
-<title>FII'NAS</title>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;margin-bottom:4px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--text)">Transaction récurrente</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Se répète automatiquement chaque mois</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+          <input type="checkbox" id="f-recur" style="opacity:0;width:0;height:0" onchange="toggleRecurOptions()">
+          <span id="recur-toggle" style="position:absolute;inset:0;background:var(--surf2);border-radius:12px;transition:.2s;border:1px solid var(--border)"></span>
+          <span id="recur-knob" style="position:absolute;left:3px;top:3px;width:16px;height:16px;background:var(--text3);border-radius:50%;transition:.2s"></span>
+        </label>
+      </div>
+      <div id="recur-options" style="display:none;margin-bottom:8px">
+        <div class="flbl" style="margin-bottom:6px">Jour du mois</div>
+        <select class="fsel" id="f-recur-day">
+          <option value='1'>1</option><option value='2'>2</option><option value='3'>3</option><option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option><option value='8'>8</option><option value='9'>9</option><option value='10'>10</option><option value='11'>11</option><option value='12'>12</option><option value='13'>13</option><option value='14'>14</option><option value='15'>15</option><option value='16'>16</option><option value='17'>17</option><option value='18'>18</option><option value='19'>19</option><option value='20'>20</option><option value='21'>21</option><option value='22'>22</option><option value='23'>23</option><option value='24'>24</option><option value='25'>25</option><option value='26'>26</option><option value='27'>27</option><option value='28'>28</option>
+        </select>
+      </div>
+      <button class="btn-p" id="bsave" onclick="saveTx()">
+        <span id="bsave-inner" style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+          Enregistrer
+        </span>
+      </button>
+      <div id="fmsg" style="font-size:11px;text-align:center;margin-top:7px;min-height:14px;color:var(--red)"></div>
+    </div>
+  </div>
+
+  <!-- PAGE HISTORIQUE -->
+  <div id="page-tx" class="page">
+    <div style="position:relative;margin-bottom:10px">
+      <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input id="tx-search" class="finp" type="text" placeholder="Rechercher poste, commentaire, montant..." style="padding-left:36px;font-size:13px" oninput="renderTX()">
+    </div>
+    <div class="tabs" id="txf">
+      <button class="tab active" onclick="setTF(this,'all')">Toutes</button>
+      <button class="tab" onclick="setTF(this,'Revenu')">Revenus</button>
+      <button class="tab" onclick="setTF(this,'Dépenses fixes')">Fixes</button>
+      <button class="tab" onclick="setTF(this,'Dépenses variables')">Variables</button>
+      <button class="tab" onclick="setTF(this,'Epargne')">Épargne</button>
+    </div>
+    <div id="tx-count" style="font-size:11px;color:var(--text3);margin-bottom:8px;text-align:right"></div>
+    <div class="card" id="txl" style="padding:4px 15px"></div>
+  </div>
+
+  <!-- PAGE BUDGET -->
+  <div id="page-bud" class="page">
+    <div class="ytabs" id="ytabs"></div>
+    <div class="mtabs" id="mtabs"></div>
+    <div id="bud-solde"></div>
+    <!-- Copier budget -->
+    <div class="card" style="padding:12px 16px;margin-bottom:10px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Copier un budget existant</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="fsel" id="copy-src" style="flex:1;padding:9px 12px;font-size:13px"></select>
+        <button onclick="copyBudget()" style="padding:9px 14px;background:var(--surf2);border:0.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:.15s">
+          Copier
+        </button>
+      </div>
+      <div id="copy-msg" style="font-size:11px;color:var(--green);margin-top:6px;min-height:14px"></div>
+    </div>
+    <div id="bform"></div>
+    <button class="btn-p" onclick="saveBudget()" style="margin-top:4px;margin-bottom:2px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+      Enregistrer le budget
+    </button>
+  </div>
+
+  <!-- PAGE PROFIL -->
+  <div id="page-pro" class="page">
+    <div class="card" style="cursor:pointer" onclick="exportPDF()">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:42px;height:42px;background:var(--surf2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--text)">Exporter relevé PDF</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Relevé bancaire du mois sélectionné</div>
+        </div>
+        <div style="margin-left:auto;color:var(--text3);font-size:18px">›</div>
+      </div>
+    </div>
+    <div class="card" style="background:linear-gradient(135deg,#0f1a2e,#0d1520);border:1px solid rgba(59,130,246,.25);cursor:pointer" onclick="goP('imp',null)">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:42px;height:42px;background:rgba(59,130,246,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:#f0f0f0">Importer des relevés</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">Wave, Orange Money ou fichier Excel</div>
+        </div>
+        <div style="margin-left:auto;color:#555;font-size:18px">›</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Compte</div>
+      <div class="srow">
+        <div>
+          <div class="slbl" id="pname">—</div>
+          <div class="ssub" id="pemail">—</div>
+        </div>
+        <div class="av" id="pav" style="width:40px;height:40px;font-size:15px"></div>
+      </div>
+      <div class="srow">
+        <div>
+          <div class="slbl">Rôle actuel</div>
+          <div class="ssub" id="role-display">Admin · Espace personnel</div>
+        </div>
+      </div>
+      <div class="srow">
+        <div>
+          <div class="slbl">Déconnexion</div>
+          <div class="ssub">Retour à l'écran de connexion</div>
+        </div>
+        <button class="btn-o" onclick="doSignOut()">Quitter</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Sécurité</div>
+      <div id="security-ui"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Mes espaces</div>
+      <div id="spaces-ui"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Postes personnalisés</div>
+      <div id="cpui"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Transactions récurrentes</div>
+      <div id="recur-list"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="ct" style="margin-bottom:0">Corbeille récente</div>
+        <button onclick="renderTrash()" style="font-size:11px;color:var(--text3);background:transparent;border:none;cursor:pointer;font-family:var(--font)">Actualiser</button>
+      </div>
+      <div id="trash-list"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Évolution patrimoniale</div>
+      <div id="patrimoine-ui"><div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Chargement...</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Évolution 6 mois</div>
+      <div class="chwrap"><canvas id="cm" role="img" aria-label="Évolution mensuelle revenus et dépenses"></canvas></div>
+      <div class="pleg" id="cmleg"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Répartition dépenses — mois sélectionné</div>
+      <div class="chwrap" style="height:180px"><canvas id="cp" role="img" aria-label="Répartition des dépenses"></canvas></div>
+      <div class="pleg" id="cpleg"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Analyse des habitudes</div>
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="analyse-period">
+        <button class="tab active" onclick="setAnalysePeriod(this,3)">3 mois</button>
+        <button class="tab" onclick="setAnalysePeriod(this,6)">6 mois</button>
+        <button class="tab" onclick="setAnalysePeriod(this,12)">12 mois</button>
+      </div>
+      <div id="analyse-content"></div>
+    </div>
+  </div>
+
+  <!-- PAGE IMPORT -->
+  <div id="page-imp" class="page">
+    <button onclick="goP('pro',document.querySelectorAll('.ni')[4])" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--text2);font-size:13px;cursor:pointer;padding:0 0 12px;font-family:var(--font)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Retour
+    </button>
+
+    <!-- IMPORT WAVE / ORANGE MONEY -->
+    <div class="card">
+      <div class="ct">Import Wave / Orange Money</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Fais une capture d'écran de ton historique Wave ou Orange Money et uploade-la. L'IA va lire les transactions automatiquement.</p>
+
+      <!-- Upload zone -->
+      <div id="img-drop-zone" onclick="document.getElementById('img-input').click()"
+        style="border:1.5px dashed var(--border2);border-radius:var(--r);padding:28px 20px;text-align:center;cursor:pointer;transition:.15s;margin-bottom:12px">
+        <div style="font-size:24px;margin-bottom:8px">📸</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">Appuie pour choisir une image</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Wave ou Orange Money · JPG, PNG</div>
+      </div>
+      <input type="file" id="img-input" accept="image/*" style="display:none" onchange="onImgSelected(this)">
+
+      <!-- Preview -->
+      <div id="img-preview" style="display:none;margin-bottom:12px">
+        <img id="img-thumb" style="width:100%;border-radius:var(--rs);max-height:200px;object-fit:contain;background:var(--surf2)" alt="Preview">
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:center" id="img-name"></div>
+      </div>
+
+      <!-- Analyse btn -->
+      <button class="btn-p" id="analyse-img-btn" onclick="analyseImage()" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        Analyser avec l'IA
+      </button>
+
+      <!-- Loading -->
+      <div id="img-loading" style="display:none;text-align:center;padding:20px">
+        <div class="spin" style="margin:0 auto 10px"></div>
+        <div style="font-size:12px;color:var(--text2)">L'IA analyse votre historique...</div>
+      </div>
+
+      <!-- Résultats détectés -->
+      <div id="img-results" style="display:none">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 10px">Transactions détectées</div>
+        <div id="img-tx-list"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0" id="img-stats"></div>
+        <div style="background:var(--surf2);border-radius:var(--rs);overflow:hidden;height:4px;margin-bottom:6px"><div id="img-pb" style="height:4px;background:var(--green);border-radius:var(--rs);width:0%;transition:width .3s"></div></div>
+        <div id="img-pt" style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:10px"></div>
+        <button class="btn-p" id="img-import-btn" onclick="importDetectedTx()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+          Importer les transactions sélectionnées
+        </button>
+      </div>
+    </div>
+
+    <!-- IMPORT EXCEL (gardé) -->
+    <div class="card">
+      <div class="ct">Import Excel</div>
+      <div id="imp-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px"></div>
+      <div style="background:var(--surf2);border-radius:var(--rs);overflow:hidden;height:4px;margin-bottom:6px"><div id="imp-pb" style="height:4px;background:var(--green);border-radius:var(--rs);width:0%;transition:width .3s"></div></div>
+      <div id="imp-pt" style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:10px">En attente</div>
+      <div style="margin-bottom:12px">
+        <div class="flbl">Coller les données Excel</div>
+        <textarea id="imp-txt" class="finp" rows="4" placeholder="Colle ici tes lignes Excel copiées..." style="resize:vertical;font-size:12px"></textarea>
+      </div>
+      <button class="btn-p" id="imp-btn" onclick="parseAndImport()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importer
+      </button>
+      <div id="imp-log" style="margin-top:10px;background:var(--surf2);border-radius:var(--rs);padding:10px;max-height:150px;overflow-y:auto;font-size:10px;color:var(--text3);display:none"></div>
+    </div>
+  </div>
+  <!-- NAVBAR -->
+  <nav id="nav">
+    <button class="ni active" onclick="goP('dash',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="ni" onclick="goP('tx',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      <span>Historique</span>
+    </button>
+    <button class="ni" onclick="goP('add',this)">
+      <div class="ni-add-ring">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+      <span>Ajouter</span>
+    </button>
+    <button class="ni" onclick="goP('bud',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      <span>Budget</span>
+    </button>
+    <button class="ni" onclick="goP('pro',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span>Profil</span>
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;padding:20px;align-items:flex-end">
+  <div style="background:var(--surf);border-radius:var(--r) var(--r) 0 0;padding:20px 18px;width:100%;max-width:480px;margin:0 auto;border-top:0.5px solid var(--border)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-size:15px;font-weight:600">Modifier la transaction</span>
+      <button onclick="closeEditTx()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px">✕</button>
+    </div>
+    <div class="fgrp"><div class="flbl">Montant</div>
+      <div class="amtwrap"><div class="amtcur">FCFA</div>
+        <input class="amtinp" type="text" id="e-amt" inputmode="numeric" oninput="fmtAmtInput(this)">
+      </div>
+    </div>
+    <div class="frow" style="margin-bottom:11px">
+      <div class="fgrp"><div class="flbl">Catégorie</div>
+        <select class="fsel" id="e-cat" onchange="syncEditPostes()"></select>
+      </div>
+      <div class="fgrp"><div class="flbl">Poste</div>
+        <select class="fsel" id="e-poste"></select>
+      </div>
+    </div>
+    <div class="frow" style="margin-bottom:11px">
+      <div class="fgrp"><div class="flbl">Date</div>
+        <input class="finp" type="date" id="e-date">
+      </div>
+      <div class="fgrp"><div class="flbl">Commentaire</div>
+        <input class="finp" type="text" id="e-cmt" placeholder="Facultatif">
+      </div>
+    </div>
+    <button class="btn-p" onclick="saveEditTx()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>
+      Enregistrer les modifications
+    </button>
+  </div>
+</div>
 
 <script>
 const DEFAULT_CATS={
@@ -389,7 +671,7 @@ const PC=['#3b82f6','#ef4444','#f59e0b','#a855f7','#22c55e','#ec4899','#06b6d4',
 const MFR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const MS=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
-let uid=null,txs=[],budget={},custom={},unsub1=null,unsub2=null,pendingSaves=0,lastSettingsHash='';
+let uid=null,txs=[],budget={},custom={},unsub1=null,unsub2=null;
 let formDirty=false;
 function setFormDirty(v){formDirty=v;}
 let sharedSpaceId=null; // ID de l'espace partagé (null = espace perso)
@@ -430,8 +712,7 @@ waitFB(()=>{
       setUserUI(user);
       buildMonthSel();
       loadUserSpaces();
-  // buildMissingSnapshots désactivé — chemin Firestore invalide
-  // buildMissingSnapshots().catch(()=>{});
+  buildMissingSnapshots().catch(()=>{});
   checkLockOnStart();
       document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
       syncPostes();
@@ -480,21 +761,19 @@ function subscribe(){
     const oldHash=txs.map(t=>t.id+'|'+t.amt+'|'+t.ts).join(',');
     txs=newTxs;
     if(firstLoad||newHash!==oldHash)renderCurrent();
+    if(firstLoad)checkRecurring();
   });
   if(unsub2)unsub2();
   unsub2=onSnapshot(doc(db,dataPath()+'/data/settings'),snap=>{
     if(snap.exists()){
       const d=snap.data();
-      if(pendingSaves>0){pendingSaves=Math.max(0,pendingSaves-1);return;}
-      const newHash=JSON.stringify(d.budget||{});
-      if(newHash===lastSettingsHash)return;
-      lastSettingsHash=newHash;
       budget=d.budget||{};
       custom=d.custom||{};
       loadCatsFromSettings(d);
     } else {
+      // Premier login — initialiser avec DEFAULT_CATS
       CATS=JSON.parse(JSON.stringify(DEFAULT_CATS));
-      saveSettings();
+      saveSettings(); // fire-and-forget on first login intentional
     }
     renderCurrent();renderCPUI();
     if(document.getElementById('page-pro')?.classList.contains('active'))renderCharts();
@@ -503,8 +782,6 @@ function subscribe(){
 
 async function saveSettings(){
   const{db,doc,setDoc}=window._fb;
-  lastSettingsHash=JSON.stringify(budget||{});
-  pendingSaves+=2;
   await setDoc(doc(db,dataPath()+'/data/settings'),{budget,custom,cats:CATS},{merge:true});
 }
 
@@ -547,7 +824,7 @@ function goP(p,btn){
   if(p==='dash')renderDash();
   else if(p==='tx')renderTX();
   else if(p==='bud')renderBudPage();
-  else if(p==='pro'){renderCPUI();renderTrash();renderSecurityUI();renderSpacesUI();}
+  else if(p==='pro'){renderCharts();renderCPUI();renderRecurList();renderTrash();renderSecurityUI();renderPatrimoine();renderAnalyse();renderSpacesUI();}
   else if(p==='add'){syncPostes();document.getElementById('fmsg').textContent='';}
   else if(p==='imp'){document.getElementById('imp-log').style.display='none';document.getElementById('imp-pb').style.width='0%';document.getElementById('imp-pt').textContent='En attente';}
 }
@@ -658,39 +935,65 @@ function renderAlerts(ym){
 }
 
 function renderDashAnnual(){
-  const y=annualYear();const t=txYear(y);
+  const y=annualYear();
+  const t=txYear(y);
   const rev=sumC(t,'Revenu');const fix=sumC(t,'Dépenses fixes');
   const vr=sumC(t,'Dépenses variables');const ep=sumC(t,'Epargne');
-  const dep=fix+vr+ep;const sol=rev-dep;
+  const dep=fix+vr+ep;const sol=rev-dep;const taux=rev>0?Math.round(sol/rev*100):0;
+  // Best/worst month
+  const soldes=Array.from({length:12},(_,i)=>{
+    const ym=ymk(y,i+1);const mt=txYM(ym);
+    const r=sumC(mt,'Revenu');const d=sumC(mt,'Dépenses fixes')+sumC(mt,'Dépenses variables')+sumC(mt,'Epargne');
+    return{m:MFR[i],sol:r-d};
+  }).filter(x=>x.sol!==0);
+  const best=soldes.length?soldes.reduce((a,b)=>b.sol>a.sol?b:a):null;
+  const worst=soldes.length?soldes.reduce((a,b)=>b.sol<a.sol?b:a):null;
   document.getElementById('hero').innerHTML=`
-    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Bilan ${y}</div>
-    <div style="font-size:30px;font-weight:700;font-family:var(--mono);color:${sol>=0?'var(--green)':'var(--red)'}">${sol>=0?'+':''}${fmt(sol)} <span style="font-size:13px;font-weight:400">FCFA</span></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">
-      <div><div style="font-size:10px;color:var(--text3)">Revenus</div><div style="font-size:13px;font-weight:500;color:var(--green);font-family:var(--mono)">${fmt(rev)} F</div></div>
-      <div><div style="font-size:10px;color:var(--text3)">Dépenses</div><div style="font-size:13px;font-weight:500;color:var(--red);font-family:var(--mono)">${fmt(dep)} F</div></div>
-      <div><div style="font-size:10px;color:var(--text3)">Épargne</div><div style="font-size:13px;font-weight:500;color:var(--blue);font-family:var(--mono)">${fmt(ep)} F</div></div>
+    <div class="hlbl">Récap annuel · ${y}</div>
+    <div class="hamt ${sol>=0?'pos':'neg'}">${fmtS(sol)} <span style="font-size:15px;opacity:.55">FCFA</span></div>
+    <div class="hmeta">
+      <div class="hmi">Revenus totaux<span style="color:var(--green)">${fmt(rev)} F</span></div>
+      <div class="hmi">Dépenses totales<span style="color:var(--red)">${fmt(dep)} F</span></div>
+      <div class="hmi">Taux d'épargne<span style="${taux>=15?'color:var(--green)':taux>=5?'color:var(--amber)':'color:var(--red)'}">${taux}%</span></div>
     </div>`;
-  let html='';
-  ['Revenu','Dépenses fixes','Dépenses variables','Epargne'].forEach(cat=>{
-    const ps=getAllPostes(cat);const act={};
-    t.filter(x=>x.cat===cat).forEach(x=>{act[x.poste]=(act[x.poste]||0)+x.amt;});
-    const total=Object.values(act).reduce((s,v)=>s+v,0);if(!total)return;
-    const isRev=cat==='Revenu';
-    const budAnnuel={};
-    ps.forEach(p=>{let b=0;for(let m=1;m<=12;m++)b+=gBud(ymk(y,m),p);if(b>0)budAnnuel[p]=b;});
-    html+=`<div class="card"><div class="ct">${CICO[cat]} ${cat}<span style="float:right;color:${isRev?'var(--green)':'var(--red)'};font-family:var(--mono)">${fmt(total)} F</span></div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <tr style="color:var(--text3);font-size:10px"><td style="padding:4px 0">Poste</td><td style="text-align:right;padding:4px 0">Réel</td><td style="text-align:right;padding:4px 0">Budget</td></tr>
-        ${ps.filter(p=>act[p]||budAnnuel[p]).map(p=>{
-          const r=act[p]||0;const b=budAnnuel[p]||0;
-          return `<tr style="border-top:0.5px solid var(--border)">
-            <td style="padding:6px 0;color:var(--text2)">${p}</td>
-            <td style="text-align:right;font-family:var(--mono);color:${b>0&&r>b?'var(--red)':isRev?'var(--green)':'var(--text)'};padding:6px 0">${fmt(r)} F</td>
-            <td style="text-align:right;font-family:var(--mono);color:var(--text3);padding:6px 0">${b?fmt(b)+' F':'—'}</td>
-          </tr>`;}).join('')}
-      </table></div>`;
-  });
-  document.getElementById('dc').innerHTML=html||`<div style="text-align:center;padding:30px;color:var(--text3)">Aucune transaction en ${y}</div>`;
+  document.getElementById('dm').innerHTML=
+    mc('Fixes',fix,0)+mc('Variables',vr,0)+mc('Épargne',ep,0)+mc('Transactions',t.length,0,true);
+  document.getElementById('dtabs').style.display='none';
+  // Annual breakdown by month
+  const monthRows=Array.from({length:12},(_,i)=>{
+    const ym=ymk(y,i+1);const mt=txYM(ym);
+    if(!mt.length)return'';
+    const r=sumC(mt,'Revenu');const d=sumC(mt,'Dépenses fixes')+sumC(mt,'Dépenses variables')+sumC(mt,'Epargne');
+    const s=r-d;const cl=s>=0?'ok':'ov';
+    return`<tr><td>${MFR[i]}</td><td style="color:var(--green)">${fmt(r)}</td><td style="color:var(--red)">${fmt(d)}</td><td class="${cl}">${s>=0?'+':'−'}${fmt(s)}</td></tr>`;
+  }).join('');
+  // Top postes
+  const posteMap={};t.filter(x=>x.cat!=='Revenu').forEach(x=>{posteMap[x.poste]=(posteMap[x.poste]||0)+x.amt;});
+  const topPostes=Object.entries(posteMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const topRows=topPostes.map(([p,v])=>`<tr><td>${p}</td><td colspan="2" style="color:var(--red)">${fmt(v)} F</td><td style="color:var(--text3)">${dep>0?Math.round(v/dep*100)+'%':'—'}</td></tr>`).join('');
+  document.getElementById('dc').innerHTML=`
+    <div class="card">
+      <div class="ct">Bilan mensuel ${y}</div>
+      <table class="rtbl"><thead><tr><th>Mois</th><th>Revenus</th><th>Dépenses</th><th>Solde</th></tr></thead>
+      <tbody>${monthRows||'<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text3)">Aucune donnée</td></tr>'}</tbody></table>
+      ${best&&worst?`<div style="display:flex;gap:12px;margin-top:12px">
+        <div style="flex:1;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.05em">Meilleur mois</div>
+          <div style="font-size:14px;font-weight:600;margin-top:4px">${best.m}</div>
+          <div style="font-size:13px;color:var(--green);font-family:var(--mono)">+${fmt(best.sol)} F</div>
+        </div>
+        <div style="flex:1;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.05em">Mois difficile</div>
+          <div style="font-size:14px;font-weight:600;margin-top:4px">${worst.m}</div>
+          <div style="font-size:13px;color:var(--red);font-family:var(--mono)">${worst.sol>=0?'+':'−'}${fmt(worst.sol)} F</div>
+        </div>
+      </div>`:''}
+    </div>
+    <div class="card">
+      <div class="ct">Top dépenses ${y}</div>
+      <table class="rtbl"><thead><tr><th>Poste</th><th colspan="2">Total</th><th>% dép.</th></tr></thead>
+      <tbody>${topRows||'<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text3)">Aucune donnée</td></tr>'}</tbody></table>
+    </div>`;
 }
 
 function mc(lbl,val,bud,cnt=false){
@@ -761,8 +1064,11 @@ async function saveTx(){
   const inner=document.getElementById('bsave-inner');
   btn.disabled=true;
   if(inner)inner.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" style="animation:sp .8s linear infinite" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Enregistrement…';
+  const isRecur=document.getElementById('f-recur')?.checked||false;
+  const recurDay=isRecur?parseInt(document.getElementById('f-recur-day')?.value||'1'):null;
   const{db,collection,addDoc}=window._fb;
   const data={amt,date,cat:selCatVal,poste,cmt,ts:new Date().toISOString(),createdBy:userName,createdById:uid};
+  if(isRecur){data.recur=true;data.recurDay=recurDay;}
   try{
     await addDoc(collection(db,dataPath()+'/transactions'),data);
   }catch(e){
@@ -771,6 +1077,8 @@ async function saveTx(){
   document.getElementById('f-amt').value='';
   document.getElementById('f-cmt').value='';
   document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  const recurCb=document.getElementById('f-recur');
+  if(recurCb&&recurCb.checked){recurCb.checked=false;toggleRecurOptions();}
   btn.disabled=false;
   if(inner)inner.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg> Enregistrer';
   toast(navigator.onLine
@@ -877,7 +1185,7 @@ function setTF(el,f){
   el.classList.add('active');txFilt=f;renderTX();
 }
 function renderTX(){
-  let t=isAnnual()?txYear(annualYear()):txYM(curYM());
+  const ym=curYM();let t=txYM(ym);
   if(txFilt!=='all')t=t.filter(x=>x.cat===txFilt);
   const q=(document.getElementById('tx-search')?.value||'').toLowerCase().trim();
   if(q)t=t.filter(x=>(x.poste||'').toLowerCase().includes(q)||(x.cmt||'').toLowerCase().includes(q)||String(x.amt).includes(q));
@@ -915,12 +1223,41 @@ function renderBudPage(){
   document.getElementById('ytabs').innerHTML=years.map(y=>`<button class="ytab ${y.toString()===bYear?'active':''}" onclick="setBY(this,'${y}')">${y}</button>`).join('');
   document.getElementById('mtabs').innerHTML=MFR.map((m,i)=>`<button class="mtab ${(i+1)===bMonth?'active':''}" onclick="setBM(this,${i+1})">${MS[i]}</button>`).join('');
   renderBForm();
-  
+  populateCopySrc();
 }
 
+function populateCopySrc(){
+  const sel=document.getElementById('copy-src');
+  if(!sel)return;
+  // Les 3 mois précédents du mois SÉLECTIONNÉ dans le budget (bYear, bMonth)
+  const prev=[];
+  for(let i=1;i<=3;i++){
+    const d=new Date(parseInt(bYear),parseInt(bMonth)-1-i,1);
+    prev.push(ymk(d.getFullYear(),d.getMonth()+1));
+  }
+  sel.innerHTML=prev.map(ym=>`<option value="${ym}">${yml(ym)}${budget[ym]&&Object.keys(budget[ym]).length?' ✓':''}</option>`).join('');
+}
 
-function setBY(el,y){document.querySelectorAll('.ytab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bYear=y;renderBForm();}
-function setBM(el,m){document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bMonth=m;renderBForm();}
+async function copyBudget(){
+  const sel=document.getElementById('copy-src');
+  const srcYm=sel?.value;
+  if(!srcYm||!budget[srcYm]){
+    document.getElementById('copy-msg').style.color='var(--red)';
+    document.getElementById('copy-msg').textContent='Aucun budget trouvé pour ce mois.';
+    return;
+  }
+  const destYm=ymk(bYear,bMonth);
+  // Deep copy
+  budget[destYm]={...budget[srcYm]};
+  await saveSettings();
+  renderBForm();
+  const msg=document.getElementById('copy-msg');
+  msg.style.color='var(--green)';
+  msg.textContent='Budget de '+yml(srcYm)+' copié avec succès ✓';
+  setTimeout(()=>{if(msg)msg.textContent='';},3000);
+}
+function setBY(el,y){document.querySelectorAll('.ytab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bYear=y;renderBForm();populateCopySrc();}
+function setBM(el,m){document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));el.classList.add('active');bMonth=m;renderBForm();populateCopySrc();}
 function calcBudSolde(ym){
   // Lire les valeurs en direct depuis les inputs si disponibles, sinon depuis budget sauvegardé
   const bud=budget[ym]||{};
@@ -989,34 +1326,13 @@ function renderBForm(){
   document.getElementById('bform').innerHTML=html;
   renderBudSolde();
 }
-function fmtBudInput(el){
-  const raw=el.value.replace(/[^0-9]/g,'');
-  el.dataset.raw=raw||'0';
-  el.value=raw?parseInt(raw).toLocaleString('fr-FR'):'';
-  const card=el.closest('.card');
-  if(!card)return;
-  const inputs=card.querySelectorAll('.binp');
-  const total=Array.from(inputs).reduce((s,i)=>s+(parseFloat(i.dataset.raw||0)||0),0);
-  const ct=card.querySelector('.ct');
-  if(ct){
-    const old=ct.querySelector('.bud-tot');if(old)old.remove();
-    if(total>0){
-      const sp=document.createElement('span');
-      sp.className='bud-tot';
-      sp.style.cssText='float:right;font-family:var(--mono);color:var(--green)';
-      sp.textContent=parseInt(total).toLocaleString('fr-FR')+' F';
-      ct.appendChild(sp);
-    }
-  }
-}
-
 async function saveBudget(){
   const ym=ymk(bYear,bMonth);const bud={};
   const all=Object.keys(CATS).flatMap(c=>CATS[c]||[]);
   all.forEach(p=>{
     const el=document.getElementById('bi_'+btoa(encodeURIComponent(p)));
     if(el){
-      const rawStr=el.dataset.raw||el.value.replace(/[^0-9]/g,'')||'0';const raw=parseFloat(rawStr)||0;
+      const raw=parseFloat((el.dataset.raw||'').replace(/\s/g,''))||0;
       if(raw>0)bud[p]=raw;
     }
   });
@@ -2116,11 +2432,89 @@ function getTxBadge(x){
 }
 
 // TRANSACTIONS RÉCURRENTES
+function toggleRecurOptions(){
+  const cb=document.getElementById('f-recur');
+  const opts=document.getElementById('recur-options');
+  const knob=document.getElementById('recur-knob');
+  const toggle=document.getElementById('recur-toggle');
+  if(cb.checked){
+    opts.style.display='block';
+    toggle.style.background='rgba(10,132,255,.25)';
+    toggle.style.borderColor='rgba(10,132,255,.4)';
+    knob.style.background='var(--blue)';
+    knob.style.left='23px';
+  } else {
+    opts.style.display='none';
+    toggle.style.background='var(--surf2)';
+    toggle.style.borderColor='var(--border)';
+    knob.style.background='var(--text3)';
+    knob.style.left='3px';
+  }
+}
+
+async function checkRecurring(){
+  if(!uid)return;
+  const recurring=txs.filter(t=>t.recur===true);
+  if(!recurring.length)return;
+  const now=new Date();
+  const curYm=ymk(now.getFullYear(),now.getMonth()+1);
+  const{db,collection,addDoc}=window._fb;
+  let created=0;
+  for(const rt of recurring){
+    // Vérifier si cette récurrente existe déjà ce mois (par recurId + mois)
+    const alreadyExists=txs.some(t=>
+      t.recurId===rt.id &&
+      t.date&&t.date.startsWith(curYm)
+    );
+    if(!alreadyExists){
+      const[y,m]=curYm.split('-');
+      const day=rt.recurDay||1;
+      const maxDay=new Date(parseInt(y),parseInt(m),0).getDate();
+      const date=curYm+'-'+String(Math.min(day,maxDay)).padStart(2,'0');
+      await addDoc(collection(db,dataPath()+'/transactions'),{
+        amt:rt.amt,date,cat:rt.cat,poste:rt.poste,
+        cmt:(rt.cmt||'')+'',
+        ts:new Date().toISOString(),
+        recurId:rt.id,
+        auto:true
+      });
+      created++;
+    }
+  }
+  if(created>0)toast(created+' transaction'+(created>1?'s':'')+' récurrente'+(created>1?'s':'')+' ajoutée'+(created>1?'s':'')+' ✓');
+}
 
 
 
+function renderRecurList(){
+  const el=document.getElementById('recur-list');
+  if(!el)return;
+  const recurring=txs.filter(t=>t.recur===true);
+  if(!recurring.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Aucune transaction récurrente</div>';
+    return;
+  }
+  el.innerHTML=recurring.map(t=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.poste}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">
+          ${new Intl.NumberFormat('fr-FR').format(t.amt)} F · le ${t.recurDay||1} de chaque mois
+          <span class="bdg ${CCLS[t.cat]||'v'}" style="margin-left:4px">${t.cat}</span>
+        </div>
+      </div>
+      <button onclick="deleteRecur('${t.id}')"
+        style="padding:5px 10px;font-size:11px;border:0.5px solid var(--border);border-radius:var(--rs);background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font)">
+        Supprimer
+      </button>
+    </div>`).join('');
+}
 
-
+async function deleteRecur(id){
+  const{db,doc,deleteDoc}=window._fb;
+  await deleteDoc(doc(db,dataPath()+'/transactions/'+id));
+  toast('Transaction récurrente supprimée');
+}
 
 
 function renderTrash(){
@@ -2900,7 +3294,10 @@ async function renderSpacesUI(freshCode){
   // Join section
   html+=`<div style="border-top:0.5px solid var(--border);padding-top:14px">
     <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:10px">Rejoindre un espace</div>
-    
+    <div style="display:flex;gap:8px">
+      <input id="join-code-inp" class="finp" type="text" placeholder="Code d'invitation..." style="flex:1;padding:9px 12px;font-size:13px;text-transform:uppercase">
+      <button onclick="joinSpace()" class="btn-o" style="white-space:nowrap">Rejoindre</button>
+    </div>
     <div id="spaces-msg" style="font-size:11px;margin-top:6px;min-height:14px;text-align:center"></div>
   </div>`;
 
