@@ -2370,7 +2370,7 @@ async function exportPDFAnnuel(){
   toast('PDF annuel telecharge !');
 }
 
-function exportPDF(){
+async function exportPDF(){
   if(typeof window.jspdf==='undefined'){
     toast('Chargement en cours...');
     await new Promise(r=>setTimeout(r,1500));
