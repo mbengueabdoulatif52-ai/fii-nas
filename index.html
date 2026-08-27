@@ -107,12 +107,6 @@ body{font-family:var(--font);color:var(--text);max-width:480px;width:100%;margin
 .page.active{display:block}
 
 /* CARDS */
-
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-.sk{background:linear-gradient(90deg,var(--surf2) 25%,var(--surf) 50%,var(--surf2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
-.sk-line{height:12px;margin:6px 0;border-radius:6px}
-.sk-h{height:28px;margin:8px 0;border-radius:6px}
-.sk-card{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px}
 .card{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:10px}
 .ct{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
 
@@ -347,15 +341,6 @@ select option{background:#2c2c2e;color:#f5f5f7}
     <div style="position:relative;margin-bottom:10px">
       <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       <input id="tx-search" class="finp" type="text" placeholder="Rechercher poste, commentaire, montant..." style="padding-left:36px;font-size:13px" oninput="renderTX()">
-    </div>
-    <div id="poste-banner" style="display:none;align-items:center;justify-content:space-between;background:rgba(77,159,255,.1);border:0.5px solid rgba(77,159,255,.3);border-radius:var(--rs);padding:8px 12px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--blue)">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        Poste : <strong id="poste-banner-label"></strong>
-      </div>
-      <button onclick="clearPosteFilter()" style="background:transparent;border:none;color:var(--blue);cursor:pointer;font-size:16px;line-height:1;padding:0 2px">×</button>
-    </div>
-    <div style="display:none">
     </div>
     <div class="tabs" id="txf">
       <button class="tab active" onclick="setTF(this,'all')">Toutes</button>
@@ -638,7 +623,7 @@ function setFormDirty(v){formDirty=v;}
 let sharedSpaceId=null; // ID de l'espace partagé (null = espace perso)
 let userRole='admin';   // 'admin' ou 'reader'
 let userName='';        // Nom affiché sur les transactions
-let txFilt='all',txPosteFilter='',dTab='all',bYear=new Date().getFullYear().toString(),bMonth=new Date().getMonth()+1;
+let txFilt='all',dTab='all',bYear=new Date().getFullYear().toString(),bMonth=new Date().getMonth()+1;
 let selCatVal='Dépenses variables';
 
 const _fmt=v=>new Intl.NumberFormat('fr-FR').format(Math.round(Math.abs(v)));
@@ -670,7 +655,6 @@ waitFB(()=>{
       document.getElementById('auth').style.display='none';
       document.getElementById('app').style.display='block';
       setUserUI(user);
-      renderSkeleton();
       buildMonthSel();
       loadUserSpaces();
   
@@ -765,56 +749,6 @@ function annualYear(){return parseInt(curYM().split('-')[1]);}
 function txYear(y){return txs.filter(t=>t.date&&t.date.startsWith(String(y)));}
 
 function onMChange(){renderCurrent();}
-
-function renderSkeleton(){
-  // Dashboard skeleton
-  const hero=document.getElementById('hero');
-  if(hero){
-    hero.innerHTML=`
-      <div class="sk sk-h" style="width:40%;margin-bottom:12px"></div>
-      <div class="sk sk-line" style="width:25%"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px">
-        <div class="sk" style="height:44px;border-radius:10px"></div>
-        <div class="sk" style="height:44px;border-radius:10px"></div>
-        <div class="sk" style="height:44px;border-radius:10px"></div>
-      </div>`;
-  }
-  const dc=document.getElementById('dc');
-  if(dc){
-    dc.innerHTML=`
-      <div class="sk-card">
-        <div class="sk sk-line" style="width:35%;height:10px;margin-bottom:14px"></div>
-        ${[1,2,3,4].map(()=>`
-          <div style="display:flex;justify-content:space-between;margin:10px 0">
-            <div class="sk sk-line" style="width:45%;height:10px;margin:0"></div>
-            <div class="sk sk-line" style="width:20%;height:10px;margin:0"></div>
-          </div>`).join('')}
-      </div>
-      <div class="sk-card">
-        <div class="sk sk-line" style="width:40%;height:10px;margin-bottom:14px"></div>
-        ${[1,2,3].map(()=>`
-          <div style="display:flex;justify-content:space-between;margin:10px 0">
-            <div class="sk sk-line" style="width:50%;height:10px;margin:0"></div>
-            <div class="sk sk-line" style="width:22%;height:10px;margin:0"></div>
-          </div>`).join('')}
-      </div>`;
-  }
-  // Historique skeleton
-  const txl=document.getElementById('txl');
-  if(txl){
-    txl.innerHTML=`<div class="card" style="padding:4px 15px">
-      ${[1,2,3,4,5,6,7].map((i)=>`
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--border)">
-          <div class="sk" style="width:36px;height:36px;border-radius:50%;flex-shrink:0"></div>
-          <div style="flex:1">
-            <div class="sk sk-line" style="width:${40+i*7}%;height:11px;margin-bottom:6px"></div>
-            <div class="sk sk-line" style="width:${20+i*4}%;height:9px"></div>
-          </div>
-          <div class="sk sk-line" style="width:18%;height:11px;margin:0"></div>
-        </div>`).join('')}
-    </div>`;
-  }
-}
 
 function renderCurrent(){
   const id=document.querySelector('.page.active')?.id;
@@ -1003,51 +937,30 @@ function renderDashAnnual(){
   const posteMap={};t.filter(x=>x.cat!=='Revenu').forEach(x=>{posteMap[x.poste]=(posteMap[x.poste]||0)+x.amt;});
   const topPostes=Object.entries(posteMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
   const topRows=topPostes.map(([p,v])=>`<tr><td>${p}</td><td colspan="2" style="color:var(--red)">${fmt(v)} F</td><td style="color:var(--text3)">${dep>0?Math.round(v/dep*100)+'%':'—'}</td></tr>`).join('');
-  // Tableau par poste : réel annuel vs budget annuel
-  const cats=['Revenu','Dépenses fixes','Dépenses variables','Epargne'];
-  const catColors={'Revenu':'var(--green)','Dépenses fixes':'var(--red)','Dépenses variables':'var(--red)','Epargne':'var(--blue)'};
-  let dcHtml='';
-  cats.forEach(cat=>{
-    const postes=getAllPostes(cat);
-    const actMap={};
-    t.filter(x=>x.cat===cat).forEach(x=>{actMap[x.poste]=(actMap[x.poste]||0)+x.amt;});
-    const totalReel=Object.values(actMap).reduce((s,v)=>s+v,0);
-    if(!totalReel&&!postes.some(p=>gBud(ymk(y,1),p)>0))return;
-    // Budget annuel = somme des 12 mois
-    const budMap={};
-    postes.forEach(p=>{
-      let b=0;for(let m=1;m<=12;m++)b+=gBud(ymk(y,m),p);
-      if(b>0)budMap[p]=b;
-    });
-    const totalBud=Object.values(budMap).reduce((s,v)=>s+v,0);
-    const rows=postes.filter(p=>actMap[p]||budMap[p]).map(p=>{
-      const r=actMap[p]||0;const b=budMap[p]||0;
-      const over=b>0&&r>b;
-      const isRev=cat==='Revenu';
-      return`<tr>
-        <td style="padding:7px 4px;color:var(--text2)">${p}</td>
-        <td style="text-align:right;font-family:var(--mono);padding:7px 4px;color:${over?'var(--red)':isRev?'var(--green)':'var(--text)'}">${fmt(r)} F</td>
-        <td style="text-align:right;font-family:var(--mono);padding:7px 4px;color:var(--text3)">${b?fmt(b)+' F':'—'}</td>
-        <td style="text-align:right;padding:7px 4px;font-size:10px;color:${over?'var(--red)':'var(--text3)'}">${b?Math.round(r/b*100)+'%':'—'}</td>
-      </tr>`;
-    }).join('');
-    if(!rows)return;
-    dcHtml+=`<div class="card">
-      <div class="ct">${cat}<span style="float:right;font-family:var(--mono);color:${catColors[cat]}">${fmt(totalReel)} F${totalBud?` / ${fmt(totalBud)} F`:''}</span></div>
-      <table class="rtbl" style="width:100%">
-        <thead><tr>
-          <th style="text-align:left">Poste</th>
-          <th style="text-align:right">Réel</th>
-          <th style="text-align:right">Budget</th>
-          <th style="text-align:right">%</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
+  document.getElementById('dc').innerHTML=`
+    <div class="card">
+      <div class="ct">Bilan mensuel ${y}</div>
+      <table class="rtbl"><thead><tr><th>Mois</th><th>Revenus</th><th>Dépenses</th><th>Solde</th></tr></thead>
+      <tbody>${monthRows||'<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text3)">Aucune donnée</td></tr>'}</tbody></table>
+      ${best&&worst?`<div style="display:flex;gap:12px;margin-top:12px">
+        <div style="flex:1;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.05em">Meilleur mois</div>
+          <div style="font-size:14px;font-weight:600;margin-top:4px">${best.m}</div>
+          <div style="font-size:13px;color:var(--green);font-family:var(--mono)">+${fmt(best.sol)} F</div>
+        </div>
+        <div style="flex:1;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.05em">Mois difficile</div>
+          <div style="font-size:14px;font-weight:600;margin-top:4px">${worst.m}</div>
+          <div style="font-size:13px;color:var(--red);font-family:var(--mono)">${worst.sol>=0?'+':'−'}${fmt(worst.sol)} F</div>
+        </div>
+      </div>`:''}
+    </div>
+    <div class="card">
+      <div class="ct">Top dépenses ${y}</div>
+      <table class="rtbl"><thead><tr><th>Poste</th><th colspan="2">Total</th><th>% dép.</th></tr></thead>
+      <tbody>${topRows||'<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text3)">Aucune donnée</td></tr>'}</tbody></table>
     </div>`;
-  });
-  document.getElementById('dc').innerHTML=dcHtml||`<div style="text-align:center;padding:30px;color:var(--text3)">Aucune transaction en ${y}</div>`;
 }
-
 
 function mc(lbl,val,bud,cnt=false){
   const p=bud>0?Math.round(val/bud*100):null;
@@ -1081,7 +994,7 @@ function renderDC(){
         ?(b===0&&r>0?'var(--green)':rawPct>=100?'var(--green)':rawPct>=80?'var(--amber)':'var(--red)')
         :(b===0&&r>0?'var(--red)':rawPct>100?'var(--red)':rawPct===100?'var(--amber)':'var(--green)');
       const pctTxt=pc!==null?(pc+'%'):(r>0?(isPos?'✓':'⚠'):'—');
-      rows+=`<tr><td style="cursor:pointer" onclick="goPoste('${p}','${cat}')">${p} <span style="font-size:10px;color:var(--blue);opacity:.7">›</span></td><td class="${cl}">${fmt(r)}</td><td style="color:var(--text3)">${b>0?fmt(b):'—'}</td><td style="color:var(--text3)">${pctTxt}</td></tr><tr><td colspan="4" style="padding:0 5px 6px"><div class="pb"><div class="pbr" style="width:${bw}%;background:${bc};min-width:${r>0?'4px':'0'}"></div></div></td></tr>`;
+      rows+=`<tr><td>${p}</td><td class="${cl}">${fmt(r)}</td><td style="color:var(--text3)">${b>0?fmt(b):'—'}</td><td style="color:var(--text3)">${pctTxt}</td></tr><tr><td colspan="4" style="padding:0 5px 6px"><div class="pb"><div class="pbr" style="width:${bw}%;background:${bc};min-width:${r>0?'4px':'0'}"></div></div></td></tr>`;
     });
     if(!rows&&dTab!=='all')return;
     html+=`<div class="card">
@@ -1226,52 +1139,13 @@ async function undoDelete(id){
 }
 
 // TX LIST
-function goPoste(poste,cat){
-  txPosteFilter=poste;
-  // Mapper cat vers txFilt
-  const catMap={'Revenu':'rev','Dépenses fixes':'fix','Dépenses variables':'var','Epargne':'epa'};
-  txFilt=catMap[cat]||'all';
-  // Activer le bon onglet dans l'historique
-  document.querySelectorAll('#txf .tab').forEach(b=>b.classList.remove('active'));
-  const tabMap={'rev':1,'fix':2,'var':3,'epa':4};
-  const tabIdx=tabMap[txFilt];
-  if(tabIdx){const tabs=document.querySelectorAll('#txf .tab');if(tabs[tabIdx])tabs[tabIdx].classList.add('active');}
-  else{const tabs=document.querySelectorAll('#txf .tab');if(tabs[0])tabs[0].classList.add('active');}
-  // Naviguer vers historique
-  const btn=document.querySelectorAll('.ni')[1];
-  goP('tx',btn);
-}
-
-function clearPosteFilter(){
-  txPosteFilter='';
-  const b=document.getElementById('poste-banner');
-  if(b)b.style.display='none';
-  renderTX();
-}
-
 function setTF(el,f){
   document.querySelectorAll('#txf .tab').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');txFilt=f;txPosteFilter='';renderTX();
+  el.classList.add('active');txFilt=f;renderTX();
 }
 function renderTX(){
   let t=isAnnual()?txYear(annualYear()):txYM(curYM());
-  // Filtre catégorie
-  const catFromFilt={'rev':'Revenu','fix':'Dépenses fixes','var':'Dépenses variables','epa':'Epargne'};
-  if(txFilt!=='all'&&catFromFilt[txFilt])t=t.filter(x=>x.cat===catFromFilt[txFilt]);
-  else if(txFilt!=='all')t=t.filter(x=>x.cat===txFilt);
-  // Filtre poste
-  if(txPosteFilter)t=t.filter(x=>x.poste===txPosteFilter);
-  // Bannière
-  const banner=document.getElementById('poste-banner');
-  const bannerLabel=document.getElementById('poste-banner-label');
-  if(banner){
-    if(txPosteFilter){
-      banner.style.display='flex';
-      if(bannerLabel)bannerLabel.textContent=txPosteFilter;
-    } else {
-      banner.style.display='none';
-    }
-  }
+  if(txFilt!=='all')t=t.filter(x=>x.cat===txFilt);
   const q=(document.getElementById('tx-search')?.value||'').toLowerCase().trim();
   if(q)t=t.filter(x=>(x.poste||'').toLowerCase().includes(q)||(x.cmt||'').toLowerCase().includes(q)||String(x.amt).includes(q));
   const countEl=document.getElementById('tx-count');
@@ -2326,30 +2200,24 @@ window.addEventListener('DOMContentLoaded',()=>{
 // ══════════════════════════════════════════
 // EXPORT PDF — Relevé bancaire style
 // ══════════════════════════════════════════
-async function exportPDF(){
+async function exportPDFAnnuel(){
   if(typeof window.jspdf==='undefined'){toast('jsPDF non charge');return;}
   const{jsPDF}=window.jspdf;
-  const ym=curYM();
-  if(isAnnual()){toast('Export PDF disponible en vue mensuelle uniquement');return;}
-  const t=txYM(ym);
+  const y=annualYear();
+  const t=txYear(y);
   const rev=sumC(t,'Revenu');
-  const fix=sumC(t,'Dépenses fixes');
-  const vr=sumC(t,'Dépenses variables');
-  const ep=sumC(t,'Epargne');
-  const dep=fix+vr+ep;
+  const dep=sumC(t,'Depenses fixes')+sumC(t,'Depenses variables')+sumC(t,'Epargne');
   const sol=rev-dep;
+  const ep=sumC(t,'Epargne');
   const taux=rev>0?Math.round(ep/rev*100):0;
 
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W=210,M=14;
   const cDARK=[10,22,40],cGREEN=[0,200,130],cRED=[220,60,80],cBLUE=[60,140,220];
   const cTEXT=[30,45,70],cTEXT2=[100,120,150],cSURF=[245,247,252],cBORDER=[210,218,230];
-  const cLIGHT=[248,250,253],cHD=[232,237,245];
+  const fmtPDF=n=>Math.round(Math.abs(n||0)).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g,' ');
 
-  const fmtPDF=n=>Math.round(Math.abs(n||0)).toLocaleString('fr-FR').replace(/\u202f/g,' ').replace(/\u00a0/g,' ');
-  const fmtDate=d=>{if(!d)return'';const p=d.split('-');return p.length===3?p[2]+'/'+p[1]:d;};
-
-  // ── EN-TETE
+  // EN-TETE
   doc.setFillColor(...cDARK);
   doc.rect(0,0,W,38,'F');
   doc.setFillColor(...cGREEN);
@@ -2359,206 +2227,543 @@ async function exportPDF(){
   doc.setTextColor(...cGREEN);
   doc.text("FII'NAS",M,15);
   doc.setFont('helvetica','normal');
-  doc.setFontSize(8.5);
+  doc.setFontSize(9);
   doc.setTextColor(180,200,220);
-  doc.text('Releve financier personnel',M,22);
-  doc.text(yml(ym).toUpperCase(),M,29);
-  doc.setFontSize(7.5);
+  doc.text('Releve financier annuel',M,22);
+  doc.text('Annee '+y,M,29);
+  doc.setFontSize(8);
   doc.text('Genere le '+new Date().toLocaleDateString('fr-FR'),W-M,29,{align:'right'});
 
-  // ── RESUME
-  let y=46;
+  // RESUME ANNUEL
+  let yp=46;
   doc.setFont('helvetica','bold');
-  doc.setFontSize(7.5);
+  doc.setFontSize(8);
   doc.setTextColor(...cTEXT2);
-  doc.text('SOLDE NET DU MOIS',M,y);
-  y+=5;
+  doc.text('BILAN ANNUEL '+y,M,yp);
+  yp+=5;
   doc.setFontSize(18);
   if(sol>=0)doc.setTextColor(...cGREEN);else doc.setTextColor(...cRED);
-  doc.text((sol>=0?'+':'-')+fmtPDF(sol)+' FCFA',M,y);
-  y+=7;
+  doc.text((sol>=0?'+':'-')+fmtPDF(sol)+' FCFA',M,yp);
+  yp+=7;
   const cw=(W-2*M)/3;
-  const cols=[
-    {label:'Revenus',val:fmtPDF(rev)+' F',color:cGREEN},
-    {label:'Depenses',val:fmtPDF(dep)+' F',color:cRED},
-    {label:'Epargne',val:fmtPDF(ep)+' F',color:cBLUE},
-  ];
-  cols.forEach((c,i)=>{
+  [{label:'Revenus',val:fmtPDF(rev)+' F',color:cGREEN},
+   {label:'Depenses',val:fmtPDF(dep)+' F',color:cRED},
+   {label:'Epargne',val:fmtPDF(ep)+' F',color:cBLUE}
+  ].forEach((c,i)=>{
     const x=M+i*cw;
     doc.setFillColor(...cSURF);
-    doc.roundedRect(x,y,cw-2,12,2,2,'F');
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(7);
-    doc.setTextColor(...cTEXT2);
-    doc.text(c.label,x+3,y+4.5);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(9);
-    doc.setTextColor(...c.color);
-    doc.text(c.val,x+3,y+10);
+    doc.roundedRect(x,yp,cw-2,12,2,2,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...cTEXT2);
+    doc.text(c.label,x+3,yp+4.5);
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...c.color);
+    doc.text(c.val,x+3,yp+10);
   });
-  y+=18;
+  yp+=20;
 
-  // ── SECTIONS
+  // TABLEAU PAR MOIS
+  const MOIS_C=['Jan','Fev','Mar','Avr','Mai','Jun','Jul','Aou','Sep','Oct','Nov','Dec'];
+  doc.setFillColor(...cDARK);
+  doc.rect(M,yp,W-2*M,7.5,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...cGREEN);
+  doc.text('EVOLUTION MENSUELLE',M+3,yp+5);
+  yp+=9;
+  // En-tete colonnes
+  doc.setFillColor(...cBORDER);
+  doc.rect(M,yp-1,W-2*M,5.5,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...cTEXT2);
+  doc.text('Mois',M+2,yp+3);
+  doc.text('Revenus',M+40,yp+3,{align:'right'});
+  doc.text('Depenses',M+80,yp+3,{align:'right'});
+  doc.text('Solde',M+115,yp+3,{align:'right'});
+  doc.text('Epargne',W-M-2,yp+3,{align:'right'});
+  yp+=6.5;
+
+  let totalRev=0,totalDep=0,totalEp=0;
+  for(let m=1;m<=12;m++){
+    if(yp>280){doc.addPage();yp=14;}
+    const ymk_=String(y)+'-'+String(m).padStart(2,'0');
+    const mt=t.filter(x=>x.date&&x.date.startsWith(ymk_));
+    if(!mt.length)continue;
+    const mrev=sumC(mt,'Revenu');
+    const mdep=sumC(mt,'Depenses fixes')+sumC(mt,'Depenses variables')+sumC(mt,'Epargne');
+    const msol=mrev-mdep;
+    const mep=sumC(mt,'Epargne');
+    totalRev+=mrev;totalDep+=mdep;totalEp+=mep;
+    const odd=m%2===0;
+    if(odd){doc.setFillColor(248,250,253);doc.rect(M,yp-1,W-2*M,5.5,'F');}
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...cTEXT);
+    doc.text(MOIS_C[m-1]+' '+y,M+2,yp+3);
+    doc.setTextColor(...cGREEN);doc.text(fmtPDF(mrev)+' F',M+40,yp+3,{align:'right'});
+    doc.setTextColor(...cRED);doc.text(fmtPDF(mdep)+' F',M+80,yp+3,{align:'right'});
+    if(msol>=0)doc.setTextColor(...cGREEN);else doc.setTextColor(...cRED);
+    doc.text((msol>=0?'+':'-')+fmtPDF(msol)+' F',M+115,yp+3,{align:'right'});
+    doc.setTextColor(...cBLUE);doc.text(fmtPDF(mep)+' F',W-M-2,yp+3,{align:'right'});
+    yp+=5.5;
+  }
+  yp+=8;
+
+  // RECAP PAR CATEGORIE
+  if(yp>240){doc.addPage();yp=14;}
   const catDef=[
     {cat:'Revenu',label:'REVENUS',color:cGREEN},
-    {cat:'Dépenses fixes',label:'DEPENSES FIXES',color:cRED},
-    {cat:'Dépenses variables',label:'DEPENSES VARIABLES',color:cRED},
+    {cat:'Depenses fixes',label:'DEPENSES FIXES',color:cRED},
+    {cat:'Depenses variables',label:'DEPENSES VARIABLES',color:cRED},
     {cat:'Epargne',label:'EPARGNE',color:cBLUE},
   ];
-
   catDef.forEach(({cat,label,color})=>{
     const postes=getAllPostes(cat);
-    // Regrouper par poste avec détail des transactions
-    const posteMap={};
-    t.filter(x=>x.cat===cat).forEach(x=>{
-      if(!posteMap[x.poste])posteMap[x.poste]={total:0,txs:[]};
-      posteMap[x.poste].total+=x.amt;
-      posteMap[x.poste].txs.push({amt:x.amt,date:x.date,cmt:x.cmt||''});
-    });
-    // Budget par poste
-    const budMap={};
-    postes.forEach(p=>{const b=gBud(ym,p);if(b>0)budMap[p]=b;});
-    const rows=postes.filter(p=>posteMap[p]||budMap[p]).map(p=>({
-      p,total:posteMap[p]?.total||0,bud:budMap[p]||0,
-      txs:(posteMap[p]?.txs||[]).sort((a,b)=>(a.date||'').localeCompare(b.date||''))
-    }));
+    const actMap={};
+    t.filter(x=>x.cat===cat).forEach(x=>{actMap[x.poste]=(actMap[x.poste]||0)+x.amt;});
+    const rows=postes.filter(p=>actMap[p]).map(p=>({p,reel:actMap[p]}));
     if(!rows.length)return;
-    const total=rows.reduce((s,r)=>s+r.total,0);
-
-    // Estimer hauteur
-    const hNeeded=10+6+rows.reduce((s,r)=>s+7+r.txs.length*5.5,0)+5;
-    if(y+Math.min(hNeeded,40)>285){doc.addPage();y=14;}
-
-    // En-tete section
+    const total2=rows.reduce((s,r)=>s+r.reel,0);
+    if(yp+10+rows.length*6>285){doc.addPage();yp=14;}
     doc.setFillColor(...cDARK);
-    doc.rect(M,y,W-2*M,7,'F');
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(8);
-    doc.setTextColor(...color);
-    doc.text(label,M+3,y+5);
+    doc.rect(M,yp,W-2*M,7.5,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...color);
+    doc.text(label,M+3,yp+5);
     doc.setTextColor(180,200,220);
-    doc.text(fmtPDF(total)+' F',W-M-3,y+5,{align:'right'});
-    y+=8.5;
-
-    // En-tete colonnes
-    doc.setFillColor(...cHD);
-    doc.rect(M,y-1,W-2*M,5,'F');
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(7);
-    doc.setTextColor(...cTEXT2);
-    doc.text('Poste / Date / Detail',M+2,y+2.8);
-    doc.text('Montant',W-M-42,y+2.8,{align:'right'});
-    doc.text('Budget',W-M-22,y+2.8,{align:'right'});
-    doc.text('Ecart',W-M-2,y+2.8,{align:'right'});
-    y+=6;
-
-    // Lignes postes + sous-détails
-    rows.forEach((r,ri)=>{
-      if(y>280){doc.addPage();y=14;}
-      // Ligne poste (total)
-      if(ri%2===0){doc.setFillColor(...cLIGHT);}else{doc.setFillColor(255,255,255);}
-      doc.rect(M,y-1,W-2*M,6,'F');
-      const over=r.bud>0&&r.total>r.bud;
-      const ecart=r.bud>0?r.total-r.bud:null;
-      const isRev=cat==='Revenu';
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(8);
-      doc.setTextColor(...cTEXT);
-      doc.text(r.p.slice(0,34),M+2,y+3.5);
-      if(isRev)doc.setTextColor(...cGREEN);
-      else if(over)doc.setTextColor(...cRED);
-      else doc.setTextColor(...cTEXT);
-      doc.text(fmtPDF(r.total)+' F',W-M-42,y+3.5,{align:'right'});
-      doc.setTextColor(...cTEXT2);
-      doc.text(r.bud?fmtPDF(r.bud)+' F':'--',W-M-22,y+3.5,{align:'right'});
-      if(ecart===null)doc.setTextColor(...cTEXT2);
-      else if(ecart>0)doc.setTextColor(...cRED);
-      else doc.setTextColor(...cGREEN);
-      doc.text(ecart===null?'--':(ecart>0?'+':'')+fmtPDF(ecart)+' F',W-M-2,y+3.5,{align:'right'});
-      y+=6.5;
-
-      // Sous-détails: chaque transaction
-      r.txs.forEach(tx=>{
-        if(y>280){doc.addPage();y=14;}
-        doc.setFillColor(250,252,254);
-        doc.rect(M,y-0.5,W-2*M,5,'F');
-        // Tiret visuel
-        doc.setDrawColor(...cBORDER);
-        doc.setLineWidth(0.2);
-        doc.line(M+4,y+2,M+6,y+2);
-        // Date
-        doc.setFont('helvetica','normal');
-        doc.setFontSize(7);
-        doc.setTextColor(...cTEXT2);
-        doc.text(fmtDate(tx.date),M+8,y+3);
-        // Commentaire
-        if(tx.cmt){
-          doc.setTextColor(120,140,160);
-          doc.text(tx.cmt.slice(0,38),M+22,y+3);
-        }
-        // Montant individuel
-        doc.setTextColor(...cTEXT2);
-        doc.text(fmtPDF(tx.amt)+' F',W-M-42,y+3,{align:'right'});
-        y+=5;
-      });
-      y+=1.5;
+    doc.text(fmtPDF(total2)+' F',W-M-3,yp+5,{align:'right'});
+    yp+=9;
+    rows.forEach((r,i)=>{
+      if(yp>280){doc.addPage();yp=14;}
+      if(i%2===0){doc.setFillColor(248,250,253);doc.rect(M,yp-1,W-2*M,5.5,'F');}
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...cTEXT);
+      doc.text(r.p.slice(0,40),M+2,yp+3);
+      doc.setTextColor(...color);
+      doc.text(fmtPDF(r.reel)+' F',W-M-2,yp+3,{align:'right'});
+      yp+=5.5;
     });
-    y+=4;
+    yp+=5;
   });
 
-  // ── RECAPITULATIF option B — lignes épurées
-  if(y>255){doc.addPage();y=14;}
-  y+=4;
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...cTEXT2);
-  doc.text('RECAPITULATIF',M,y);
-  y+=5;
-  // Ligne séparatrice haut
-  doc.setDrawColor(...cBORDER);
-  doc.setLineWidth(0.4);
-  doc.line(M,y,W-M,y);
-  y+=5;
-  const recap=[
-    {label:'Revenus totaux',val:fmtPDF(rev)+' F',color:cGREEN,bold:false,line:false},
-    {label:'- Depenses totales',val:fmtPDF(dep)+' F',color:cRED,bold:false,line:false},
-    {label:'Solde net',val:(sol>=0?'+':'-')+fmtPDF(Math.abs(sol))+' F',color:sol>=0?cGREEN:cRED,bold:true,line:true},
-    {label:"Taux d'epargne",val:taux+'%',color:taux>=15?cGREEN:taux>=5?[200,150,40]:cRED,bold:false,line:false},
-  ];
-  recap.forEach(item=>{
-    if(item.line){
-      doc.setDrawColor(...cBORDER);
-      doc.setLineWidth(0.3);
-      doc.line(M,y-1,W-M,y-1);
-    }
+  // RECAPITULATIF
+  if(yp>255){doc.addPage();yp=14;}
+  yp+=4;
+  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...cTEXT2);
+  doc.text('RECAPITULATIF',M,yp);yp+=5;
+  doc.setDrawColor(...cBORDER);doc.setLineWidth(0.4);doc.line(M,yp,W-M,yp);yp+=5;
+  [{label:'Revenus totaux',val:fmtPDF(rev)+' F',color:cGREEN,bold:false},
+   {label:'- Depenses totales',val:fmtPDF(dep)+' F',color:cRED,bold:false},
+   {label:'Solde net '+y,val:(sol>=0?'+':'-')+fmtPDF(sol)+' F',color:sol>=0?cGREEN:cRED,bold:true},
+   {label:"Taux d'epargne",val:taux+'%',color:taux>=15?cGREEN:taux>=5?[200,150,40]:cRED,bold:false},
+  ].forEach((item,i)=>{
+    if(i===2){doc.setDrawColor(...cBORDER);doc.setLineWidth(0.3);doc.line(M,yp-1,W-M,yp-1);}
     doc.setFont('helvetica',item.bold?'bold':'normal');
-    doc.setFontSize(item.bold?10:8.5);
-    doc.setTextColor(...cTEXT2);
-    doc.text(item.label,M,y+3.5);
-    doc.setTextColor(...item.color);
-    doc.text(item.val,W-M,y+3.5,{align:'right'});
-    y+=7;
+    doc.setFontSize(item.bold?9.5:8.5);
+    doc.setTextColor(...cTEXT2);doc.text(item.label,M,yp+3);
+    doc.setTextColor(...item.color);doc.text(item.val,W-M,yp+3,{align:'right'});
+    yp+=7;
   });
-  // Ligne séparatrice bas
-  doc.setDrawColor(...cBORDER);
-  doc.setLineWidth(0.4);
-  doc.line(M,y,W-M,y);
+  doc.setDrawColor(...cBORDER);doc.setLineWidth(0.4);doc.line(M,yp,W-M,yp);
 
-  // Pied de page
+  // PIED DE PAGE
   const pages=doc.getNumberOfPages();
   for(let i=1;i<=pages;i++){
     doc.setPage(i);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(7);
-    doc.setTextColor(...cTEXT2);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...cTEXT2);
     doc.text("FII'NAS -- Suivi financier personnel",M,295);
     doc.text('Page '+i+'/'+pages,W-M,295,{align:'right'});
   }
 
-  doc.save('FiiNas_'+ym+'.pdf');
-  toast('PDF telecharge !');
+  doc.save("FiiNas_"+y+".pdf");
+  toast('PDF annuel telecharge !');
 }
 
+function exportPDF(){
+  if(typeof window.jspdf==='undefined'){
+    toast('Chargement en cours...');
+    await new Promise(r=>setTimeout(r,1500));
+  }
+  const{jsPDF}=window.jspdf;
+  const ym=curYM();
+  const t=txYM(ym);
+  const rev=sumC(t,'Revenu');
+  const dep=sumC(t,'Dépenses fixes')+sumC(t,'Dépenses variables')+sumC(t,'Epargne');
+  const sol=rev-dep;
+  const moisLabel=yml(ym);
+  const uName=document.getElementById('pname')?.textContent||'';
+  const uEmail=document.getElementById('pemail')?.textContent||'';
+  const today=new Date().toLocaleDateString('fr-FR');
+
+  // Format sans espace insécable
+  const pf=v=>new Intl.NumberFormat('fr-FR').format(Math.round(Math.abs(v)))
+    .replace(/\u202f/g,' ').replace(/\u00a0/g,' ');
+
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,M=15,CW=W-2*M;
+  const BLUE=[29,52,97],GREEN=[16,185,129],GRAY=[110,110,115],BLACK=[29,29,31];
+
+  // ── EN-TÊTE
+  doc.setFillColor(...BLUE);
+  doc.rect(0,0,W,42,'F');
+
+  // Icône — image PNG embarquée en base64
+  const ICON_B64 = 'data:image/png;base64,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';
+  doc.addImage(ICON_B64,'PNG',M,8,22,22);
+
+  // Texte FII'NAS
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(20);
+  doc.setTextColor(59,130,246);
+  doc.text('FII',M+27,21);
+  const fw=doc.getTextWidth('FII');
+  doc.setTextColor(255,255,255);
+  doc.text("'",M+27+fw,21);
+  const aw=doc.getTextWidth("'");
+  doc.setTextColor(...GREEN);
+  doc.text('NAS',M+27+fw+aw,21);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.setTextColor(180,180,190);
+  doc.text('SUIVI FINANCIER PERSONNEL',M+28,27);
+
+  // Infos droite
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(255,255,255);
+  doc.text(uName,W-M,16,'right');
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(180,180,190);
+  doc.text(uEmail,W-M,22,'right');
+  doc.text('Releve du mois de '+moisLabel,W-M,28,'right');
+  doc.text('Genere le '+today,W-M,34,'right');
+
+  let y=50;
+
+  // ── RÉSUMÉ
+  // Boîte résumé plus haute pour éviter superposition
+  doc.setFillColor(245,245,247);
+  doc.roundedRect(M,y,CW,42,3,3,'F');
+  doc.setFillColor(...(sol>=0?GREEN:[220,38,38]));
+  doc.rect(M,y,2,42,'F');
+
+  // Ligne 1 — label
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...GRAY);
+  doc.text('SOLDE NET DU MOIS',M+6,y+7);
+
+  // Ligne 2 — solde
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(18);
+  doc.setTextColor(...(sol>=0?GREEN:[220,38,38]));
+  doc.text((sol>=0?'+':'-')+pf(sol)+' FCFA',M+6,y+20);
+
+  // Ligne 3 — séparateur
+  doc.setDrawColor(220,220,225);
+  doc.line(M+4,y+24,M+CW-4,y+24);
+
+  // Ligne 4 — 3 colonnes en dessous
+  const cw3=CW/3;
+  [{l:'Revenus',v:'+'+pf(rev)+' F',c:GREEN},{l:'Dépenses',v:'-'+pf(dep)+' F',c:[220,38,38]},{l:'% consommé',v:(rev>0?Math.round(dep/rev*100):0)+'%',c:GRAY}]
+  .forEach((item,i)=>{
+    const cx=M+i*cw3;
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...GRAY);
+    doc.text(item.l,cx+cw3/2,y+30,'center');
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...item.c);
+    doc.text(item.v,cx+cw3/2,y+38,'center');
+  });
+
+  y+=50;
+
+  // ── TABLEAU DES OPÉRATIONS
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...BLACK);
+  doc.text('Detail des operations - '+moisLabel,M,y);
+  y+=4;
+
+  const sorted=[...t].sort((a,b)=>a.date.localeCompare(b.date));
+  let running=0;
+  const rows=sorted.map(tx=>{
+    const isR=tx.cat==='Revenu';
+    running+=isR?tx.amt:-tx.amt;
+    const date=tx.date.split('-').reverse().join('/');
+    // Truncate libelle to avoid overflow
+    const raw=(tx.poste+(tx.cmt?' - '+tx.cmt:'')).substring(0,45);
+    return[
+      date,
+      raw,
+      isR?'':pf(tx.amt)+' F',
+      isR?pf(tx.amt)+' F':'',
+      (running>=0?'+':'-')+pf(running)+' F'
+    ];
+  });
+
+  doc.autoTable({
+    startY:y,
+    head:[['Date','Libelle','Debit','Credit','Solde']],
+    body:rows,
+    margin:{left:M,right:M},
+    tableWidth:CW,
+    styles:{
+      font:'helvetica',fontSize:7,cellPadding:1.8,
+      textColor:BLACK,lineColor:[220,220,225],lineWidth:0.15,
+      overflow:'linebreak'
+    },
+    headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',fontSize:7.5},
+    columnStyles:{
+      0:{cellWidth:20,halign:'center'},
+      1:{cellWidth:CW-20-22-22-26},
+      2:{cellWidth:22,halign:'right',textColor:[200,30,30]},
+      3:{cellWidth:22,halign:'right',textColor:[16,150,100]},
+      4:{cellWidth:26,halign:'right',fontStyle:'bold'}
+    },
+    alternateRowStyles:{fillColor:[250,250,252]},
+    didParseCell(data){
+      if(data.section==='body'&&data.column.index===4){
+        const v=parseFloat(data.cell.raw.replace(/[^0-9.-]/g,''));
+        data.cell.styles.textColor=data.cell.raw.startsWith('+')?[16,150,100]:[200,30,30];
+      }
+    }
+  });
+
+  // ── RÉCAP CATÉGORIES
+  const fy=doc.lastAutoTable.finalY+6;
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...BLACK);
+  doc.text('Recapitulatif par categorie',M,fy);
+
+  const catRows=Object.keys(CATS).map(cat=>{
+    const total=t.filter(x=>x.cat===cat).reduce((s,x)=>s+x.amt,0);
+    if(!total)return null;
+    return[cat,cat==='Revenu'?'+'+pf(total)+' F':'-'+pf(total)+' F'];
+  }).filter(Boolean);
+
+  doc.autoTable({
+    startY:fy+4,
+    head:[['Categorie','Montant']],
+    body:catRows,
+    margin:{left:M,right:M},
+    tableWidth:CW,
+    styles:{font:'helvetica',fontSize:8,cellPadding:2,textColor:BLACK},
+    headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold'},
+    columnStyles:{0:{cellWidth:CW*0.7},1:{cellWidth:CW*0.3,halign:'right',fontStyle:'bold'}}
+  });
+
+  // ── PIED DE PAGE
+  const pc=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pc;i++){
+    doc.setPage(i);
+    doc.setDrawColor(220,220,225);doc.line(M,285,W-M,285);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...GRAY);
+    doc.text("FII'NAS - Releve "+moisLabel+" - Document non contractuel",M,290);
+    doc.text('Page '+i+'/'+pc,W-M,290,'right');
+  }
+
+  doc.save('releve_fiinas_'+ym+'.pdf');
+  toast('Releve PDF genere');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ══════════════════════════════════════
+// ESPACES — Partage de l'espace perso
+// ══════════════════════════════════════
+
+// sharedSpaceId = ownerUid of the person whose space we're viewing
+// mySpaces = list of spaces we have access to (other people's spaces)
 
 function updateSpaceBtn(){
   const icon=document.getElementById('space-icon');
