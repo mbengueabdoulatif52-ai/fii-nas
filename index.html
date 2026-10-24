@@ -306,7 +306,7 @@ select option{background:#2c2c2e;color:#f5f5f7}
         <div class="flbl">Montant (FCFA)</div>
         <div class="amtwrap">
           <div class="amtcur">FCFA</div>
-          <input class="amtinp" type="text" id="f-amt" placeholder="0" inputmode="numeric" oninput="fmtAmtInput(this);setFormDirty(true)">
+          <input class="amtinp" type="text" id="f-amt" placeholder="0" inputmode="numeric" oninput="fmtAmtInput(this);setFormDirty(true);updReste()">
         </div>
       </div>
       <div class="fgrp">
@@ -321,13 +321,14 @@ select option{background:#2c2c2e;color:#f5f5f7}
       <div class="frow">
         <div class="fgrp">
           <div class="flbl">Poste</div>
-          <select class="fsel" id="f-poste"></select>
+          <select class="fsel" id="f-poste" onchange="updReste()"></select>
         </div>
         <div class="fgrp">
           <div class="flbl">Date</div>
-          <input class="finp" type="date" id="f-date">
+          <input class="finp" type="date" id="f-date" onchange="updReste()">
         </div>
       </div>
+      <div id="f-reste"></div>
       <div class="fgrp">
         <div class="flbl">Commentaire (facultatif)</div>
         <input class="finp" type="text" id="f-cmt" placeholder="Wave, Yango, MAB Ibrahima...">
@@ -373,7 +374,11 @@ select option{background:#2c2c2e;color:#f5f5f7}
     <div class="ytabs" id="ytabs"></div>
     <div class="mtabs" id="mtabs"></div>
     <div id="bud-solde"></div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+    <div style="display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+      <button id="bud-plan-btn" onclick="openPlanSheet()" style="background:var(--bd);border:0.5px solid var(--blue);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--blue);cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:5px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Plan 2026–2031
+      </button>
       <button id="bud-copy-btn" onclick="openCopyBudget()" style="background:none;border:0.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text2);cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:5px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
         Copier depuis un autre mois
@@ -950,7 +955,7 @@ function renderAlerts(ym){
       const r=t.filter(x=>x.cat===cat&&x.poste===p).reduce((s,x)=>s+(x.amt||0),0);
       const b=bud[p]||0;
       if(b>0&&r>b){alerts.push({p,r,b,pct:Math.round(r/b*100)});}
-      else if(b>0&&r>=b*0.9&&r<b){alerts.push({p,r,b,pct:Math.round(r/b*100),warn:true});}
+      else if(b>0&&r>=b*ALERT_PCT&&r<b){alerts.push({p,r,b,pct:Math.round(r/b*100),warn:true});}
     });
   });
   const el=document.getElementById('alerts-wrap');
@@ -1111,6 +1116,7 @@ function selCat(el,cat,cls){
 function syncPostes(){
   const p=getAllPostes(selCatVal);
   document.getElementById('f-poste').innerHTML=p.map(x=>`<option>${x}</option>`).join('');
+  updReste();
 }
 async function saveTx(){
   if(!isAdmin()){toast('Mode lecture — modification non autorisée');return;}
@@ -1127,6 +1133,7 @@ async function saveTx(){
   if(inner)inner.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" style="animation:sp .8s linear infinite" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Enregistrement…';
   const{db,collection,addDoc}=window._fb;
   const data={amt,date,cat:selCatVal,poste,cmt,ts:new Date().toISOString(),createdBy:userName,createdById:uid};
+  const alertInfo=budgetStatus(selCatVal,poste,date.slice(0,7),amt);
   try{
     await addDoc(collection(db,dataPath()+'/transactions'),data);
   }catch(e){
@@ -1142,7 +1149,170 @@ async function saveTx(){
     :'Enregistré hors ligne · sync au retour du réseau');
   setFormDirty(false);
   goP('tx',document.querySelectorAll('.ni')[1]);
+  if(alertInfo&&alertInfo.crossed)showBudgetAlert(alertInfo);
 }
+
+// ═══════════════ ALERTES BUDGET ═══════════════
+const ALERT_PCT=0.8; // alerte « proche du budget » dès 80 %
+const EXPENSE_CATS=['Dépenses fixes','Dépenses variables'];
+function spentYM(cat,poste,ym){return txYM(ym).filter(x=>x.cat===cat&&x.poste===poste).reduce((s,x)=>s+(x.amt||0),0);}
+// État du poste avant/après une saisie de `add` FCFA
+function budgetStatus(cat,poste,ym,add){
+  if(!EXPENSE_CATS.includes(cat)||!poste||!ym)return null;
+  const b=gBud(ym,poste);if(!(b>0))return null;
+  const before=spentYM(cat,poste,ym),after=before+(add||0);
+  const lvl=v=>v>b?2:v>=b*ALERT_PCT?1:0;
+  return{poste,ym,b,before,after,reste:b-after,pct:Math.round(after/b*100),level:lvl(after),crossed:lvl(after)>lvl(before)};
+}
+function updReste(){
+  const el=document.getElementById('f-reste');if(!el)return;
+  const poste=document.getElementById('f-poste')?.value;
+  const date=document.getElementById('f-date')?.value||new Date().toISOString().split('T')[0];
+  const raw=(document.getElementById('f-amt')?.value||'').replace(/\s/g,'').replace(/,/g,'.');
+  const amt=parseFloat(raw)||0;
+  const ym=date.slice(0,7);
+  if(!EXPENSE_CATS.includes(selCatVal)||!poste){el.innerHTML='';return;}
+  const b=gBud(ym,poste);
+  if(!(b>0)){el.innerHTML=`<div style="font-size:11px;color:var(--text3);margin:-4px 0 10px">Pas de budget pour ${poste} en ${yml(ym)}.</div>`;return;}
+  const spent=spentYM(selCatVal,poste,ym),reste=b-spent,after=spent+amt;
+  const pctNow=Math.min(100,Math.round(spent/b*100));
+  const col=spent>b?'var(--red)':spent>=b*ALERT_PCT?'var(--amber)':'var(--green)';
+  const bg=spent>b?'var(--rd)':spent>=b*ALERT_PCT?'rgba(255,214,10,.1)':'var(--gd)';
+  let warn='';
+  if(amt>0&&after>b)warn=`<div style="font-size:11px;color:var(--red);margin-top:5px">Avec cette saisie : ${fmt(after)} F, soit ${fmt(after-b)} F au-delà du budget.</div>`;
+  else if(amt>0&&after>=b*ALERT_PCT)warn=`<div style="font-size:11px;color:var(--amber);margin-top:5px">Avec cette saisie : ${Math.round(after/b*100)} % du budget utilisé.</div>`;
+  el.innerHTML=`<div style="background:${bg};border-radius:10px;padding:10px 12px;margin:-2px 0 12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px"><span style="color:${col};font-weight:600">${reste>=0?'Reste ce mois':'Budget dépassé de'}</span><span style="color:${col};font-weight:600;font-family:var(--mono)">${fmt(Math.abs(reste))} F</span></div>
+    <div style="height:4px;background:var(--border);border-radius:2px;margin-top:7px"><div style="width:${pctNow}%;height:4px;background:${col};border-radius:2px"></div></div>
+    <div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:var(--mono)">${fmt(spent)} dépensés sur ${fmt(b)} · ${yml(ym)}</div>${warn}</div>`;
+}
+function showBudgetAlert(a){
+  const over=a.level===2,col=over?'var(--red)':'var(--amber)';
+  const bg=document.createElement('div');
+  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:flex-end;justify-content:center';
+  bg.innerHTML=`<div style="background:var(--surf);border-radius:16px 16px 0 0;padding:18px 20px calc(18px + env(safe-area-inset-bottom,0px));width:100%;max-width:480px">
+    <div style="width:32px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 14px"></div>
+    <div style="font-size:15px;font-weight:600;color:${col}">${over?'Budget '+a.poste+' dépassé':a.poste+' : '+a.pct+' % du budget'}</div>
+    <div style="font-size:12px;color:var(--text2);margin-top:6px;font-family:var(--mono)">${fmt(a.after)} F sur ${fmt(a.b)} F en ${yml(a.ym)} (${a.pct} %)</div>
+    <div style="height:4px;background:var(--border);border-radius:2px;margin-top:10px"><div style="width:${Math.min(100,a.pct)}%;height:4px;background:${col};border-radius:2px"></div></div>
+    <div style="font-size:12px;color:var(--text2);margin-top:10px;line-height:1.5">${over?`Le dépassement de ${fmt(-a.reste)} F réduit d'autant ton épargne prévue ce mois-ci.`:`Il te reste ${fmt(a.reste)} F sur ce poste jusqu'à la fin du mois.`}</div>
+    <button class="btn-p" style="margin-top:14px;background:var(--surf2);color:var(--text)">Compris</button>
+  </div>`;
+  bg.addEventListener('click',e=>{if(e.target===bg||e.target.closest('button'))bg.remove();});
+  document.body.appendChild(bg);
+}
+
+// ═══════════════ PLAN BUDGÉTAIRE 2026–2031 (sans prime) ═══════════════
+const PLAN_START='2026-11',PLAN_END='2031-10',PLAN_END_Y=2031;
+const PLAN={
+  salaire:716200,salaireInc:30000,setec:10000,remu:50000,remuInc:15000,
+  pret:227000,finPret:'2030-09',
+  fixes:{'Frais bancaires':8000,'Assurances':20000,'Gardien':1500,'Electricité':15000,'Eau':6000,'Location':135000,'Abonnements':35000,'Téléphone':4000},
+  parents:115000,conjoint:15000,foyer:50000,
+  vars:{'Achats divers':15000,'Alimentation':20000,'Santé':7000,'Dons':40000,'Loisir':7000,'Prêts':15000,'Imprévus':15000,'Transport':8000,'Voiture':15000,'Tour de famille':6000},
+  dette:158777,detteMens:15000,
+  mariage:2000000,foyerPrep:300000,noces:400000,nocesDelai:9,majFetes:0.3,
+  fetes:{'Ramadan':50000,'Korité':120000,'Tabaski':250000,'Tamkharit':15000,'Grand Magal de Touba':75000,'Gamou':25000,'Rentrée scolaire':50000},
+  // Mois de dépense de chaque fête (dates lunaires estimées, à ajuster selon l'annonce)
+  cal:[['2027-02','Ramadan'],['2027-03','Korité'],['2027-05','Tabaski'],['2027-06','Tamkharit'],['2027-07','Grand Magal de Touba'],['2027-08','Gamou'],
+       ['2028-02','Ramadan'],['2028-02','Korité'],['2028-05','Tabaski'],['2028-06','Tamkharit'],['2028-07','Grand Magal de Touba'],['2028-08','Gamou'],
+       ['2029-01','Ramadan'],['2029-02','Korité'],['2029-04','Tabaski'],['2029-05','Tamkharit'],['2029-07','Grand Magal de Touba'],['2029-07','Gamou'],
+       ['2030-01','Ramadan'],['2030-02','Korité'],['2030-04','Tabaski'],['2030-05','Tamkharit'],['2030-06','Grand Magal de Touba'],['2030-07','Gamou'],
+       ['2031-01','Ramadan'],['2031-01','Korité'],['2031-04','Tabaski'],['2031-05','Tamkharit'],['2031-06','Grand Magal de Touba'],['2031-07','Gamou'],
+       ['2027-10','Rentrée scolaire'],['2028-10','Rentrée scolaire'],['2029-10','Rentrée scolaire'],['2030-10','Rentrée scolaire'],['2031-10','Rentrée scolaire']]
+};
+const P_FETES='Fêtes religieuses',P_MARIAGE='Mariage et foyer',P_EPARGNE='Epargne de précaution';
+function ymAdd(ym,n){const[y,m]=ym.split('-').map(Number);const t=y*12+(m-1)+n;return ymk(Math.floor(t/12),t%12+1);}
+function planMonths(){const out=[];for(let ym=PLAN_START;ym<=PLAN_END;ym=ymAdd(ym,1))out.push(ym);return out;}
+function buildPlan(marYm){
+  const bud={},det={};let detteRest=PLAN.dette;
+  const evts={};const addE=(ym,l,a)=>{(evts[ym]=evts[ym]||[]).push({label:l,amt:a});};
+  addE(ymAdd(marYm,-3),'Préparation du foyer (1/2)',PLAN.foyerPrep/2);
+  addE(ymAdd(marYm,-2),'Préparation du foyer (2/2)',PLAN.foyerPrep/2);
+  addE(ymAdd(marYm,-1),'Mariage : préparatifs et dot',PLAN.mariage*0.4);
+  addE(marYm,'Mariage : cérémonie',PLAN.mariage*0.6);
+  addE(ymAdd(marYm,PLAN.nocesDelai),'Voyage de noces',PLAN.noces);
+  let cum=0;const summary={};
+  planMonths().forEach(ym=>{
+    const y=parseInt(ym.slice(0,4)),k=y-2026,after=ym>marYm,b={},d={};
+    b['Salaire net']=PLAN.salaire+PLAN.salaireInc*k;
+    b['Autres']=PLAN.setec; d['Autres']=[{label:'Forfait SETEC',amt:PLAN.setec}];
+    b['Extras professionnels']=PLAN.remu+PLAN.remuInc*k; d['Extras professionnels']=[{label:'Rémunération MBENGUE ARCHIBUILDING',amt:b['Extras professionnels']}];
+    if(ym<=PLAN.finPret)b['Mensualité de prêt']=PLAN.pret;
+    Object.assign(b,PLAN.fixes);
+    b['Aides versées']=PLAN.parents+(after?0:PLAN.conjoint);
+    d['Aides versées']=[{label:'Parents',amt:PLAN.parents}];if(!after)d['Aides versées'].push({label:'Conjoint',amt:PLAN.conjoint});
+    Object.assign(b,PLAN.vars);
+    if(after){b['Alimentation']+=PLAN.foyer;d['Alimentation']=[{label:'Courant',amt:PLAN.vars['Alimentation']},{label:'Charges du foyer',amt:PLAN.foyer}];}
+    if(detteRest>0){const r=Math.min(PLAN.detteMens,detteRest);detteRest-=r;b['Remboursement']=r;d['Remboursement']=[{label:'Dette MBENGUE ARCHIBUILDING',amt:r}];}
+    const fl=PLAN.cal.filter(c=>c[0]===ym).map(c=>({label:c[1],amt:Math.round(PLAN.fetes[c[1]]*((after&&c[1]!=='Rentrée scolaire')?1+PLAN.majFetes:1))}));
+    if(fl.length){b[P_FETES]=fl.reduce((s,x)=>s+x.amt,0);d[P_FETES]=fl;}
+    if(evts[ym]){b[P_MARIAGE]=evts[ym].reduce((s,x)=>s+x.amt,0);d[P_MARIAGE]=evts[ym];}
+    let rev=0,dep=0;
+    Object.entries(b).forEach(([p,v])=>{if(getPlanCat(p)==='Revenu')rev+=v;else dep+=v;});
+    const sol=rev-dep;cum+=sol;
+    const ep=Math.max(0,Math.floor(sol/1000)*1000);
+    if(ep>0)b[P_EPARGNE]=ep;
+    bud[ym]=b;det[ym]=d;summary[ym]={sol,cum};
+  });
+  return{bud,det,summary};
+}
+const PLAN_REVENUS=['Salaire net','Autres','Extras professionnels'];
+const PLAN_FIXES=['Mensualité de prêt','Aides versées',...Object.keys(PLAN.fixes)];
+function getPlanCat(p){if(PLAN_REVENUS.includes(p))return'Revenu';if(PLAN_FIXES.includes(p))return'Dépenses fixes';if(p===P_EPARGNE)return'Epargne';return'Dépenses variables';}
+function planStats(marYm){
+  const{summary}=buildPlan(marYm);const yms=Object.keys(summary);
+  let min=Infinity,minYm='';yms.forEach(ym=>{if(summary[ym].cum<min){min=summary[ym].cum;minYm=ym;}});
+  return{min,minYm,end:summary[PLAN_END].cum,atMar:summary[marYm]?summary[marYm].cum:null};
+}
+function renderPlanStats(){
+  const v=document.getElementById('plan-mar')?.value;const el=document.getElementById('plan-stats');if(!v||!el)return;
+  const st=planStats(v);const ok=st.min>=0;
+  el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
+    <div style="background:var(--surf2);border-radius:9px;padding:8px"><div style="font-size:10px;color:var(--text3)">ÉPARGNE AU PLUS BAS</div><div style="font-weight:600;font-family:var(--mono);color:${ok?'var(--text)':'var(--red)'}">${fmtS(st.min)} F</div><div style="font-size:10px;color:var(--text3)">${yml(st.minYm)}</div></div>
+    <div style="background:var(--surf2);border-radius:9px;padding:8px"><div style="font-size:10px;color:var(--text3)">ÉPARGNE OCT. 2031</div><div style="font-weight:600;font-family:var(--mono)">${fmt(st.end)} F</div><div style="font-size:10px;color:var(--text3)">sans prime</div></div>
+  </div>
+  <div style="font-size:11px;margin-top:8px;color:${ok?'var(--green)':'var(--red)'}">${ok?'Le budget reste dans le vert sur toute la période.':'Le budget passe dans le rouge : choisis un mariage plus tard.'}</div>`;
+}
+function openPlanSheet(){
+  if(!isAdmin()){toast('Mode lecture — modification non autorisée');return;}
+  const bg=document.createElement('div');bg.id='plan-sheet';
+  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:flex-end;justify-content:center';
+  const nb=planMonths().filter(ym=>Object.keys(budget[ym]||{}).length>0).length;
+  bg.innerHTML=`<div style="background:var(--surf);border-radius:16px 16px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));width:100%;max-width:480px;max-height:88vh;overflow-y:auto">
+    <div style="font-size:15px;font-weight:600;color:var(--text);display:flex;justify-content:space-between;align-items:center">
+      Plan budgétaire 2026–2031
+      <button onclick="document.getElementById('plan-sheet').remove()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:0" aria-label="Fermer">×</button>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.5">Remplit tes budgets de novembre 2026 à octobre 2031 : salaire +30 000 par an, rémunération de l'entreprise +15 000 par an, prêt jusqu'en septembre 2030, fêtes religieuses et mariage. <b>La prime n'est pas comptée</b> : si elle arrive, elle va en épargne.</div>
+    <div style="margin-top:14px"><div class="flbl">Mois du mariage</div><input class="finp" type="month" id="plan-mar" value="2029-09" min="2027-03" max="2031-09" onchange="renderPlanStats()"></div>
+    <div id="plan-stats"></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.5">Postes ajoutés s'ils n'existent pas : ${P_FETES}, ${P_MARIAGE}, Tour de famille. Les fêtes et le mariage sont détaillés dans chaque mois.</div>
+    ${nb?`<div style="font-size:11px;color:var(--amber);margin-top:8px">${nb} mois ont déjà un budget sur cette période : ils seront remplacés.</div>`:''}
+    <div id="plan-err" style="font-size:11px;color:var(--red);min-height:14px;margin-top:6px"></div>
+    <button class="btn-p" id="plan-apply" onclick="applyPlan()" style="margin-top:4px">Appliquer le plan</button>
+  </div>`;
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.remove();});
+  document.body.appendChild(bg);renderPlanStats();
+}
+async function applyPlan(){
+  const marYm=document.getElementById('plan-mar')?.value;const err=document.getElementById('plan-err');
+  if(!marYm||marYm<'2027-03'||marYm>'2031-09'){err.textContent='Choisis un mois de mariage entre mars 2027 et septembre 2031.';return;}
+  const btn=document.getElementById('plan-apply');btn.disabled=true;btn.textContent='Application…';
+  try{
+    const{bud,det}=buildPlan(marYm);
+    if(!CATS['Dépenses variables'])CATS['Dépenses variables']=[];
+    [P_FETES,P_MARIAGE,'Tour de famille'].forEach(p=>{if(!getAllPostes('Dépenses variables').includes(p))CATS['Dépenses variables'].push(p);});
+    if(!CATS['Epargne'])CATS['Epargne']=[];
+    if(!getAllPostes('Epargne').includes(P_EPARGNE))CATS['Epargne'].push(P_EPARGNE);
+    Object.keys(bud).forEach(ym=>{budget[ym]=bud[ym];budgetDetails[ym]=det[ym];});
+    await saveSettings();
+    document.getElementById('plan-sheet')?.remove();
+    syncPostes();renderCPUI();renderCurrent();
+    toast('Plan appliqué jusqu\'en octobre 2031 ✓');
+  }catch(e){err.textContent='Erreur : '+e.message;btn.disabled=false;btn.textContent='Appliquer le plan';}
+}
+
 // Corbeille temporaire (session)
 // Corbeille — persistée 1h dans localStorage
 const TRASH_KEY='fiinas-trash';
@@ -1312,7 +1482,7 @@ function renderTX(){
 
 // BUDGET
 function renderBudPage(){
-  const years=[new Date().getFullYear(),new Date().getFullYear()+1,new Date().getFullYear()+2];
+  const y0=new Date().getFullYear();const years=[];for(let y=y0;y<=Math.max(y0+2,PLAN_END_Y);y++)years.push(y);
   document.getElementById('ytabs').innerHTML=years.map(y=>`<button class="ytab ${y.toString()===bYear?'active':''}" onclick="setBY(this,'${y}')">${y}</button>`).join('');
   document.getElementById('mtabs').innerHTML=MFR.map((m,i)=>`<button class="mtab ${(i+1)===bMonth?'active':''}" onclick="setBM(this,${i+1})">${MS[i]}</button>`).join('');
   renderBForm();
