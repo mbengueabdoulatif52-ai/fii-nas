@@ -1209,9 +1209,9 @@ const PLAN={
   pret:227000,finPret:'2030-09',
   fixes:{'Frais bancaires':8000,'Assurances':20000,'Gardien':1500,'Electricité':15000,'Eau':6000,'Location':135000,'Abonnements':35000,'Téléphone':4000},
   parents:115000,conjoint:15000,foyer:50000,
-  vars:{'Achats divers':15000,'Alimentation':20000,'Santé':7000,'Dons':40000,'Loisir':7000,'Prêts':15000,'Imprévus':15000,'Transport':8000,'Voiture':15000,'Tour de famille':6000},
-  avantMariage:{'Dons':20000,'Prêts':0}, // effort jusqu'au mariage
-  pretEnt:1600000,pretEntMois:'2027-09',pretEntMens:65000,pretEntDebut:'2028-06', // prêt de MBENGUE ARCHIBUILDING pour le mariage
+  vars:{'Achats divers':15000,'Alimentation':20000,'Santé':7000,'Dons':35000,'Loisir':7000,'Prêts':15000,'Imprévus':15000,'Transport':8000,'Voiture':15000,'Tour de famille':6000},
+  avantMariage:{'Dons':35000,'Prêts':0}, // effort jusqu'au mariage
+  pretEnt:1750000,pretEntMois:'2027-09',pretEntMens:65000,pretEntDebut:'2028-06', // prêt de MBENGUE ARCHIBUILDING pour le mariage
   dette:158777,detteMens:15000,
   mariage:2000000,foyerPrep:300000,noces:400000,nocesDelai:31,majFetes:0.3,
   fetes:{'Ramadan':50000,'Korité':120000,'Tabaski':250000,'Tamkharit':15000,'Grand Magal de Touba':75000,'Gamou':25000,'Rentrée scolaire':50000},
@@ -1289,7 +1289,7 @@ function openPlanSheet(){
       Plan budgétaire 2026–2031
       <button onclick="document.getElementById('plan-sheet').remove()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);padding:0" aria-label="Fermer">×</button>
     </div>
-    <div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.5">Remplit tes budgets de novembre 2026 à octobre 2031 : salaire +30 000 par an, rémunération de l'entreprise +15 000 par an, prêt bancaire jusqu'en septembre 2030, fêtes religieuses et mariage. Dons à 20 000 et aucun prêt aux proches jusqu'au mariage. Prêt de MBENGUE ARCHIBUILDING : 1 600 000 en septembre 2027, remboursé 65 000 par mois dès juin 2028. <b>La prime n'est pas comptée</b> : si elle arrive, elle sert à rembourser l'entreprise plus vite.</div>
+    <div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.5">Remplit tes budgets de novembre 2026 à octobre 2031 : salaire +30 000 par an, rémunération de l'entreprise +15 000 par an, prêt bancaire jusqu'en septembre 2030, fêtes religieuses et mariage. Dons à 35 000 par mois, aucun prêt aux proches jusqu'au mariage. Prêt de MBENGUE ARCHIBUILDING : 1 750 000 en septembre 2027, remboursé 65 000 par mois dès juin 2028. <b>La prime n'est pas comptée</b> : si elle arrive, elle sert à rembourser l'entreprise plus vite.</div>
     <div style="margin-top:14px"><div class="flbl">Mois du mariage</div><input class="finp" type="month" id="plan-mar" value="2027-12" min="2027-03" max="2031-09" onchange="renderPlanStats()"></div>
     <div id="plan-stats"></div>
     <div style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.5">Postes ajoutés s'ils n'existent pas : ${P_FETES}, ${P_MARIAGE}, Tour de famille. Les fêtes et le mariage sont détaillés dans chaque mois.</div>
